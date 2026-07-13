@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tinkerVault</title>
+<style>
+  :root {
+    --bg: #12151c;
+    --panel: #1a1e28;
+    --border: #2a2f3d;
+    --text: #e8eaf0;
+    --muted: #8b93a7;
+    --accent: #7dd3c0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4rem 1.5rem;
+  }
+  .wrap { max-width: 720px; width: 100%; }
+  h1 {
+    font-size: 2.25rem;
+    margin: 0 0 0.5rem;
+    letter-spacing: -0.02em;
+  }
+  .tagline {
+    color: var(--muted);
+    font-size: 1.05rem;
+    margin: 0 0 3rem;
+    line-height: 1.5;
+  }
+  .app-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .app-info h2 {
+    margin: 0 0 0.35rem;
+    font-size: 1.15rem;
+  }
+  .app-info p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.45;
+  }
+  .app-links {
+    display: flex;
+    gap: 0.6rem;
+    flex-shrink: 0;
+  }
+  .btn {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 7px;
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #0a0d12;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  footer {
+    margin-top: 3rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>tinkerVault</h1>
+    <p class="tagline">
+      Small, offline-first, single-file web apps. No install, no account,
+      no server. Double-click and go, or try them right here.
+    </p>
+
+    <div class="app-card">
+      <div class="app-info">
+        <h2>Markdown Viewer</h2>
+        <p>Drag-and-drop .md viewer, syntax highlighting, tabs, search, TOC, dark/light theme, standalone export.</p>
+      </div>
+      <div class="app-links">
+        <a class="btn btn-primary" href="apps/markdown-viewer/">Open</a>
+        <a class="btn btn-secondary" href="apps/markdown-viewer/">Source</a>
+      </div>
+    </div>
+
+    <div class="app-card">
+      <div class="app-info">
+        <h2>Whiteboard <span style="color:var(--muted); font-weight:400; font-size:0.85em;">v2.4.0</span></h2>
+        <p>Five boards: Paint, Sticky Notes, Annotate, Wordpad, Kanban, with smart paste routing, quota tracking, board history, and command-palette search.</p>
+      </div>
+      <div class="app-links">
+        <a class="btn btn-primary" href="apps/whiteboard/whiteboard.html">Open</a>
+        <a class="btn btn-secondary" href="apps/whiteboard/">Source</a>
+      </div>
+    </div>
+
+    <footer>
+      Every app here runs fully offline. Nothing on this page calls out
+      to any server after it loads. <a href="https://github.com/webshoppe/tinkerVault">View on GitHub</a>
+    </footer>
+  </div>
+</body>
+</html>
