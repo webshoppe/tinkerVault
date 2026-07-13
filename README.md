@@ -44,7 +44,7 @@ Apps do not share dependencies or a build system by design.
 
 ## License
 
-TBD, left for the maintainer to finalize.
+MIT, see [LICENSE](LICENSE). Fork it, tinker with it, ship your own version, no attribution required.
 
 ## Repo
 

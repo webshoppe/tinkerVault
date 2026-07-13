@@ -89,6 +89,16 @@
     text-align: center;
   }
   footer a { color: var(--accent); }
+  .versions {
+    margin: 0.5rem 0 0;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  .versions a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .versions a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -106,7 +116,7 @@
       </div>
       <div class="app-links">
         <a class="btn btn-primary" href="apps/markdown-viewer/">Open</a>
-        <a class="btn btn-secondary" href="apps/markdown-viewer/">Source</a>
+        <a class="btn btn-secondary" href="https://github.com/webshoppe/tinkerVault/tree/main/apps/markdown-viewer" target="_blank" rel="noopener">Source</a>
       </div>
     </div>
 
@@ -114,16 +124,18 @@
       <div class="app-info">
         <h2>Whiteboard <span style="color:var(--muted); font-weight:400; font-size:0.85em;">v2.4.0</span></h2>
         <p>Five boards: Paint, Sticky Notes, Annotate, Wordpad, Kanban, with smart paste routing, quota tracking, board history, and command-palette search.</p>
+        <p class="versions">Also available: <a href="apps/whiteboard/releases/v1.0.0/whiteboard.html">v1.0.0</a> (original four-board release)</p>
       </div>
       <div class="app-links">
         <a class="btn btn-primary" href="apps/whiteboard/whiteboard.html">Open</a>
-        <a class="btn btn-secondary" href="apps/whiteboard/">Source</a>
+        <a class="btn btn-secondary" href="https://github.com/webshoppe/tinkerVault/tree/main/apps/whiteboard" target="_blank" rel="noopener">Source</a>
       </div>
     </div>
 
     <footer>
       Every app here runs fully offline. Nothing on this page calls out
-      to any server after it loads. <a href="https://github.com/webshoppe/tinkerVault">View on GitHub</a>
+      to any server after it loads. MIT licensed, fork it and make it
+      yours. <a href="https://github.com/webshoppe/tinkerVault">View on GitHub</a>
     </footer>
   </div>
 </body>
