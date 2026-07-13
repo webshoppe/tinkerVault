@@ -5,10 +5,11 @@
 Everything in this repo was written, tested, and packaged on ordinary
 consumer hardware, not rented cloud compute or a CI cluster:
 
-- **Primary build machine:** Intel i7-7700 (2017-era desktop CPU),
-  RTX 3060 12GB, 32GB DDR4, Windows 10 IoT Enterprise LTSC
-- **A second machine** in the same local fleet, used for one app's
-  build tooling (WSL2 / Ubuntu 24.04) — see below
+- **Build machine:** Intel i7-7700 (2017-era desktop CPU), RTX 3060
+  12GB, 32GB DDR4, Windows 10 IoT Enterprise LTSC
+- **Same physical rig, isolated build tooling:** one app's build
+  environment runs in its own WSL2 distro (Ubuntu 24.04) on that same
+  machine, not a separate box, see below
 
 No dev cloud, no rented GPU, no build farm. If you're running similar
 homelab-tier hardware, this is what it's actually capable of.
@@ -25,9 +26,10 @@ produce:
   or account-level auth of any kind. All git operations for the
   actual repo were done by a human, separately.
 - **Whiteboard** was built through an agentic coding CLI running
-  inside WSL2 on the same local network, driven interactively one
-  feature tier at a time, with independent manual verification in a
-  real browser after every automated test pass.
+  inside an isolated WSL2 distro (Ubuntu 24.04) on that same rig,
+  driven interactively one feature tier at a time, with independent
+  manual verification in a real browser after every automated test
+  pass.
 
 ## Verification discipline
 
