@@ -157,6 +157,7 @@ whiteboard.html      ← the app (this is all you need to run it), always the cu
 icon.svg             ← icon for docs / shortcuts
 VERSION               ← 2.4.0
 README.md            ← this file
+CHANGELOG.md          ← what changed between versions
 docs/USER_GUIDE.md
 docs/DEV_GUIDE.md
 PROJECT_SUMMARY.md    ← the build story, in two voices, covering v1 and v2
@@ -170,7 +171,7 @@ Everything at the root of this package always tracks the newest release. If you 
 
 ## License
 
-License is intentionally left for the project owner to choose; no LICENSE file is included here.
+MIT, see the repo's [LICENSE](../../LICENSE) file. See also [CHANGELOG.md](CHANGELOG.md) for what changed between versions.
 
 ## More detail
 
