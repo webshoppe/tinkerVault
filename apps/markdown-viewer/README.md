@@ -38,9 +38,9 @@ Everything below works the moment a file is open:
 - **Export**, click ⬇ to save the currently open, formatted document as a single standalone `.html` file you can share or open anywhere.
 - **Remembers your file**, when you reopen the tool, the last file you were reading comes back automatically.
 
-## A note on the license
+## License
 
-No license file is included yet. A `LICENSE` file needs to be added to this folder before this project is published or redistributed. Until then, the default copyright applies and you should not assume you have permission to reuse it.
+MIT, see the repo's [LICENSE](../../LICENSE) file. See also [CHANGELOG.md](CHANGELOG.md) for what changed between versions.
 
 ## Where to get help
 
