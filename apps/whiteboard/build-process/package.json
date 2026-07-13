@@ -1,0 +1,12 @@
+{
+  "name": "whiteboard-app",
+  "private": true,
+  "description": "Runtime is whiteboard.html only. Node deps are for optional verify.mjs.",
+  "type": "module",
+  "scripts": {
+    "verify": "node verify.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.50.0"
+  }
+}

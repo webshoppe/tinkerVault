@@ -1,0 +1,356 @@
+{
+  "when": "2026-07-13T03:48:59.184Z",
+  "version": "2.2.0",
+  "tier": "v2-tier3",
+  "file": "/home/jp/grok-build-projects/whiteboard-app/whiteboard.html",
+  "chrome": "/home/jp/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome",
+  "thresholds": {
+    "PASTE_STICKY_MAX": 280,
+    "PASTE_WORDPAD_MIN": 900
+  },
+  "passed": 68,
+  "failed": 0,
+  "total": 68,
+  "results": [
+    {
+      "ok": true,
+      "name": "App version 2.2.0",
+      "detail": "2.2.0"
+    },
+    {
+      "ok": true,
+      "name": "Smart toast element present",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Sticky max threshold 280",
+      "detail": "280"
+    },
+    {
+      "ok": true,
+      "name": "Wordpad min threshold 900",
+      "detail": "900"
+    },
+    {
+      "ok": true,
+      "name": "Empty text",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Short text → sticky",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "150 chars → sticky (not toast/Wordpad)",
+      "detail": "sticky"
+    },
+    {
+      "ok": true,
+      "name": "400 chars → ambiguous toast",
+      "detail": "ambiguous-text"
+    },
+    {
+      "ok": true,
+      "name": "950 chars → wordpad",
+      "detail": "wordpad"
+    },
+    {
+      "ok": true,
+      "name": "280 chars → sticky",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "281 chars → ambiguous",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "900 chars → wordpad",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "500 chars → ambiguous",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Single URL classified",
+      "detail": "{\"kind\":\"url\",\"href\":\"https://docs.example.com/a/b\",\"domain\":\"docs.example.com\",\"length\":28}"
+    },
+    {
+      "ok": true,
+      "name": "www. URL classified",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "URL with extra text not pure-url",
+      "detail": "sticky"
+    },
+    {
+      "ok": true,
+      "name": "3-col CSV classified tabular",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "2-col CSV is NOT tabular (prose-safe)",
+      "detail": "sticky"
+    },
+    {
+      "ok": true,
+      "name": "Prose with commas is NOT tabular",
+      "detail": "sticky"
+    },
+    {
+      "ok": true,
+      "name": "TSV classified tabular",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Paste 150 classify sticky",
+      "detail": "{\"n\":150,\"classify\":\"sticky\",\"toast\":false,\"toastMsg\":\"\",\"templateId\":\"notepad\",\"name\":\"Sticky notes\"}"
+    },
+    {
+      "ok": true,
+      "name": "Paste 150: no toast",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Paste 150 → notepad sticky board",
+      "detail": "notepad"
+    },
+    {
+      "ok": true,
+      "name": "Paste 400 classify ambiguous",
+      "detail": "{\"n\":400,\"classify\":\"ambiguous-text\",\"toast\":true,\"toastMsg\":\"Paste text (400 chars; sticky if ≤280, Wordpad if ≥900). Sticky note or Wordpad page?\",\"templateId\":\"notepad\",\"name\":\"Sticky notes\"}"
+    },
+    {
+      "ok": true,
+      "name": "Paste 400: toast visible",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Toast reports 400 chars",
+      "detail": "Paste text (400 chars; sticky if ≤280, Wordpad if ≥900). Sticky note or Wordpad page?"
+    },
+    {
+      "ok": true,
+      "name": "Paste 400 does not silently open Wordpad",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Paste 950 classify wordpad",
+      "detail": "{\"n\":950,\"classify\":\"wordpad\",\"toast\":false,\"toastMsg\":\"\",\"templateId\":\"wordpad\",\"name\":\"Pasted text\"}"
+    },
+    {
+      "ok": true,
+      "name": "Paste 950: no toast",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Paste 950 → wordpad board",
+      "detail": "wordpad"
+    },
+    {
+      "ok": true,
+      "name": "Toast dismissed when a new short paste routes",
+      "detail": "{\"toast\":false,\"templateId\":\"notepad\"}"
+    },
+    {
+      "ok": true,
+      "name": "Follow-up 150-char paste → sticky",
+      "detail": "notepad"
+    },
+    {
+      "ok": true,
+      "name": "Short paste opens/uses notepad",
+      "detail": "notepad"
+    },
+    {
+      "ok": true,
+      "name": "Sticky note with TODO created",
+      "detail": "[{\"id\":\"nmrioni3f_nowav\",\"x\":43,\"y\":73,\"w\":200,\"h\":180,\"text\":\"TODO buy milk #errands\",\"color\":\"red\",\"colorAuto\":true,\"lockedTriggerKey\":null,\"lastAutoTrigger\":\"urgent:TODO\",\"linkCard\":false,\"linkHref\":null}]"
+    },
+    {
+      "ok": true,
+      "name": "Sticky text preserved",
+      "detail": "TODO buy milk #errands"
+    },
+    {
+      "ok": true,
+      "name": "Tier 2 auto-color still applies (TODO→red)",
+      "detail": "red"
+    },
+    {
+      "ok": true,
+      "name": "Long text → wordpad board",
+      "detail": "wordpad"
+    },
+    {
+      "ok": true,
+      "name": "Wordpad has HTML content",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "URL creates notepad board",
+      "detail": "notepad"
+    },
+    {
+      "ok": true,
+      "name": "Note marked as link card",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Link shows domain only",
+      "detail": "example.com"
+    },
+    {
+      "ok": true,
+      "name": "Link href preserved",
+      "detail": "https://example.com/docs/guide"
+    },
+    {
+      "ok": true,
+      "name": "New board created for image",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Image → Annotate (snip)",
+      "detail": "snip"
+    },
+    {
+      "ok": true,
+      "name": "Annotate has imageDataUrl",
+      "detail": "6198"
+    },
+    {
+      "ok": true,
+      "name": "Annotate board opened",
+      "detail": "Paste test image/snip"
+    },
+    {
+      "ok": true,
+      "name": "prepareAnnotateImage uses Tier 1 downscale",
+      "detail": "8808902 → 6613486"
+    },
+    {
+      "ok": true,
+      "name": "Ambiguous text shows toast",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Toast mentions sticky/wordpad",
+      "detail": "Paste text (449 chars; sticky if ≤280, Wordpad if ≥900). Sticky note or Wordpad page?"
+    },
+    {
+      "ok": true,
+      "name": "Sticky action button",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Wordpad action button",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Toast dismissed after accept",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Accepted sticky → notepad",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Tabular text shows toast",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Toast mentions table",
+      "detail": "Looks like a table (3×3). Add as a table in a new Wordpad page?"
+    },
+    {
+      "ok": true,
+      "name": "Table → wordpad",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Wordpad HTML contains table",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "JSON drop shows import toast",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Toast wording is clear",
+      "detail": "Import JSON as board(s)? “boards.json” will be imported into your library using the normal board import. This cannot be undone easily."
+    },
+    {
+      "ok": true,
+      "name": "JSON not imported until accept",
+      "detail": "7"
+    },
+    {
+      "ok": true,
+      "name": "JSON import added board(s)",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Imported board name present",
+      "detail": "[\"Paint board\",\"Sticky notes\",\"Pasted text\",\"example.com\",\"Paste test image\",\"Sticky notes\",\"Pasted table\",\"Imported From Toast\"]"
+    },
+    {
+      "ok": true,
+      "name": "Two Annotate boards from two images",
+      "detail": "1 → 3"
+    },
+    {
+      "ok": true,
+      "name": "Last multi-image board is open",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": ".txt → wordpad",
+      "detail": "wordpad"
+    },
+    {
+      "ok": true,
+      "name": "Wordpad contains file text",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Can focus sticky textarea for native paste",
+      "detail": "{\"ok\":true,\"inField\":true,\"active\":true}"
+    },
+    {
+      "ok": true,
+      "name": "No page console errors",
+      "detail": ""
+    }
+  ]
+}

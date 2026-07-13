@@ -1,0 +1,585 @@
+{
+  "when": "2026-07-13T05:16:21.722Z",
+  "version": "2.4.0",
+  "tier": "v2-packaging",
+  "identity": {
+    "workingSha": "dfa582315f03b183e56945dfafdfd9c9a44a506ac8f3b315a5b6b973da7f7e93",
+    "releaseSha": "dfa582315f03b183e56945dfafdfd9c9a44a506ac8f3b315a5b6b973da7f7e93",
+    "identical": true,
+    "workingBytes": 281995,
+    "releaseBytes": 281995
+  },
+  "engines": {
+    "chromium": {
+      "working-copy": {
+        "status": "passed",
+        "passed": 26,
+        "failed": 0,
+        "total": 26,
+        "results": [
+          {
+            "ok": true,
+            "name": "title",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "VERSION constant 2.4.0",
+            "detail": "2.4.0"
+          },
+          {
+            "ok": true,
+            "name": "version badge",
+            "detail": "v2.4.0"
+          },
+          {
+            "ok": true,
+            "name": "inline SVG favicon",
+            "detail": "data:image/svg+xml,%3Csvg xmlns="
+          },
+          {
+            "ok": true,
+            "name": "five templates incl. kanban",
+            "detail": "kanban,notepad,paint,snip,wordpad"
+          },
+          {
+            "ok": true,
+            "name": "global search present",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "command palette button",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "quota meter",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "time machine menu item",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "trash menu item",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions Kanban",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions time machine",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions trash",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions search",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions palette",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions smart paste",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "paint canvas visible",
+            "detail": "{\"x\":12,\"y\":209.75,\"width\":1256,\"height\":638.25}"
+          },
+          {
+            "ok": true,
+            "name": "paint stroke leaves ink",
+            "detail": "pixels=699"
+          },
+          {
+            "ok": true,
+            "name": "Kanban drag gesture executed",
+            "detail": "{\"ok\":true,\"inDoing\":true,\"todoCount\":0,\"doingCount\":1,\"engine\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.0.0 Safari/537.36\"}"
+          },
+          {
+            "ok": true,
+            "name": "Kanban pointer drag moved card to In Progress",
+            "detail": "{\"ok\":true,\"inDoing\":true,\"todoCount\":0,\"doingCount\":1,\"engine\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.0.0 Safari/537.36\"}"
+          },
+          {
+            "ok": true,
+            "name": "Time machine opens from board menu",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "Delete moves board to trash",
+            "detail": "{\"trash\":1,\"live\":2}"
+          },
+          {
+            "ok": true,
+            "name": "search input works",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "command palette opens",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "no external network requests",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "no console errors",
+            "detail": ""
+          }
+        ]
+      },
+      "release-copy": {
+        "status": "passed",
+        "passed": 26,
+        "failed": 0,
+        "total": 26,
+        "results": [
+          {
+            "ok": true,
+            "name": "title",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "VERSION constant 2.4.0",
+            "detail": "2.4.0"
+          },
+          {
+            "ok": true,
+            "name": "version badge",
+            "detail": "v2.4.0"
+          },
+          {
+            "ok": true,
+            "name": "inline SVG favicon",
+            "detail": "data:image/svg+xml,%3Csvg xmlns="
+          },
+          {
+            "ok": true,
+            "name": "five templates incl. kanban",
+            "detail": "kanban,notepad,paint,snip,wordpad"
+          },
+          {
+            "ok": true,
+            "name": "global search present",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "command palette button",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "quota meter",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "time machine menu item",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "trash menu item",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions Kanban",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions time machine",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions trash",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions search",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions palette",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions smart paste",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "paint canvas visible",
+            "detail": "{\"x\":12,\"y\":209.75,\"width\":1256,\"height\":638.25}"
+          },
+          {
+            "ok": true,
+            "name": "paint stroke leaves ink",
+            "detail": "pixels=699"
+          },
+          {
+            "ok": true,
+            "name": "Kanban drag gesture executed",
+            "detail": "{\"ok\":true,\"inDoing\":true,\"todoCount\":0,\"doingCount\":1,\"engine\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.0.0 Safari/537.36\"}"
+          },
+          {
+            "ok": true,
+            "name": "Kanban pointer drag moved card to In Progress",
+            "detail": "{\"ok\":true,\"inDoing\":true,\"todoCount\":0,\"doingCount\":1,\"engine\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.0.0 Safari/537.36\"}"
+          },
+          {
+            "ok": true,
+            "name": "Time machine opens from board menu",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "Delete moves board to trash",
+            "detail": "{\"trash\":1,\"live\":2}"
+          },
+          {
+            "ok": true,
+            "name": "search input works",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "command palette opens",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "no external network requests",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "no console errors",
+            "detail": ""
+          }
+        ]
+      }
+    },
+    "firefox": {
+      "working-copy": {
+        "status": "passed",
+        "passed": 26,
+        "failed": 0,
+        "total": 26,
+        "results": [
+          {
+            "ok": true,
+            "name": "title",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "VERSION constant 2.4.0",
+            "detail": "2.4.0"
+          },
+          {
+            "ok": true,
+            "name": "version badge",
+            "detail": "v2.4.0"
+          },
+          {
+            "ok": true,
+            "name": "inline SVG favicon",
+            "detail": "data:image/svg+xml,%3Csvg xmlns="
+          },
+          {
+            "ok": true,
+            "name": "five templates incl. kanban",
+            "detail": "kanban,notepad,paint,snip,wordpad"
+          },
+          {
+            "ok": true,
+            "name": "global search present",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "command palette button",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "quota meter",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "time machine menu item",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "trash menu item",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions Kanban",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions time machine",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions trash",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions search",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions palette",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions smart paste",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "paint canvas visible",
+            "detail": "{\"x\":12,\"y\":209.8000030517578,\"width\":1256,\"height\":638.1999969482422}"
+          },
+          {
+            "ok": true,
+            "name": "paint stroke leaves ink",
+            "detail": "pixels=700"
+          },
+          {
+            "ok": true,
+            "name": "Kanban drag gesture executed",
+            "detail": "{\"ok\":true,\"inDoing\":true,\"todoCount\":0,\"doingCount\":1,\"engine\":\"Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0\"}"
+          },
+          {
+            "ok": true,
+            "name": "Kanban pointer drag moved card to In Progress",
+            "detail": "{\"ok\":true,\"inDoing\":true,\"todoCount\":0,\"doingCount\":1,\"engine\":\"Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0\"}"
+          },
+          {
+            "ok": true,
+            "name": "Time machine opens from board menu",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "Delete moves board to trash",
+            "detail": "{\"trash\":1,\"live\":2}"
+          },
+          {
+            "ok": true,
+            "name": "search input works",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "command palette opens",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "no external network requests",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "no console errors",
+            "detail": ""
+          }
+        ]
+      },
+      "release-copy": {
+        "status": "passed",
+        "passed": 26,
+        "failed": 0,
+        "total": 26,
+        "results": [
+          {
+            "ok": true,
+            "name": "title",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "VERSION constant 2.4.0",
+            "detail": "2.4.0"
+          },
+          {
+            "ok": true,
+            "name": "version badge",
+            "detail": "v2.4.0"
+          },
+          {
+            "ok": true,
+            "name": "inline SVG favicon",
+            "detail": "data:image/svg+xml,%3Csvg xmlns="
+          },
+          {
+            "ok": true,
+            "name": "five templates incl. kanban",
+            "detail": "kanban,notepad,paint,snip,wordpad"
+          },
+          {
+            "ok": true,
+            "name": "global search present",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "command palette button",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "quota meter",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "time machine menu item",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "trash menu item",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions Kanban",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions time machine",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions trash",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions search",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions palette",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "About mentions smart paste",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "paint canvas visible",
+            "detail": "{\"x\":12,\"y\":209.8000030517578,\"width\":1256,\"height\":638.1999969482422}"
+          },
+          {
+            "ok": true,
+            "name": "paint stroke leaves ink",
+            "detail": "pixels=700"
+          },
+          {
+            "ok": true,
+            "name": "Kanban drag gesture executed",
+            "detail": "{\"ok\":true,\"inDoing\":true,\"todoCount\":0,\"doingCount\":1,\"engine\":\"Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0\"}"
+          },
+          {
+            "ok": true,
+            "name": "Kanban pointer drag moved card to In Progress",
+            "detail": "{\"ok\":true,\"inDoing\":true,\"todoCount\":0,\"doingCount\":1,\"engine\":\"Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0\"}"
+          },
+          {
+            "ok": true,
+            "name": "Time machine opens from board menu",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "Delete moves board to trash",
+            "detail": "{\"trash\":1,\"live\":2}"
+          },
+          {
+            "ok": true,
+            "name": "search input works",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "command palette opens",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "no external network requests",
+            "detail": ""
+          },
+          {
+            "ok": true,
+            "name": "no console errors",
+            "detail": ""
+          }
+        ]
+      }
+    },
+    "webkit": {
+      "working-copy": {
+        "status": "skipped",
+        "reason": "browserType.launch: Target page, context or browser has been closed\nBrowser logs:\n\n<launching> /home/jp/.cache/ms-playwright/webkit-2311/pw_run.sh --inspector-pipe --headless --no-startup-window\n<launched> pid=12868\n[pid=12868][err] /home/jp/.cache/ms-playwright/webkit-2311/minibrowser-wpe/bin/MiniBrowser: error while loading shared libraries: libbase.so.0: cannot open shared object file: No such file or directory\nCall log:\n  - <launching> /home/jp/.cache/ms-playwright/webkit-2311/pw_run.sh --in"
+      },
+      "release-copy": {
+        "status": "skipped",
+        "reason": "browserType.launch: Target page, context or browser has been closed\nBrowser logs:\n\n<launching> /home/jp/.cache/ms-playwright/webkit-2311/pw_run.sh --inspector-pipe --headless --no-startup-window\n<launched> pid=12877\n[pid=12877][err] /home/jp/.cache/ms-playwright/webkit-2311/minibrowser-wpe/bin/MiniBrowser: error while loading shared libraries: libbase.so.0: cannot open shared object file: No such file or directory\nCall log:\n  - <launching> /home/jp/.cache/ms-playwright/webkit-2311/pw_run.sh --in"
+      }
+    }
+  },
+  "summary": {
+    "passed": 104,
+    "failed": 0,
+    "skipped": 2
+  }
+}

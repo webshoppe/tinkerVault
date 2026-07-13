@@ -1,0 +1,500 @@
+{
+  "tier": 3,
+  "at": "2026-07-11T14:38:38.552Z",
+  "engines": [
+    {
+      "target": "working-copy",
+      "engine": "chromium",
+      "label": "Chromium/Chrome",
+      "status": "pass",
+      "failed": 0,
+      "total": 13,
+      "capture": {
+        "api": true,
+        "isSecureContext": true,
+        "protocol": "file:",
+        "buttonPresent": true,
+        "buttonDisabled": false
+      },
+      "results": [
+        {
+          "ok": true,
+          "name": "title",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "name": "VERSION constant",
+          "detail": "1.0.0"
+        },
+        {
+          "ok": true,
+          "name": "version badge",
+          "detail": "v1.0.0"
+        },
+        {
+          "ok": true,
+          "name": "inline SVG favicon",
+          "detail": "data:image/svg+xml,%3Csvg xmlns='http://"
+        },
+        {
+          "ok": true,
+          "name": "four templates",
+          "detail": "notepad,paint,snip,wordpad"
+        },
+        {
+          "ok": true,
+          "name": "paint canvas",
+          "detail": "{\"x\":12,\"y\":103.375,\"width\":1176,\"height\":684.625}"
+        },
+        {
+          "ok": true,
+          "name": "paint stroke",
+          "detail": "pixels=642"
+        },
+        {
+          "ok": true,
+          "name": "annotate mounted",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "name": "getDisplayMedia probe",
+          "detail": "{\"api\":true,\"isSecureContext\":true,\"protocol\":\"file:\",\"buttonPresent\":true,\"buttonDisabled\":false}"
+        },
+        {
+          "ok": true,
+          "name": "about shows version",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "name": "multiple boards",
+          "detail": "count=2"
+        },
+        {
+          "ok": true,
+          "name": "no external requests after reload",
+          "detail": "none"
+        },
+        {
+          "ok": true,
+          "name": "no console errors",
+          "detail": "none"
+        }
+      ]
+    },
+    {
+      "target": "working-copy",
+      "engine": "firefox",
+      "label": "Firefox",
+      "status": "pass",
+      "failed": 0,
+      "total": 13,
+      "capture": {
+        "api": true,
+        "isSecureContext": true,
+        "protocol": "file:",
+        "buttonPresent": true,
+        "buttonDisabled": false
+      },
+      "results": [
+        {
+          "ok": true,
+          "name": "title",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "name": "VERSION constant",
+          "detail": "1.0.0"
+        },
+        {
+          "ok": true,
+          "name": "version badge",
+          "detail": "v1.0.0"
+        },
+        {
+          "ok": true,
+          "name": "inline SVG favicon",
+          "detail": "data:image/svg+xml,%3Csvg xmlns='http://"
+        },
+        {
+          "ok": true,
+          "name": "four templates",
+          "detail": "notepad,paint,snip,wordpad"
+        },
+        {
+          "ok": true,
+          "name": "paint canvas",
+          "detail": "{\"x\":12,\"y\":103.4000015258789,\"width\":1176,\"height\":684.5999984741211}"
+        },
+        {
+          "ok": true,
+          "name": "paint stroke",
+          "detail": "pixels=652"
+        },
+        {
+          "ok": true,
+          "name": "annotate mounted",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "name": "getDisplayMedia probe",
+          "detail": "{\"api\":true,\"isSecureContext\":true,\"protocol\":\"file:\",\"buttonPresent\":true,\"buttonDisabled\":false}"
+        },
+        {
+          "ok": true,
+          "name": "about shows version",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "name": "multiple boards",
+          "detail": "count=2"
+        },
+        {
+          "ok": true,
+          "name": "no external requests after reload",
+          "detail": "none"
+        },
+        {
+          "ok": true,
+          "name": "no console errors",
+          "detail": "none"
+        }
+      ]
+    },
+    {
+      "target": "working-copy",
+      "engine": "webkit",
+      "label": "WebKit",
+      "status": "pass",
+      "failed": 0,
+      "total": 13,
+      "capture": {
+        "api": false,
+        "isSecureContext": true,
+        "protocol": "file:",
+        "buttonPresent": true,
+        "buttonDisabled": true
+      },
+      "results": [
+        {
+          "ok": true,
+          "name": "title",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "name": "VERSION constant",
+          "detail": "1.0.0"
+        },
+        {
+          "ok": true,
+          "name": "version badge",
+          "detail": "v1.0.0"
+        },
+        {
+          "ok": true,
+          "name": "inline SVG favicon",
+          "detail": "data:image/svg+xml,%3Csvg xmlns='http://"
+        },
+        {
+          "ok": true,
+          "name": "four templates",
+          "detail": "notepad,paint,snip,wordpad"
+        },
+        {
+          "ok": true,
+          "name": "paint canvas",
+          "detail": "{\"x\":12,\"y\":103.375,\"width\":1176,\"height\":684.625}"
+        },
+        {
+          "ok": true,
+          "name": "paint stroke",
+          "detail": "pixels=654"
+        },
+        {
+          "ok": true,
+          "name": "annotate mounted",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "name": "getDisplayMedia probe",
+          "detail": "{\"api\":false,\"isSecureContext\":true,\"protocol\":\"file:\",\"buttonPresent\":true,\"buttonDisabled\":true}"
+        },
+        {
+          "ok": true,
+          "name": "about shows version",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "name": "multiple boards",
+          "detail": "count=2"
+        },
+        {
+          "ok": true,
+          "name": "no external requests after reload",
+          "detail": "none"
+        },
+        {
+          "ok": true,
+          "name": "no console errors",
+          "detail": "none"
+        }
+      ]
+    },
+    {
+      "target": "release-copy",
+      "engine": "chromium",
+      "label": "Chromium/Chrome",
+      "status": "pass",
+      "failed": 0,
+      "total": 13,
+      "capture": {
+        "api": true,
+        "isSecureContext": true,
+        "protocol": "file:",
+        "buttonPresent": true,
+        "buttonDisabled": false
+      },
+      "results": [
+        {
+          "ok": true,
+          "name": "title",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "name": "VERSION constant",
+          "detail": "1.0.0"
+        },
+        {
+          "ok": true,
+          "name": "version badge",
+          "detail": "v1.0.0"
+        },
+        {
+          "ok": true,
+          "name": "inline SVG favicon",
+          "detail": "data:image/svg+xml,%3Csvg xmlns='http://"
+        },
+        {
+          "ok": true,
+          "name": "four templates",
+          "detail": "notepad,paint,snip,wordpad"
+        },
+        {
+          "ok": true,
+          "name": "paint canvas",
+          "detail": "{\"x\":12,\"y\":103.375,\"width\":1176,\"height\":684.625}"
+        },
+        {
+          "ok": true,
+          "name": "paint stroke",
+          "detail": "pixels=642"
+        },
+        {
+          "ok": true,
+          "name": "annotate mounted",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "name": "getDisplayMedia probe",
+          "detail": "{\"api\":true,\"isSecureContext\":true,\"protocol\":\"file:\",\"buttonPresent\":true,\"buttonDisabled\":false}"
+        },
+        {
+          "ok": true,
+          "name": "about shows version",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "name": "multiple boards",
+          "detail": "count=2"
+        },
+        {
+          "ok": true,
+          "name": "no external requests after reload",
+          "detail": "none"
+        },
+        {
+          "ok": true,
+          "name": "no console errors",
+          "detail": "none"
+        }
+      ]
+    },
+    {
+      "target": "release-copy",
+      "engine": "firefox",
+      "label": "Firefox",
+      "status": "pass",
+      "failed": 0,
+      "total": 13,
+      "capture": {
+        "api": true,
+        "isSecureContext": true,
+        "protocol": "file:",
+        "buttonPresent": true,
+        "buttonDisabled": false
+      },
+      "results": [
+        {
+          "ok": true,
+          "name": "title",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "name": "VERSION constant",
+          "detail": "1.0.0"
+        },
+        {
+          "ok": true,
+          "name": "version badge",
+          "detail": "v1.0.0"
+        },
+        {
+          "ok": true,
+          "name": "inline SVG favicon",
+          "detail": "data:image/svg+xml,%3Csvg xmlns='http://"
+        },
+        {
+          "ok": true,
+          "name": "four templates",
+          "detail": "notepad,paint,snip,wordpad"
+        },
+        {
+          "ok": true,
+          "name": "paint canvas",
+          "detail": "{\"x\":12,\"y\":103.4000015258789,\"width\":1176,\"height\":684.5999984741211}"
+        },
+        {
+          "ok": true,
+          "name": "paint stroke",
+          "detail": "pixels=652"
+        },
+        {
+          "ok": true,
+          "name": "annotate mounted",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "name": "getDisplayMedia probe",
+          "detail": "{\"api\":true,\"isSecureContext\":true,\"protocol\":\"file:\",\"buttonPresent\":true,\"buttonDisabled\":false}"
+        },
+        {
+          "ok": true,
+          "name": "about shows version",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "name": "multiple boards",
+          "detail": "count=2"
+        },
+        {
+          "ok": true,
+          "name": "no external requests after reload",
+          "detail": "none"
+        },
+        {
+          "ok": true,
+          "name": "no console errors",
+          "detail": "none"
+        }
+      ]
+    },
+    {
+      "target": "release-copy",
+      "engine": "webkit",
+      "label": "WebKit",
+      "status": "pass",
+      "failed": 0,
+      "total": 13,
+      "capture": {
+        "api": false,
+        "isSecureContext": true,
+        "protocol": "file:",
+        "buttonPresent": true,
+        "buttonDisabled": true
+      },
+      "results": [
+        {
+          "ok": true,
+          "name": "title",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "name": "VERSION constant",
+          "detail": "1.0.0"
+        },
+        {
+          "ok": true,
+          "name": "version badge",
+          "detail": "v1.0.0"
+        },
+        {
+          "ok": true,
+          "name": "inline SVG favicon",
+          "detail": "data:image/svg+xml,%3Csvg xmlns='http://"
+        },
+        {
+          "ok": true,
+          "name": "four templates",
+          "detail": "notepad,paint,snip,wordpad"
+        },
+        {
+          "ok": true,
+          "name": "paint canvas",
+          "detail": "{\"x\":12,\"y\":103.375,\"width\":1176,\"height\":684.625}"
+        },
+        {
+          "ok": true,
+          "name": "paint stroke",
+          "detail": "pixels=654"
+        },
+        {
+          "ok": true,
+          "name": "annotate mounted",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "name": "getDisplayMedia probe",
+          "detail": "{\"api\":false,\"isSecureContext\":true,\"protocol\":\"file:\",\"buttonPresent\":true,\"buttonDisabled\":true}"
+        },
+        {
+          "ok": true,
+          "name": "about shows version",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "name": "multiple boards",
+          "detail": "count=2"
+        },
+        {
+          "ok": true,
+          "name": "no external requests after reload",
+          "detail": "none"
+        },
+        {
+          "ok": true,
+          "name": "no console errors",
+          "detail": "none"
+        }
+      ]
+    }
+  ],
+  "targets": [],
+  "workingMatchesRelease": true
+}

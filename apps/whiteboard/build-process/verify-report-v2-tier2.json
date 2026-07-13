@@ -1,0 +1,297 @@
+{
+  "when": "2026-07-13T02:42:26.094Z",
+  "version": "2.1.0",
+  "tier": "v2-tier2",
+  "file": "/home/jp/grok-build-projects/whiteboard-app/whiteboard.html",
+  "chrome": "/home/jp/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome",
+  "passed": 57,
+  "failed": 0,
+  "total": 57,
+  "results": [
+    {
+      "ok": true,
+      "name": "App version 2.1.0",
+      "detail": "2.1.0"
+    },
+    {
+      "ok": true,
+      "name": "Settings button present",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Command palette button present",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Tag bar present",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Content search still present",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Ctrl+K focuses content search",
+      "detail": "global-search"
+    },
+    {
+      "ok": true,
+      "name": "Ctrl+/ opens command palette",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Command palette input present",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Escape closes command palette",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Detects checklist lines",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Plain text is not checklist",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Toggle * line to [x]",
+      "detail": "[x] buy milk"
+    },
+    {
+      "ok": true,
+      "name": "Toggle [ ] to [x]",
+      "detail": "[x] task"
+    },
+    {
+      "ok": true,
+      "name": "Toggle [x] to [ ]",
+      "detail": "[ ] done"
+    },
+    {
+      "ok": true,
+      "name": "Parse bullet line",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Checklist view rendered for checklist note",
+      "detail": "{\"ok\":true,\"hasChecklist\":true,\"boxCount\":3,\"checkedCount\":1,\"firstChecked\":false}"
+    },
+    {
+      "ok": true,
+      "name": "At least 3 checkboxes rendered",
+      "detail": "3"
+    },
+    {
+      "ok": true,
+      "name": "Checked line has strikethrough class",
+      "detail": "1"
+    },
+    {
+      "ok": true,
+      "name": "Checkbox toggle updates underlying text",
+      "detail": "[x] unchecked item\n[ ] box item\nplain line\n[x] already done"
+    },
+    {
+      "ok": true,
+      "name": "TODO → red",
+      "detail": "{\"color\":\"red\",\"triggerKey\":\"urgent:TODO\"}"
+    },
+    {
+      "ok": true,
+      "name": "URGENT → red",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "ASAP → red",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "DONE → green",
+      "detail": "{\"color\":\"green\",\"triggerKey\":\"done:DONE\"}"
+    },
+    {
+      "ok": true,
+      "name": "✓ → green",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Multiple ?? → yellow",
+      "detail": "{\"color\":\"yellow\",\"triggerKey\":\"questions:4\"}"
+    },
+    {
+      "ok": true,
+      "name": "Plain statement has no auto color",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Single note after clear+add",
+      "detail": "1"
+    },
+    {
+      "ok": true,
+      "name": "TODO note gets red background",
+      "detail": "{\"classes\":\"sticky-note color-red auto-colored\",\"isRed\":true,\"auto\":true,\"count\":1,\"stateColor\":\"red\",\"stateText\":\"TODO finish report #work\"}"
+    },
+    {
+      "ok": true,
+      "name": "Manual color sets colorAuto false",
+      "detail": "{\"colorAuto\":false,\"color\":\"yellow\",\"locked\":\"urgent:TODO\"}"
+    },
+    {
+      "ok": true,
+      "name": "Trigger change re-enables auto-color to green",
+      "detail": "{\"color\":\"green\",\"colorAuto\":true,\"text\":\"DONE unlocked\"}"
+    },
+    {
+      "ok": true,
+      "name": "Settings panel opens",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Settings save updated keyword map with CRITICAL",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Custom keyword CRITICAL → red",
+      "detail": "{\"color\":\"red\",\"triggerKey\":\"urgent:CRITICAL\"}"
+    },
+    {
+      "ok": true,
+      "name": "Tag bar visible when tags present",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Collects #alpha and #beta",
+      "detail": "[\"alpha\",\"beta\"]"
+    },
+    {
+      "ok": true,
+      "name": "Chip for #alpha",
+      "detail": "[\"#alpha\",\"#beta\"]"
+    },
+    {
+      "ok": true,
+      "name": "Active filter is beta",
+      "detail": "beta"
+    },
+    {
+      "ok": true,
+      "name": "Two notes dimmed when filtering #beta",
+      "detail": "{\"filter\":\"beta\",\"dimmed\":2,\"total\":3,\"activeChip\":true}"
+    },
+    {
+      "ok": true,
+      "name": "Active chip styled",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Click again clears filter",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "No notes dimmed after clear",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Wordpad tags extracted",
+      "detail": "[\"q3\",\"roadmap\"]"
+    },
+    {
+      "ok": true,
+      "name": "Annotate textLayers tags extracted",
+      "detail": "[\"screenshot\"]"
+    },
+    {
+      "ok": true,
+      "name": "Palette opens from button",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Palette lists many commands",
+      "detail": "22"
+    },
+    {
+      "ok": true,
+      "name": "Lists boards",
+      "detail": "[\"Paint board\",\"Tier2 Notes\",\"WP Tags\",\"Snip Tags\"]"
+    },
+    {
+      "ok": true,
+      "name": "Lists toggle theme",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Lists export all",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Lists content search action",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Lists settings",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Fuzzy filter finds theme",
+      "detail": "[\"Toggle light/dark theme\"]"
+    },
+    {
+      "ok": true,
+      "name": "Palette action toggles theme",
+      "detail": "light → dark"
+    },
+    {
+      "ok": true,
+      "name": "Palette closes after run",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Palette switches board by name",
+      "detail": "Tier2 Notes"
+    },
+    {
+      "ok": true,
+      "name": "Ctrl+K does not open command palette",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Ctrl+K still focuses content search",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "No page console errors",
+      "detail": ""
+    }
+  ]
+}

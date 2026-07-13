@@ -1,0 +1,207 @@
+{
+  "when": "2026-07-13T04:32:45.420Z",
+  "version": "2.3.0",
+  "tier": "v2-tier4",
+  "file": "/home/jp/grok-build-projects/whiteboard-app/whiteboard.html",
+  "chrome": "/home/jp/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome",
+  "passed": 39,
+  "failed": 0,
+  "total": 39,
+  "results": [
+    {
+      "ok": true,
+      "name": "App version 2.3.0",
+      "detail": "2.3.0"
+    },
+    {
+      "ok": true,
+      "name": "All 5 templates registered",
+      "detail": "kanban,notepad,paint,snip,wordpad"
+    },
+    {
+      "ok": true,
+      "name": "Opened Kanban board",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Default 3 columns",
+      "detail": "To Do|In Progress|Done"
+    },
+    {
+      "ok": true,
+      "name": "UI shows 3 columns",
+      "detail": "3"
+    },
+    {
+      "ok": true,
+      "name": "WIP counts start at 0",
+      "detail": "0,0,0"
+    },
+    {
+      "ok": true,
+      "name": "TODO card auto-color red",
+      "detail": "red"
+    },
+    {
+      "ok": true,
+      "name": "DONE card auto-color green",
+      "detail": "green"
+    },
+    {
+      "ok": true,
+      "name": "Pointer drag gesture ran",
+      "detail": "{\"ok\":true,\"counts\":[1,1,0],\"badges\":[\"1\",\"1\",\"0\"],\"doingHasC0\":true,\"todoHasC0\":false,\"ghostLeft\":true}"
+    },
+    {
+      "ok": true,
+      "name": "Real pointer drag moved card To Do → In Progress",
+      "detail": "{\"ok\":true,\"counts\":[1,1,0],\"badges\":[\"1\",\"1\",\"0\"],\"doingHasC0\":true,\"todoHasC0\":false,\"ghostLeft\":true}"
+    },
+    {
+      "ok": true,
+      "name": "Column card counts after drag",
+      "detail": "[1,1,0]"
+    },
+    {
+      "ok": true,
+      "name": "WIP badges update after drag",
+      "detail": "1,1,0"
+    },
+    {
+      "ok": true,
+      "name": "Drag ghost cleaned up",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "In-column/cross reorder gesture ran",
+      "detail": "{\"ok\":true,\"doingOrder\":[\"card_mriq7v87_58k8mh\",\"card_mriq7v84_bmhxc7\"],\"todoCount\":0}"
+    },
+    {
+      "ok": true,
+      "name": "Second card dragged into In Progress",
+      "detail": "{\"ok\":true,\"doingOrder\":[\"card_mriq7v87_58k8mh\",\"card_mriq7v84_bmhxc7\"],\"todoCount\":0}"
+    },
+    {
+      "ok": true,
+      "name": "Reloaded Kanban board",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Cards still in In Progress after reload",
+      "detail": "[0,2,0]"
+    },
+    {
+      "ok": true,
+      "name": "Persisted card text in In Progress",
+      "detail": "[\"DONE polish docs\",\"TODO build feature #sprint\"]"
+    },
+    {
+      "ok": true,
+      "name": "Global search finds kanban card text",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Tag bar extracts #sprint from cards",
+      "detail": "[\"sprint\"]"
+    },
+    {
+      "ok": true,
+      "name": "Add column works",
+      "detail": "To Do|In Progress|Done|Blocked"
+    },
+    {
+      "ok": true,
+      "name": "UI has 4 columns",
+      "detail": "4"
+    },
+    {
+      "ok": true,
+      "name": "Card added to existing Kanban",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Original sticky unchanged",
+      "detail": "URGENT call client #sales"
+    },
+    {
+      "ok": true,
+      "name": "Kanban has sticky text as card",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Can create Kanban then add card",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Opens Kanban after send",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "New board created",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Opened new Kanban",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Name indicates Kanban",
+      "detail": "Retro notes Kanban"
+    },
+    {
+      "ok": true,
+      "name": "All stickies became cards in first column",
+      "detail": "3"
+    },
+    {
+      "ok": true,
+      "name": "Original notepad board untouched",
+      "detail": "3"
+    },
+    {
+      "ok": true,
+      "name": "Card text preserved",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Command palette: New Kanban board",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Command palette: promote stickies when on Notepad",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Sticky has Send to Kanban control",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Notepad toolbar has promote-to-Kanban button",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Quota shows percentage",
+      "detail": "1%"
+    },
+    {
+      "ok": true,
+      "name": "No page console errors",
+      "detail": ""
+    }
+  ]
+}

@@ -1,0 +1,212 @@
+{
+  "failed": 0,
+  "results": [
+    {
+      "ok": true,
+      "name": "Page title",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "App shell present",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Board select present",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "New board button",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Theme toggle present",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "File menu present",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "All 4 templates registered",
+      "detail": "notepad,paint,snip,wordpad"
+    },
+    {
+      "ok": true,
+      "name": "Default single board",
+      "detail": "count=1"
+    },
+    {
+      "ok": true,
+      "name": "Default board is paint",
+      "detail": "{\"templateId\":\"paint\",\"name\":\"Paint board\"}"
+    },
+    {
+      "ok": true,
+      "name": "Theme toggles",
+      "detail": "light -> dark"
+    },
+    {
+      "ok": true,
+      "name": "Paint canvas sized",
+      "detail": "{\"x\":12,\"y\":103.375,\"width\":1256,\"height\":744.625}"
+    },
+    {
+      "ok": true,
+      "name": "Paint stroke drawn",
+      "detail": "pixels=1148"
+    },
+    {
+      "ok": true,
+      "name": "Paint undo reduces ink",
+      "detail": "2304 -> 1148"
+    },
+    {
+      "ok": true,
+      "name": "Created notepad board",
+      "detail": "{\"templateId\":\"notepad\",\"name\":\"My Notes\"}"
+    },
+    {
+      "ok": true,
+      "name": "Two boards exist",
+      "detail": "count=2"
+    },
+    {
+      "ok": true,
+      "name": "Wordpad bold formatting applied",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Wordpad exportText has content",
+      "detail": "Hello Wordpad"
+    },
+    {
+      "ok": true,
+      "name": "Wordpad typed EXTRA before undo",
+      "detail": "Hello Wordpad EXTRA"
+    },
+    {
+      "ok": true,
+      "name": "Wordpad undo reverts EXTRA",
+      "detail": "\"Hello Wordpad EXTRA\" -> \"Hello Wordpad\""
+    },
+    {
+      "ok": true,
+      "name": "Annotate stage mounted",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Annotate empty hint visible",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Annotate board holds image data",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Annotate exportPng works",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Capture screen button present",
+      "detail": "{\"apiAvailable\":true,\"buttonPresent\":true,\"buttonDisabled\":false,\"isFile\":true}"
+    },
+    {
+      "ok": true,
+      "name": "Capture API probe recorded",
+      "detail": "{\"apiAvailable\":true,\"buttonPresent\":true,\"buttonDisabled\":false,\"isFile\":true}"
+    },
+    {
+      "ok": true,
+      "name": "Board renamed",
+      "detail": "Annotate Renamed"
+    },
+    {
+      "ok": true,
+      "name": "Duplicate increased board count",
+      "detail": "count=5"
+    },
+    {
+      "ok": true,
+      "name": "Duplicate name has copy",
+      "detail": "Annotate Renamed copy"
+    },
+    {
+      "ok": true,
+      "name": "My Notes board listed",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Notepad state preserved across board switch",
+      "detail": "Tier 2 note"
+    },
+    {
+      "ok": true,
+      "name": "Export payload has boards",
+      "detail": "5"
+    },
+    {
+      "ok": true,
+      "name": "Import adds a board",
+      "detail": "5 -> 6"
+    },
+    {
+      "ok": true,
+      "name": "Opened imported board",
+      "detail": "Imported Paint"
+    },
+    {
+      "ok": true,
+      "name": "localStorage is v2",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Persisted multiple boards",
+      "detail": "6"
+    },
+    {
+      "ok": true,
+      "name": "Boards survive reload",
+      "detail": "count=6"
+    },
+    {
+      "ok": true,
+      "name": "Note text survives full reload",
+      "detail": "Tier 2 note"
+    },
+    {
+      "ok": true,
+      "name": "Delete removes one board",
+      "detail": "6 -> 5"
+    },
+    {
+      "ok": true,
+      "name": "No external network requests",
+      "detail": "none"
+    },
+    {
+      "ok": true,
+      "name": "No console errors",
+      "detail": "none"
+    },
+    {
+      "ok": true,
+      "name": "Screenshots written",
+      "detail": "C:\\Users\\USER\\AppData\\Local\\Temp\\whiteboard-verify\\verify-screenshots"
+    }
+  ],
+  "at": "2026-07-11T12:47:31.907Z",
+  "tier": 2
+}

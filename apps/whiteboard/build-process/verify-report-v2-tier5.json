@@ -1,0 +1,152 @@
+{
+  "when": "2026-07-13T04:48:06.896Z",
+  "version": "2.4.0",
+  "tier": "v2-tier5",
+  "file": "/home/jp/grok-build-projects/whiteboard-app/whiteboard.html",
+  "chrome": "/home/jp/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome",
+  "passed": 27,
+  "failed": 0,
+  "total": 27,
+  "results": [
+    {
+      "ok": true,
+      "name": "App version 2.4.0",
+      "detail": "2.4.0"
+    },
+    {
+      "ok": true,
+      "name": "Board menu has Time machine",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "File menu has Trash",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "History max 10",
+      "detail": "10"
+    },
+    {
+      "ok": true,
+      "name": "Snapshot min interval 2 minutes",
+      "detail": "120000"
+    },
+    {
+      "ok": true,
+      "name": "Trash max age 7 days",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Rolling window caps at 10 snapshots",
+      "detail": "10"
+    },
+    {
+      "ok": true,
+      "name": "Oldest snapshots dropped when over 10",
+      "detail": "v1 still present? false"
+    },
+    {
+      "ok": true,
+      "name": "History picker opened via menu",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "History list shows snapshots",
+      "detail": "2"
+    },
+    {
+      "ok": true,
+      "name": "Found snapshot A restore button",
+      "detail": "{\"ok\":true}"
+    },
+    {
+      "ok": true,
+      "name": "DOM restore applied snapshot A",
+      "detail": "Restore target A"
+    },
+    {
+      "ok": true,
+      "name": "Pre-restore snapshot retained for undo",
+      "detail": "ui-b,ui-a"
+    },
+    {
+      "ok": true,
+      "name": "Auto snapshot skipped when unchanged / within interval",
+      "detail": "{\"before\":2,\"after\":2,\"r1\":false,\"r2\":false}"
+    },
+    {
+      "ok": true,
+      "name": "Board removed from live list",
+      "detail": "History Notes"
+    },
+    {
+      "ok": true,
+      "name": "Board is in trash",
+      "detail": "[\"History Notes\"]"
+    },
+    {
+      "ok": true,
+      "name": "Trash list shows items",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Board restored to live list",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Restored board opened",
+      "detail": "History Notes"
+    },
+    {
+      "ok": true,
+      "name": "Purge drops 8-day-old trash",
+      "detail": "Recent trash"
+    },
+    {
+      "ok": true,
+      "name": "History for purged trash board removed",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "trimHistoryForQuota drops oldest snapshots under pressure",
+      "detail": "10 → 1"
+    },
+    {
+      "ok": true,
+      "name": "Trim does not purge trash first",
+      "detail": "1"
+    },
+    {
+      "ok": true,
+      "name": "Quota meter still shows %",
+      "detail": "3%"
+    },
+    {
+      "ok": true,
+      "name": "Palette has Time machine",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "Palette has Trash",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "No page console errors",
+      "detail": ""
+    }
+  ],
+  "notes": {
+    "historyRestoreTest": "DOM: board menu → Time machine → Restore button → confirm modal OK",
+    "trashRestoreTest": "DOM: board menu → Move to trash → confirm → File → Trash → Restore button",
+    "snapshotCadence": "Auto: content fingerprint changed AND ≥2 min since last; force for picker/restore/trash"
+  }
+}
