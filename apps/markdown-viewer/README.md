@@ -1,5 +1,7 @@
 # Markdown Viewer
 
+![Release](https://img.shields.io/github/v/release/webshoppe/tinkerVault?filter=markdown-viewer*&label=release)
+
 <img src="icon.svg" width="80" alt="Markdown Viewer logo icon">
 
 A tiny, free, offline tool that turns Markdown files (`.md`) into a clean, readable page in your web browser, no installation, no internet, no account, no sign-up. You open a file and it just shows up, formatted, with tables, checklists, code, and more.
