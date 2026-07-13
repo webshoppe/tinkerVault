@@ -3,7 +3,7 @@
 **Date:** 2026-07-12  
 **Version:** 2.4.0  
 **Working artifact:** `whiteboard.html`  
-**Release package:** `release/`  
+**Release package:** `releases/v2.4.0/`  
 **Verification:** `verify-v2-package.mjs` → `verify-report-v2-package.json`
 
 This pass is **packaging only** (no new product features). Mirrors the role of v1’s Tier 3 packaging after the full five-tier v2 feature arc.
@@ -14,11 +14,11 @@ This pass is **packaging only** (no new product features). Mirrors the role of v
 
 | Item | Status |
 |------|--------|
-| `release/whiteboard.html` = working copy (byte-identical) | **Done** |
-| `release/VERSION` = 2.4.0 | **Done** |
-| `release/icon.svg` refreshed from root | **Done** |
-| `release/README.md` describes v2 feature set | **Done** |
-| `release/docs/USER_GUIDE.md` full v2 guide | **Done** |
+| `releases/v2.4.0/whiteboard.html` = working copy (byte-identical) | **Done** |
+| `releases/v2.4.0/VERSION` = 2.4.0 | **Done** |
+| `releases/v2.4.0/icon.svg` refreshed from root | **Done** |
+| `releases/v2.4.0/README.md` describes v2 feature set | **Done** |
+| `releases/v2.4.0/docs/USER_GUIDE.md` full v2 guide | **Done** |
 | Root `README.md` / `docs/USER_GUIDE.md` updated | **Done** |
 | `RELEASE_NOTES.md` covers full v2 arc + two bugs | **Done** |
 | In-app badge + About (**?**) reflect v2.4.0 & real features | **Done** |
@@ -53,7 +53,7 @@ This pass is **packaging only** (no new product features). Mirrors the role of v
 Playwright WebKit is installed under `~/.cache/ms-playwright/webkit-2311`, but launch fails without system packages (e.g. gstreamer/gtk/jxl/backtrace-related libs). This environment cannot `sudo apt-get install`.  
 
 **Not a product code defect identified in Chromium/Firefox.**  
-**Mitigation:** Flag clearly; re-run `node verify-v2-package.mjs` on macOS or a full Linux desktop with `npx playwright install-deps` for WebKit green. Manual Safari open of `release/whiteboard.html` recommended before wide iOS/macOS distribution.
+**Mitigation:** Flag clearly; re-run `node verify-v2-package.mjs` on macOS or a full Linux desktop with `npx playwright install-deps` for WebKit green. Manual Safari open of `releases/v2.4.0/whiteboard.html` recommended before wide iOS/macOS distribution.
 
 No other hard blockers.
 
@@ -70,7 +70,7 @@ No other hard blockers.
 ## How to ship
 
 ```
-release/
+releases/v2.4.0/
   whiteboard.html
   icon.svg
   VERSION          # 2.4.0

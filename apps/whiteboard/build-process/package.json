@@ -4,7 +4,14 @@
   "description": "Runtime is whiteboard.html only. Node deps are for optional verify.mjs.",
   "type": "module",
   "scripts": {
-    "verify": "node verify.mjs"
+    "verify": "node verify.mjs",
+    "verify:tier3": "node verify-tier3.mjs",
+    "verify:v2-tier1": "node verify-v2-tier1.mjs",
+    "verify:v2-tier2": "node verify-v2-tier2.mjs",
+    "verify:v2-tier3": "node verify-v2-tier3.mjs",
+    "verify:v2-tier4": "node verify-v2-tier4.mjs",
+    "verify:v2-tier5": "node verify-v2-tier5.mjs",
+    "verify:v2-package": "node verify-v2-package.mjs"
   },
   "devDependencies": {
     "playwright-core": "^1.50.0"
