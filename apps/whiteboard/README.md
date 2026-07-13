@@ -1,5 +1,7 @@
 # Whiteboard
 
+![Release](https://img.shields.io/github/v/release/webshoppe/tinkerVault?filter=whiteboard*&label=release)
+
 <img src="icon.svg" width="48" height="48" alt="Whiteboard icon" />
 
 **Version 2.4.0**, a portable, offline whiteboard in a single HTML file.
@@ -12,7 +14,27 @@ Open it by **double-clicking `whiteboard.html`**. There is nothing to install, n
 
 Whiteboard is a clipboard-style board app with five board types, multiple named boards, cross-board search, a command palette, content-aware paste/drop routing, undo-grade history (per-board snapshots plus a soft-delete trash), and import/export for backups. It runs fully offline from a double-clicked file, no network calls at runtime, ever.
 
+## Getting Started
+
+**1. Download it**
+
+Go to the [Whiteboard release page](https://github.com/webshoppe/tinkerVault/releases/tag/whiteboard-v2.4.0) and click `whiteboard-v2.4.0.zip` under Assets. It downloads like any other file.
+
+**2. Unzip it**
+
+Find the downloaded file (usually in your Downloads folder), right-click it, choose **Extract All**, and pick somewhere easy to find, like your Desktop. You'll end up with a folder called `Whiteboard` containing `whiteboard.html` and a couple of other files.
+
+**3. Use it**
+
+Double-click `whiteboard.html`. It opens in your browser and you're ready to go. Everything you draw or write saves automatically, right there on your computer, nothing is uploaded anywhere.
+
+**Want it to open in its own window instead of a browser tab?**
+
+See [Making an App Feel Like a Real Desktop App](../../DESKTOP-LAUNCHER.md). When it asks for the app's folder and filename, use: `Desktop/Whiteboard/whiteboard.html` (or wherever you actually put it).
+
 ## How to open
+
+If you'd rather work from the source in this repo instead of a downloaded zip:
 
 1. Find `whiteboard.html` on your computer.
 2. Double-click it (or drag it into Chrome, Edge, Brave, or Firefox).
@@ -121,8 +143,12 @@ On a Mac, use `Cmd` instead of `Ctrl`.
 ## Theme & help
 
 - **◐**, light / dark theme
-- **?** — About panel (version and short help)
+- **?**, About panel (version and short help)
 - Version also shows as **v2.4.0** in the toolbar
+
+## Privacy-focused browsers
+
+Using Mullvad Browser, Tor Browser, or Firefox with strict tracking protection? You may see a prompt asking to allow "HTML5 canvas image data," that's expected, not a bug. See [docs/USER_GUIDE.md](docs/USER_GUIDE.md#a-note-for-privacy-focused-browsers) for what it means and a known display quirk on some of those browsers.
 
 ## Files in this package
 

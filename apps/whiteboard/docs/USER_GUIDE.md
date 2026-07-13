@@ -295,6 +295,12 @@ Use `Cmd` on macOS.
 - Content stays in the browser unless you export a file.
 - Double-click / `file://` is the intended way to run the app.
 
+### A note for privacy-focused browsers
+
+If you're using Mullvad Browser, Tor Browser, or Firefox with strict tracking protection, you may see a prompt asking to allow "HTML5 canvas image data." That's your browser's anti-fingerprinting protection, not a problem with the app: Whiteboard reads canvas data only to save your own drawings, and never sends anything anywhere, this app makes zero network calls of any kind. Allow is safe to click.
+
+**Known issue:** part of the board area may briefly show a colored striped placeholder pattern (green in Firefox, red in Mullvad Browser) instead of rendering normally while this permission is unresolved. In Firefox it clears up once the prompt appears; in Mullvad Browser specifically, it has been observed to persist even after the prompt is dismissed. The two are likely separate bugs rather than the same root cause. Being investigated.
+
 ---
 
 ## Troubleshooting
