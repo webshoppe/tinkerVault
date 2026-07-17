@@ -5,6 +5,7 @@ The build-out history of the **repo itself**, day by day: structure, conventions
 ## 2026-07-17, Markdown Viewer v1.1.0 folded in, repo hygiene pass
 
 - Removed two stray duplicate files (`apps/README.md`, `apps/CHANGELOG.md`) left over from an earlier commit, sitting one directory too high, not referenced from anywhere.
+- Added a real `apps/README.md` afterward, a short overview linking to both app folders, filling the gap the stray-duplicate cleanup left behind.
 - Archived the outgoing Markdown Viewer v1.0.0 build as a `releases/v1.0.0/` snapshot before replacing it, matching the pattern already established for Whiteboard.
 - Shipped Markdown Viewer v1.1.0: rebuilt its source pipeline into `src/template.html` + `src/app.js` + `src/vendor/*`, retiring the old flat `src/` layout (`github-dark.css`, `github-light.css`, and root-level `marked.min.js`/`highlight.min.js` all moved into `src/vendor/`).
 - Caught and fixed a handful of docs (`README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `PROJECT_SUMMARY.md`) that had been silently truncated mid-write during the v1.1.0 commit, and restored `index.html` after it drifted to Linux line endings during a build-pipeline check.
