@@ -22,4 +22,13 @@ After any change, rebuild with `python src/assemble.py` and open the result in a
 - **Export visual styling**: the **Export** feature produces a structurally valid, self-contained standalone HTML file (embeds the highlighted code and rendered content, closes properly), but the exported file's visual styling was not re-confirmed end-to-end in a second browser session as part of the v1.1.0 pass. When working on or near export, open an actual exported `.html` in a browser to confirm it renders as expected.
 - **Cross-session `localStorage` persistence** (open tabs/edits restored after reload) was confirmed by a human smoke test rather than the automated build harness, which blocks storage access. Re-verify by opening two same-named files, reloading, and confirming both tabs return.
 
-## Code hygien
+## Code hygiene expectations
+
+- Keep vendored libraries as-is (don't minify or transform `marked.min.js` / `highlight.min.js` beyond how they ship).
+- Don't introduce `eval()` or dynamic code execution of your own.
+- Prefer readable, unobfuscated app code in `app.js`.
+- Bump the `VERSION` file when you ship a change; never hand-edit the footer string in `template.html` or the built file.
+
+## License
+
+MIT, see the repo's [LICENSE](../../LICENSE) file.

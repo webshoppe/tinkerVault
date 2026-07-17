@@ -15,4 +15,21 @@ All notable changes to this app are listed here, newest first. See [PROJECT_SUMM
 - Copy MD: copy the active tab's raw Markdown source in one click
 - Per-tab scroll position memory, restored when you switch back to a tab
 - Keyboard shortcuts: open, close active tab, reopen last closed tab, switch between tabs
-- Browser tab t
+- Browser tab title now shows the active document's filename
+- Drag-and-drop skips non-text files (images, PDFs, etc.) with an on-screen notice instead of rendering them as garbage
+- Rebuilt, human-editable build pipeline: `src/template.html` + `src/app.js` + `src/vendor/*`, assembled by `src/assemble.py`
+
+## v1.0.0, 2026-07-11
+
+### Added
+- Initial release: GitHub-Flavored Markdown rendering (headings with anchors, bold/italic/strikethrough/inline code, tables, task lists, nested lists, blockquotes) with real syntax-highlighted code blocks
+- Copy button on every code block
+- Dark/light theme toggle
+- Collapsible table of contents generated from headings
+- In-document search with highlight and jump-between-matches
+- Multiple files open at once, each in its own tab
+- Raw/rendered view toggle
+- Export to a standalone, self-contained `.html` file
+- Remembers the last file opened, plus theme and TOC state, via `localStorage`
+- Internal `.md`/`.markdown`/`.txt` link interception: clicking a same-origin relative link while viewing a file inside the running app loads it via the tab system, or shows a graceful on-page message instead of failing silently if `fetch()` is blocked under `file://` (browser-dependent; the links themselves work normally everywhere else, GitHub, editors, any standard renderer)
+- Inline SVG favicon and a `VERSION` file read by the build script and stamped into the footer

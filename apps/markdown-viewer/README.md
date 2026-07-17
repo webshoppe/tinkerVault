@@ -52,4 +52,53 @@ You can copy the file to a USB drive or another machine and open it the same way
 - **Search.** Highlights matches inside the document, jump between them.
 - **Dark / light theme.**
 - **Raw / rendered toggle**, see the original Markdown text or the formatted page.
-- **Edit mode.** Edit the text directly in the rendered v
+- **Edit mode.** Edit the text directly in the rendered view; the formatted view updates when you switch back out of edit mode.
+- **Copy.** Copy the raw Markdown for the whole document (Copy MD), or just a single code block.
+- **Save.** Download your edits as a new file (a browser can't overwrite the original file it opened).
+- **Export.** Save the current document as one standalone `.html` file you can share or open anywhere.
+- **Keyboard shortcuts** for opening, closing, reopening the last closed tab, and switching between tabs.
+- **Remembers where you left off.** Reopening the tool brings back your open tabs and scroll position.
+
+Full walkthrough, in the order a first-time user meets each feature: [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md).
+
+## What's new in v1.1.0
+
+Fixed a real bug: two files with the same name from different folders used to collide into a single tab, each open file now gets its own tab, always. Added multi-file open, edit mode, Save, Copy raw Markdown, keyboard shortcuts, and per-tab scroll memory. Full history: [`CHANGELOG.md`](CHANGELOG.md).
+
+## Older versions
+
+Every past release stays available as a complete, independently runnable snapshot. Nothing is ever deleted.
+
+- [`releases/v1.0.0/`](releases/v1.0.0/index.html), the original single-file-at-a-time release
+
+## Files in this package
+
+```
+index.html          the app (this is all you need to run it), always the current version, 1.1.0
+icon.svg
+VERSION
+README.md            this file
+CHANGELOG.md          what changed between versions
+CONTRIBUTING.md
+docs/
+  USER_GUIDE.md        every feature, in first-time-user order
+src/
+  DEV_GUIDE.md          how to rebuild from source
+  (template.html, app.js, assemble.py, and vendored libraries under vendor/)
+test/
+  test.md               sample file exercising Tier 1 rendering features
+  fixtures/              same-name-collision test fixtures (projectA/, projectB/)
+PROJECT_SUMMARY.md      the build story
+releases/
+  v1.0.0/                 the original release, preserved as-is
+```
+
+Everything at the root of this package always tracks the newest release. If you want an older version, see [releases/](releases/).
+
+## License
+
+MIT, see the repo's [LICENSE](../../LICENSE) file. See also [CHANGELOG.md](CHANGELOG.md) for what changed between versions.
+
+## More detail
+
+See [docs/USER_GUIDE.md](docs/USER_GUIDE.md) for a fuller walkthrough of every feature, or [src/DEV_GUIDE.md](src/DEV_GUIDE.md) if you want to read or modify the source. For the story of how this got built, see [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md).
