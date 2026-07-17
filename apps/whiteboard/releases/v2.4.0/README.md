@@ -96,4 +96,4 @@ License is intentionally left for the project owner to choose; no LICENSE file i
 
 ## More detail
 
-See [docs/USER_GUIDE.md](docs/USER_GUIDE.md) for a full walkthrough. See [RELEASE_NOTES.md](RELEASE_NOTES.md) for the v2.4.0 release arc.
+See [docs/USER_GUIDE.md](docs/USER_GUIDE.md) for a full walkthrough. See the main app's [CHANGELOG.md](https://github.com/webshoppe/tinkerVault/blob/main/apps/whiteboard/CHANGELOG.md) for the v2.4.0 release arc.

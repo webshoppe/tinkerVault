@@ -6,6 +6,8 @@
 
 A tiny, free, offline tool that turns Markdown files (`.md`) into a clean, readable page in your web browser, no installation, no internet, no account, no sign-up. You open a file and it just shows up, formatted, with tables, checklists, code, and more.
 
+This is an archived, self-contained snapshot of **v1.0.0**, preserved exactly as it shipped. For the current version, see the [main app folder](https://github.com/webshoppe/tinkerVault/tree/main/apps/markdown-viewer) on GitHub.
+
 ## What you need
 
 - A computer (Windows, macOS, or Linux).
@@ -38,13 +40,26 @@ Everything below works the moment a file is open:
 - **Export**, click ⬇ to save the currently open, formatted document as a single standalone `.html` file you can share or open anywhere.
 - **Remembers your file**, when you reopen the tool, the last file you were reading comes back automatically.
 
+## Files in this snapshot
+
+```
+index.html          the app, exactly as it shipped for v1.0.0
+icon.svg
+VERSION
+README.md            this file
+docs/
+  USER_GUIDE.md        every feature, in first-time-user order
+```
+
+Intentionally minimal, just what's needed to run this exact version standalone, no external dependencies. For source code, the changelog, and newer versions, see the [main app folder](https://github.com/webshoppe/tinkerVault/tree/main/apps/markdown-viewer).
+
 ## License
 
-MIT, see the repo's [LICENSE](../../LICENSE) file. See also [CHANGELOG.md](CHANGELOG.md) for what changed between versions.
+MIT, see the repo's [LICENSE](https://github.com/webshoppe/tinkerVault/blob/main/LICENSE) file. See this version's entry in [CHANGELOG.md](https://github.com/webshoppe/tinkerVault/blob/main/apps/markdown-viewer/CHANGELOG.md) for what changed since.
 
 ## Where to get help
 
-- For a full walkthrough of every feature, see [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md).
-- For technical details and how the tool is built, see [`src/DEV_GUIDE.md`](src/DEV_GUIDE.md).
-- To try it out, use the sample file at [`test/test.md`](test/test.md).
-- The full build story, methods, decisions, and dead ends, is in [`PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md) in this folder.
+- For a full walkthrough of every feature, see [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) (included in this folder).
+- For technical details and how the tool is built, see the current [`src/DEV_GUIDE.md`](https://github.com/webshoppe/tinkerVault/blob/main/apps/markdown-viewer/src/DEV_GUIDE.md) in the main app folder.
+- To try it out, use the sample file at [`test/test.md`](https://github.com/webshoppe/tinkerVault/blob/main/apps/markdown-viewer/test/test.md).
+- The full build story, methods, decisions, and dead ends, is in [`PROJECT_SUMMARY.md`](https://github.com/webshoppe/tinkerVault/blob/main/apps/markdown-viewer/PROJECT_SUMMARY.md) in the main app folder.
