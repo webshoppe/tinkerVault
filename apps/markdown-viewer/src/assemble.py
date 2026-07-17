@@ -1,42 +1,49 @@
 #!/usr/bin/env python3
-"""Assemble a single self-contained index.html from template.html + local libs."""
-import re, pathlib
+"""Assemble a single self-contained index.html from template.html + src files.
 
-base = pathlib.Path(__file__).parent
-tpl = (base / "template.html").read_text(encoding="utf-8")
+Run:  python src/assemble.py
+Outputs: index.html (in the project root, sibling of src/)
 
-marked = (base / "marked.min.js").read_text(encoding="utf-8")
-hljs = (base / "highlight.min.js").read_text(encoding="utf-8")
-light = (base / "github-light.css").read_text(encoding="utf-8")
-dark = (base / "github-dark.css").read_text(encoding="utf-8")
+The shipped index.html is one file with no build step so it opens straight from
+file://. This script exists only so future edits can happen on small, readable
+source files (src/template.html, src/app.js, src/vendor/*) instead of a ~190 KB
+single file. It performs a lossless round-trip of the current build.
+"""
+import pathlib
 
-# Version stamp (single source of truth: VERSION file at the release root)
-version = "0.0.0"
-try:
-    version = (base.parent / "VERSION").read_text(encoding="utf-8").strip() or version
-except FileNotFoundError:
-    pass
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+SRC = ROOT / "src"
+VENDOR = SRC / "vendor"
 
-# Scope dark theme rules under html[data-theme="dark"] so they win by specificity
-dark_scoped = re.sub(r'([^{}]+\{)', r'html[data-theme="dark"] \1', dark)
+template = (SRC / "template.html").read_text(encoding="utf-8")
+style = (VENDOR / "base.css").read_text(encoding="utf-8")
+marked = (VENDOR / "marked.min.js").read_text(encoding="utf-8")
+hljs = (VENDOR / "highlight.min.js").read_text(encoding="utf-8")
+app = (SRC / "app.js").read_text(encoding="utf-8")
 
-# Sanity: ensure libs don't contain a closing script tag that would break the block
-assert "</script" not in marked.lower(), "marked contains </script>"
-assert "</script" not in hljs.lower(), "hljs contains </script>"
+# Sanity: vendored libs must not contain a closing script tag that would
+# prematurely terminate the <script> block in the assembled file.
+assert "</script" not in marked.lower(), "marked.min.js contains </script>"
+assert "</script" not in hljs.lower(), "highlight.min.js contains </script>"
 
-out = tpl
+out = template
+out = out.replace("/*__STYLE__*/", style)
 out = out.replace("/*__MARKED__*/", marked)
 out = out.replace("/*__HLJS__*/", hljs)
-out = out.replace("/*__HLJS_LIGHT__*/", light)
-out = out.replace("/*__HLJS_DARK__*/", dark_scoped)
+out = out.replace("/*__APP__*/", app)
 
-# Expose hljs css sources for the export feature
-out = out.replace("HLJS_LIGHT_SRC", light.replace("`", "\\`"))
-out = out.replace("HLJS_DARK_SRC", dark_scoped.replace("`", "\\`"))
-
-# Stamp version (single source of truth: VERSION file)
+# Version stamp (single source of truth: VERSION file at the project root).
+version = "0.0.0"
+try:
+    version = (ROOT / "VERSION").read_text(encoding="utf-8").strip() or version
+except FileNotFoundError:
+    pass
 out = out.replace("--VERSION--", version)
 
-target = base / "index.html"
+# Guard: every token must have been consumed.
+for tok in ["/*__STYLE__*/", "/*__MARKED__*/", "/*__HLJS__*/", "/*__APP__*/"]:
+    assert tok not in out, f"unreplaced token: {tok}"
+
+target = ROOT / "index.html"
 target.write_text(out, encoding="utf-8")
 print("Wrote", target, len(out), "bytes")

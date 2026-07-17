@@ -66,6 +66,6 @@ Net effect: correct, standard behavior in the majority of real-world reading con
 
 The export feature's visual styling, specifically, was never confirmed end-to-end in a from-scratch second browser session as part of the automated build. If you touch the export logic, open a real exported file in a real browser before trusting it.
 
-## Why this doc exists at all
+## v1.1.0: the tab collision bug, an editing pass, and a rebuilt pipeline
 
-The honest answer: because countless other people decided documenting the "simple," "obvious" stuff, the trials, the wrong turns, the constraints that turned out to be more (or less) real than expected, was worth their time, even when it felt like overkill for something this small. That's a large part of why an agent could help build this at all. This doc is that same bet, paid forward.
+A second build round, run months after the v1.0.0 packaging above, started from a real bug report rather than a feature wishlist: two open files that happened to share a filename (say, two different `README.md` from different project folders) silently collapsed into a single tab, one clobbering the other. Root cause was exactly what it sounds l

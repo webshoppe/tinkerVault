@@ -4,47 +4,52 @@
 
 <img src="icon.svg" width="80" alt="Markdown Viewer logo icon">
 
-A tiny, free, offline tool that turns Markdown files (`.md`) into a clean, readable page in your web browser, no installation, no internet, no account, no sign-up. You open a file and it just shows up, formatted, with tables, checklists, code, and more.
+**Version 1.1.0**, a free, offline Markdown viewer and light editor in a single HTML file.
 
-## What you need
+Open it by **double-clicking `index.html`**. There is nothing to install, no account, and no server. Your files never leave your computer.
 
-- A computer (Windows, macOS, or Linux).
-- A web browser (Chrome, Edge, Firefox, Safari; anything reasonably recent).
-- The `index.html` file from this folder.
+Part of the [tinkerVault](../../) collection of offline-first single-file apps. See the [root README](../../README.md) for what else lives here.
 
-That's it. There is nothing to install.
+---
 
-## How to use it (2 steps)
+## What it is
 
-1. **Open the tool.** Find `index.html` in this folder and double-click it. It opens in your default web browser. (You can also drag `index.html` onto an open browser window.)
-2. **Open a Markdown file.** Once the page is open:
-   - Click the **"Choose a .md file"** text at the top-left, pick a `.md` file from your computer, and it appears formatted instantly; **or**
-   - Drag a `.md` file from your file manager and drop it anywhere on the page.
+Markdown Viewer turns `.md` files into a clean, readable, GitHub-style page: tables, checklists, syntax-highlighted code, nested lists, blockquotes, a table of contents, and in-document search. Open several files at once and switch between them in tabs. Edit the rendered text directly, save your edits as a new file, copy the raw Markdown or a single code block, and export the current document as one portable standalone HTML file you can hand to someone else. It runs fully offline, no network calls at runtime, ever.
 
-That's the whole thing. No setup, no configuration.
+## Getting Started
+
+**1. Download it**
+
+Go to the [Markdown Viewer release page](https://github.com/webshoppe/tinkerVault/releases/tag/markdown-viewer-v1.1.0) and download the zip under Assets. It downloads like any other file.
+
+**2. Unzip it**
+
+Find the downloaded file (usually in your Downloads folder), right-click it, choose **Extract All**, and pick somewhere easy to find, like your Desktop. You'll end up with a folder containing `index.html` and a couple of other files.
+
+**3. Use it**
+
+Double-click `index.html`. It opens in your browser and you're ready to go.
+
+**Want it to open in its own window instead of a browser tab?**
+
+See [Making an App Feel Like a Real Desktop App](../../DESKTOP-LAUNCHER.md). When it asks for the app's folder and filename, use: `Desktop/MarkdownViewer/index.html` (or wherever you actually put it).
+
+## How to open
+
+If you'd rather work from the source in this repo instead of a downloaded zip:
+
+1. Find `index.html` on your computer.
+2. Double-click it (or drag it into Chrome, Edge, Brave, or Firefox).
+3. Click **📂 Open**, or drag a `.md` file (or several at once) straight onto the page.
+
+You can copy the file to a USB drive or another machine and open it the same way.
 
 ## What it can do
 
-Everything below works the moment a file is open:
-
-- **Tables, checklists, and nested bullet lists** render properly.
-- **Code blocks** are shown with real, colored syntax highlighting (not just a plain monospace font).
-- **Copy button**, every code block has a small "Copy" button that copies the code to your clipboard so you can paste it elsewhere.
-- **Dark mode**, click the 🌙 / ☀️ button in the toolbar to switch between light and dark.
-- **Table of contents**, a list of the document's headings appears on the left; click any entry to jump there. Click the ☰ button to hide/show it.
-- **Search**, type in the search box (top-right) to highlight matches inside the document; press Enter to jump between them.
-- **Multiple files**, open several `.md` files at once; each gets its own tab at the top. Click a tab to switch.
-- **Raw view**, click the 📝 button to see the original, unformatted Markdown text, and click again to go back to the formatted view.
-- **Export**, click ⬇ to save the currently open, formatted document as a single standalone `.html` file you can share or open anywhere.
-- **Remembers your file**, when you reopen the tool, the last file you were reading comes back automatically.
-
-## License
-
-MIT, see the repo's [LICENSE](../../LICENSE) file. See also [CHANGELOG.md](CHANGELOG.md) for what changed between versions.
-
-## Where to get help
-
-- For a full walkthrough of every feature, see [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md).
-- For technical details and how the tool is built, see [`src/DEV_GUIDE.md`](src/DEV_GUIDE.md).
-- To try it out, use the sample file at [`test/test.md`](test/test.md).
-- The full build story, methods, decisions, and dead ends, is in [`PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md) in this folder.
+- **Tabs.** Open several files at once, each gets its own tab, even if two files share the same name from different folders (disambiguated as `(2)`, `(3)`...).
+- **Full GitHub-style rendering.** Tables, checklists, nested lists, blockquotes, and code blocks with real syntax highlighting.
+- **Table of contents.** A list of the document's headings on the left, click any entry to jump there.
+- **Search.** Highlights matches inside the document, jump between them.
+- **Dark / light theme.**
+- **Raw / rendered toggle**, see the original Markdown text or the formatted page.
+- **Edit mode.** Edit the text directly in the rendered v

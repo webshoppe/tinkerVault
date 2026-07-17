@@ -79,10 +79,11 @@ body {
   padding: 6px 10px; border: 1px solid var(--border);
   border-bottom: none; border-radius: 6px 6px 0 0;
   background: var(--bg); cursor: pointer; font-size: 13px;
-  max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 260px;
 }
 #tabs .tab.active { background: var(--bg); font-weight: 600; border-color: var(--accent); }
-#tabs .tab .close { color: var(--fg-muted); font-weight: 700; }
+#tabs .tab .name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#tabs .tab .close { flex: 0 0 auto; color: var(--fg-muted); font-weight: 700; }
 #tabs .tab .close:hover { color: #d1242f; }
 
 /* ===================== LAYOUT ===================== */
@@ -174,6 +175,15 @@ body {
 mark.hl { background: var(--mark-bg); color: inherit; border-radius: 2px; padding: 0 1px; }
 mark.hl.current { outline: 2px solid var(--accent); }
 
+/* transient toast notice */
+#toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+  background: var(--bg-elev); color: var(--fg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 16px; font-size: 13px; box-shadow: 0 6px 20px rgba(0,0,0,.18);
+  opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 60; max-width: 80vw;
+}
+#toast.show { opacity: 1; }
+
 /* empty state */
 #drop-hint {
   margin: 12vh auto; max-width: 520px; text-align: center; color: var(--fg-muted);
@@ -232,6 +242,23 @@ html[data-theme="dark"] pre code.hljs{display:block;overflow-x:auto;padding:1em}
   border-radius: 4px;
   font-size: 12px;
 }
+.link-error {
+  margin: 16px 0; padding: 12px 16px; border-radius: 8px;
+  border: 1px solid #d1242f; background: rgba(209,36,47,.08); color: var(--fg);
+  font-size: 14px; line-height: 1.5;
+}
+.link-error code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+
+/* edit mode */
+#edit-area {
+  display: none; width: 100%; min-height: 60vh; resize: vertical;
+  background: var(--bg); color: var(--fg);
+  border: 1px solid var(--border); border-radius: 8px; padding: 16px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px; line-height: 1.6; box-sizing: border-box;
+}
+body.edit-mode #content { display: none; }
+body.edit-mode #edit-area { display: block; }
 
 #app-footer {
   padding: 10px 16px;
@@ -246,11 +273,14 @@ html[data-theme="dark"] pre code.hljs{display:block;overflow-x:auto;padding:1em}
 <body>
 <div id="toolbar">
   <span class="brand">📄 MD Viewer</span>
-  <input type="file" id="fileInput" accept=".md,.markdown,.txt,text/markdown" hidden>
+  <input type="file" id="fileInput" accept=".md,.markdown,.txt,text/markdown" multiple hidden>
   <label class="btn" for="fileInput">📂 Open</label>
   <button id="themeBtn" title="Toggle light/dark">🌙 Dark</button>
   <button id="tocBtn" title="Toggle table of contents">☰ TOC</button>
   <button id="rawBtn" title="Toggle raw/rendered">📝 Raw</button>
+  <button id="editBtn" title="Toggle edit mode (re-renders as you type)">✏️ Edit</button>
+  <button id="copyBtn" title="Copy raw Markdown of the active tab">📋 Copy MD</button>
+  <button id="saveBtn" title="Download the active tab's (edited) Markdown as a NEW .md file">💾 Save</button>
   <button id="exportBtn" title="Export rendered view to standalone HTML">⬇ Export</button>
   <span class="spacer"></span>
   <input type="search" id="searchInput" placeholder="Search in document…" autocomplete="off">
@@ -262,8 +292,10 @@ html[data-theme="dark"] pre code.hljs{display:block;overflow-x:auto;padding:1em}
 <div id="app">
   <nav id="toc"><h2>Contents</h2><ul id="tocList"></ul></nav>
   <main id="content"><div id="drop-hint"><h1>Drop a .md file here</h1><p>or click <strong>Open</strong> to choose a file.</p></div></main>
+  <textarea id="edit-area" spellcheck="false" placeholder="Markdown source for the active tab…"></textarea>
 </div>
-<footer id="app-footer">MD Viewer v1.0.0</footer>
+<footer id="app-footer">MD Viewer v1.1.0</footer>
+<div id="toast" role="status" aria-live="polite"></div>
 
 <script>/**
  * marked v12.0.2 - a markdown parser
@@ -1495,20 +1527,34 @@ const tocList = $('tocList');
 const tabsEl = $('tabs');
 
 const store = {
-  tabs: [],            // {name, text}
+  tabs: [],            // {id, name, text, scroll}  — id is a unique per-load key (NOT the filename)
   active: -1,
   theme: 'light',
   tocOpen: true,
   rawMode: false,
+  editMode: false,
 };
 const LS_KEY = 'mdv_state_v1';
+// Stack of recently-closed tabs for "reopen last closed" (Ctrl/Cmd+Shift+T).
+let lastClosed = [];
+
+// Unique per-load identifier for a tab. File pickers/drag-drop only expose the
+// basename (no folder), so two different files can share a name. We therefore
+// key tabs by an id that is unique for every load, never by filename alone —
+// otherwise two distinct README.md files would collide into one tab.
+let __tabSeq = 0;
+function genTabId() {
+  if (window.crypto && typeof crypto.randomUUID === 'function') return 'tab-' + crypto.randomUUID();
+  __tabSeq += 1;
+  return 'tab-' + Date.now().toString(36) + '-' + __tabSeq + '-' + Math.random().toString(36).slice(2, 8);
+}
 
 /* ===================== PERSISTENCE ===================== */
 function saveState() {
   try {
     const slim = {
-      tabs: store.tabs.map(t => ({ name: t.name, text: t.text })),
-      active: store.active, theme: store.theme, tocOpen: store.tocOpen, rawMode: store.rawMode,
+      tabs: store.tabs.map(t => ({ name: t.name, text: t.text, scroll: t.scroll || 0 })),
+      active: store.active, theme: store.theme, tocOpen: store.tocOpen, rawMode: store.rawMode, editMode: store.editMode,
     };
     localStorage.setItem(LS_KEY, JSON.stringify(slim));
   } catch (e) { /* quota — ignore */ }
@@ -1521,7 +1567,10 @@ function loadState() {
     store.theme = s.theme || 'light';
     store.tocOpen = s.tocOpen !== false;
     store.rawMode = !!s.rawMode;
-    store.tabs = (s.tabs || []).filter(t => t && typeof t.text === 'string');
+    store.editMode = !!s.editMode;
+    store.tabs = (s.tabs || [])
+      .filter(t => t && typeof t.text === 'string')
+      .map(t => Object.assign({ id: genTabId(), scroll: 0 }, t));
     store.active = Math.min(Math.max(s.active || 0, 0), Math.max(store.tabs.length - 1, 0));
     return store.tabs.length > 0;
   } catch (e) { return false; }
@@ -1643,12 +1692,24 @@ async function copyText(text, btn) {
 /* ===================== TABS ===================== */
 function renderTabs() {
   tabsEl.innerHTML = '';
+  // Build a display label per tab. When two tabs share a filename (e.g. two
+  // README.md from different folders), append a numeric suffix so the user can
+  // tell them apart. Labels are derived purely for display; tab identity is the
+  // stable id, never the filename (see openTab).
+  const counts = {};
+  const labels = store.tabs.map(t => {
+    const base = t.name || 'untitled';
+    counts[base] = (counts[base] || 0) + 1;
+    return counts[base] > 1 ? base + ' (' + counts[base] + ')' : base;
+  });
   store.tabs.forEach((t, i) => {
     const el = document.createElement('div');
     el.className = 'tab' + (i === store.active ? ' active' : '');
+    const label = labels[i];
     const name = document.createElement('span');
-    name.textContent = t.name;
-    name.title = t.name;
+    name.className = 'name';
+    name.textContent = label;
+    name.title = t.name || 'untitled';
     el.appendChild(name);
     const close = document.createElement('span');
     close.className = 'close';
@@ -1663,21 +1724,29 @@ function renderTabs() {
 }
 
 function openTab(name, text, activate = true) {
-  const existing = store.tabs.findIndex(t => t.name === name);
-  if (existing >= 0) {
-    store.tabs[existing].text = text;
-    if (activate) store.active = existing;
-  } else {
-    store.tabs.push({ name, text });
-    if (activate) store.active = store.tabs.length - 1;
-  }
+  store.tabs.push({ id: genTabId(), name: name, text: text, scroll: 0 });
+  if (activate) store.active = store.tabs.length - 1;
   renderTabs();
   if (activate) showActive();
   saveState();
   updateFileHint();
 }
 
+function saveScroll() {
+  const t = store.tabs[store.active];
+  if (t) t.scroll = window.scrollY || 0;
+}
+function restoreScroll() {
+  const t = store.tabs[store.active];
+  window.scrollTo(0, t && t.scroll ? t.scroll : 0);
+}
+
 function closeTab(i) {
+  saveScroll();
+  const removed = store.tabs[i];
+  // Remember closed tabs (most-recent first) for "reopen last closed".
+  if (removed) lastClosed.unshift({ name: removed.name, text: removed.text, scroll: removed.scroll || 0 });
+  if (lastClosed.length > 25) lastClosed.length = 25;
   store.tabs.splice(i, 1);
   if (store.active >= store.tabs.length) store.active = store.tabs.length - 1;
   if (store.active < 0) store.active = 0;
@@ -1687,10 +1756,24 @@ function closeTab(i) {
   updateFileHint();
 }
 
+function reopenLastClosed() {
+  if (!lastClosed.length) { toast('No recently closed tabs'); return; }
+  const t = lastClosed.shift();
+  store.tabs.push({ id: genTabId(), name: t.name, text: t.text, scroll: t.scroll || 0 });
+  const idx = store.tabs.length - 1;
+  store.active = idx;
+  renderTabs();
+  showActive();
+  saveState();
+  updateFileHint();
+}
+
 function setActive(i) {
+  saveScroll();
   store.active = i;
   renderTabs();
   showActive();
+  updateTitle();   // refresh the browser tab title to the now-active filename
   saveState();
 }
 
@@ -1701,11 +1784,20 @@ function showActive() {
     tocList.innerHTML = '';
     return;
   }
+  if (store.editMode) {
+    // Edit mode: show the source textarea, keep the (last-rendered) content hidden.
+    const ed = $('edit-area');
+    ed.value = t.text;
+    if (store.rawMode) { showRaw(t.text); } else { renderMarkdown(t.text); }
+    restoreScroll();
+    return;
+  }
   if (store.rawMode) {
     showRaw(t.text);
   } else {
     renderMarkdown(t.text);
   }
+  restoreScroll();
 }
 
 function showRaw(text) {
@@ -1786,6 +1878,27 @@ function searchNext(dir) {
   $('searchHint').textContent = (searchIdx + 1) + '/' + searchMarks.length;
 }
 
+/* ===================== SAVE ACTIVE TAB AS .md ===================== */
+// Client-side only: build a Blob from the active tab's (possibly edited) text
+// and trigger a download via a programmatic anchor click. No server, no File
+// System Access API (unreliable under file://). This always creates a NEW file;
+// it cannot overwrite the original (file:// gives us no write path to it), so we
+// default the download name to the tab's current filename unchanged.
+function saveActiveFile() {
+  const t = store.tabs[store.active];
+  if (!t) { toast('Open a file first.'); return; }
+  const blob = new Blob([t.text], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = t.name || 'document.md';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('Saved a copy: ' + (t.name || 'document.md'));
+}
+
 /* ===================== EXPORT ===================== */
 function exportStandalone() {
   const t = store.tabs[store.active];
@@ -1852,16 +1965,37 @@ ${bodyHtml}
 function escapeHtml(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
 /* ===================== FILE LOADING ===================== */
-function readFile(file) {
+let __toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(__toastTimer);
+  __toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+function readFile(file, activate) {
+  // Only treat text-like files as markdown. Dropping an image, PDF, or other
+  // binary would otherwise render garbage; warn and skip instead.
+  const isTextLike = /\.(md|markdown|txt)$/i.test(file.name) || file.type === 'text/markdown' || (file.type || '').startsWith('text/');
+  if (!isTextLike) {
+    toast('Skipped "' + file.name + '": not a Markdown/text file.');
+    return;
+  }
   const reader = new FileReader();
-  reader.onload = () => openTab(file.name, String(reader.result || ''));
-  reader.onerror = () => alert('Failed to read file: ' + file.name);
+  reader.onload = () => openTab(file.name, String(reader.result || ''), activate !== false);
+  reader.onerror = () => toast('Failed to read file: ' + file.name);
   reader.readAsText(file);
 }
 
 fileInput.addEventListener('change', (e) => {
-  const f = e.target.files && e.target.files[0];
-  if (f) readFile(f);
+  const files = e.target.files;
+  if (files && files.length) {
+    // Activate only the last opened tab; earlier ones open but stay inactive.
+    for (let k = 0; k < files.length; k++) {
+      readFile(files[k], k === files.length - 1);
+    }
+  }
   fileInput.value = '';
 });
 
@@ -1877,9 +2011,10 @@ window.addEventListener('drop', (e) => {
   dragDepth = 0; document.body.style.outline = '';
   const files = e.dataTransfer && e.dataTransfer.files;
   if (files && files.length) {
-    for (const f of files) {
-      if (/\.(md|markdown|txt)$/i.test(f.name) || f.type === 'text/markdown') readFile(f);
-      else readFile(f); // try anyway
+    // Each dropped file opens as its own tab; activate only the last one.
+    // readFile() itself filters out non-text files.
+    for (let k = 0; k < files.length; k++) {
+      readFile(files[k], k === files.length - 1);
     }
   }
 });
@@ -1905,6 +2040,40 @@ $('rawBtn').addEventListener('click', () => {
   saveState();
 });
 
+$('editBtn').addEventListener('click', () => {
+  store.editMode = !store.editMode;
+  document.body.classList.toggle('edit-mode', store.editMode);
+  $('editBtn').textContent = store.editMode ? '👁 View' : '✏️ Edit';
+  if (store.editMode) {
+    const t = store.tabs[store.active];
+    $('edit-area').value = t ? t.text : '';
+    $('edit-area').focus();
+  } else {
+    // Leaving edit mode: re-render the (possibly edited) source.
+    showActive();
+  }
+  saveState();
+});
+
+// Live re-render as the user edits the active tab's Markdown.
+$('edit-area').addEventListener('input', () => {
+  const t = store.tabs[store.active];
+  if (!t) return;
+  t.text = $('edit-area').value;
+  // Re-render a hidden preview? We keep content hidden in edit mode; just store
+  // the text and re-render content so switching back / exporting is current.
+  renderMarkdown(t.text);
+  saveState();
+});
+
+$('copyBtn').addEventListener('click', () => {
+  const t = store.tabs[store.active];
+  if (!t) { toast('Open a file first.'); return; }
+  copyText(t.text, $('copyBtn'));
+});
+
+$('saveBtn').addEventListener('click', saveActiveFile);
+
 $('exportBtn').addEventListener('click', exportStandalone);
 
 let searchTimer = null;
@@ -1920,6 +2089,15 @@ $('searchInput').addEventListener('keydown', (e) => {
 function updateFileHint() {
   const t = store.tabs[store.active];
   $('fileHint').textContent = t ? ('📄 ' + t.name) : '';
+  updateTitle();
+}
+
+// Browser tab title = the active tab's filename, nothing else. document.title
+// updates are fully supported under file://, so a per-tab dynamic title is
+// reliably achievable (no static fallback needed).
+function updateTitle() {
+  const t = store.tabs[store.active];
+  document.title = t ? t.name : 'Markdown Viewer';
 }
 
 /* ===================== INTERNAL .md LINKS ===================== */
@@ -1968,6 +2146,40 @@ document.addEventListener('click', (e) => {
   fetchMd(target.href, a);
 }, true);
 
+/* ===================== KEYBOARD SHORTCUTS ===================== */
+// Ctrl/Cmd+T  open file picker
+// Ctrl/Cmd+W  close active tab
+// Ctrl/Cmd+Shift+T  reopen last closed tab
+// Ctrl/Cmd+Alt+Left/Right  (or Ctrl/Cmd+PageUp/PageDown)  switch tabs
+document.addEventListener('keydown', (e) => {
+  const mod = e.ctrlKey || e.metaKey;
+  if (!mod) return;
+  const k = e.key.toLowerCase();
+  if (k === 't' && !e.shiftKey && !e.altKey) {
+    e.preventDefault(); fileInput.click(); return;
+  }
+  if (k === 'w' && !e.shiftKey && !e.altKey) {
+    e.preventDefault(); if (store.tabs.length) closeTab(store.active); return;
+  }
+  if (k === 't' && e.shiftKey && !e.altKey) {
+    e.preventDefault(); reopenLastClosed(); return;
+  }
+  if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+    e.preventDefault();
+    const delta = e.key === 'ArrowLeft' ? -1 : 1;
+    const n = store.tabs.length;
+    if (n) setActive((store.active + delta + n) % n);
+    return;
+  }
+  if ((k === 'pagedown' || k === 'pageup') && !e.altKey) {
+    e.preventDefault();
+    const delta = k === 'pagedown' ? 1 : -1;
+    const n = store.tabs.length;
+    if (n) setActive((store.active + delta + n) % n);
+    return;
+  }
+});
+
 /* ===================== BOOT ===================== */
 function boot() {
   const had = loadState();
@@ -1975,6 +2187,8 @@ function boot() {
   $('themeBtn').textContent = store.theme === 'light' ? '🌙 Dark' : '☀️ Light';
   $('toc').classList.toggle('collapsed', !store.tocOpen);
   $('rawBtn').textContent = store.rawMode ? '👁 Rendered' : '📝 Raw';
+  $('editBtn').textContent = store.editMode ? '👁 View' : '✏️ Edit';
+  document.body.classList.toggle('edit-mode', store.editMode);
   renderTabs();
   if (had) { showActive(); }
   updateFileHint();
