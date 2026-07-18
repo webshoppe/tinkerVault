@@ -1,6 +1,15 @@
 # Changelog, tinkerVault (monorepo)
 
-The build-out history of the **repo itself**, day by day: structure, conventions, the landing page, licensing, and cross-app housekeeping. Each app also keeps its own feature-level changelog for just that app's version history: [`apps/markdown-viewer/CHANGELOG.md`](apps/markdown-viewer/CHANGELOG.md), [`apps/whiteboard/CHANGELOG.md`](apps/whiteboard/CHANGELOG.md).
+The build-out history of the **repo itself**, day by day: structure, conventions, the landing page, licensing, and cross-app housekeeping. Each app also keeps its own feature-level changelog for just that app's version history: [`apps/hermes-console/CHANGELOG.md`](apps/hermes-console/CHANGELOG.md), [`apps/markdown-viewer/CHANGELOG.md`](apps/markdown-viewer/CHANGELOG.md), [`apps/whiteboard/CHANGELOG.md`](apps/whiteboard/CHANGELOG.md).
+
+## 2026-07-18, Hermes Console 1.0.0
+
+- Added a new app, Hermes Console (`apps/hermes-console/`), tag `hermes-console-v1.0.0`, a single-file PWA for resolving Hermes approval-gated tool calls and browsing sessions from a phone or any other device, talking directly to a running Hermes API server over HTTP.
+- Ships a connection screen (host/port/bearer, stored per-device), capability-gated UI, chat, remote approve/deny of tool calls, run stop, and session browse/open/create/fork.
+- Installable as a PWA: manifest, service worker (cache-first shell, network-only API), custom install button, maskable and standard icons.
+- Run monitoring uses polling rather than SSE, since the server's `/v1/runs/{id}/events` endpoint is missing its CORS header; the SSE reader is retained behind a flag for when that's fixed.
+- Per-message toolbar (copy, rerun, etc.) is a planned v1.1 follow-up, not in this release.
+- First app in the repo to use `PROJECT_SUMMARY.md`, `docs/`, and a separate `build-process/` folder for dev-only artifacts from day one, rather than folding those in on a later version bump.
 
 ## 2026-07-17, Markdown Viewer v1.1.0 folded in, repo hygiene pass
 
