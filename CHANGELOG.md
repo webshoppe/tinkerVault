@@ -2,6 +2,14 @@
 
 The build-out history of the **repo itself**, day by day: structure, conventions, the landing page, licensing, and cross-app housekeeping. Each app also keeps its own feature-level changelog for just that app's version history: [`apps/hermes-console/CHANGELOG.md`](apps/hermes-console/CHANGELOG.md), [`apps/markdown-viewer/CHANGELOG.md`](apps/markdown-viewer/CHANGELOG.md), [`apps/whiteboard/CHANGELOG.md`](apps/whiteboard/CHANGELOG.md).
 
+## 2026-07-18, Hermes Console 1.1.0
+
+- Added a per-message toolbar to Hermes Console: Copy on any message, Rerun on user messages (resubmits the exact input as a new run through the existing send path, no history replay).
+- Added a version label next to the header title, read from `VERSION` at runtime rather than hardcoded, so it can't drift from the CHANGELOG/README again.
+- Investigated the footer's "Powered by" line for a possible version-field gap; confirmed the live server exposes no version-like field anywhere in `/v1/capabilities`, not a bug, no code change, documented so it isn't relitigated.
+- Archived v1.0.0 as `apps/hermes-console/releases/v1.0.0/`, added `apps/hermes-console/releases/v1.1.0/` as the new current snapshot.
+- Updated `apps/hermes-console/PROJECT_SUMMARY.md` to also cover the v1.1.0 build (the file itself already existed from the v1.0.0 release; this pass adds a v1.1.0 section, it isn't a new file).
+
 ## 2026-07-18, Hermes Console 1.0.0
 
 - Added a new app, Hermes Console (`apps/hermes-console/`), tag `hermes-console-v1.0.0`, a single-file PWA for resolving Hermes approval-gated tool calls and browsing sessions from a phone or any other device, talking directly to a running Hermes API server over HTTP.
