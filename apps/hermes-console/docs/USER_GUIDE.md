@@ -47,6 +47,13 @@ Type in the box at the bottom and press **Send** (or **Enter**; **Shift+Enter**
 makes a new line). The agent's reply appears above as it's produced. While a run
 is active a **Stop** button appears — tap it to halt the run.
 
+Hovering any message reveals a small toolbar in its corner: **Copy** copies
+that message's raw text to your clipboard, and on your own messages
+**Rerun** resubmits the exact same input as a brand-new run — useful for
+retrying a prompt without retyping it. This toolbar currently only appears on
+hover, so it's most reliable on desktop with a mouse; touch-only devices may
+not reveal it the same way.
+
 At the very bottom you'll see a small **"Powered by"** line showing which agent
 / model the server reported.
 
