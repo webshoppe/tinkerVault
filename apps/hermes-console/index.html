@@ -325,7 +325,7 @@
 "use strict";
 
 /* ============================================================
-   Hermes Console — Phase 1 (approval flow, end to end)
+   Hermes Console: Phase 1 (approval flow, end to end)
    Single-file PWA. Talks to a running Hermes API server via the Runs API.
    ============================================================ */
 
@@ -355,7 +355,7 @@ const state = {
 // but WITHOUT an Access-Control-Allow-Origin header, so the browser blocks the
 // cross-origin read ("CORS header 'Access-Control-Allow-Origin' missing").
 // Every OTHER endpoint (health, capabilities, POST /v1/runs, /approval, /stop)
-// sends CORS correctly — this gap is specific to the events stream.
+// sends CORS correctly; this gap is specific to the events stream.
 // Until that's fixed server-side, we poll GET /v1/runs/{run_id} instead.
 // Flip this to true to re-enable the fetch-based SSE reader once the header lands.
 const USE_SSE = false;
@@ -580,7 +580,7 @@ function flashCopied(btn) {
 }
 
 // Rerun: resubmit the exact input as a new run via the existing send path.
-// "Send this again" — no history replay, no edit step (out of scope).
+// "Send this again": no history replay, no edit step (out of scope).
 function rerunMessage(text) {
   console.log("[rerun] resubmitting", JSON.stringify(text.slice(0, 80) + (text.length > 80 ? "…" : "")));
   sendMessage(text);
@@ -671,7 +671,7 @@ async function connect() {
   const canSubmit = featureOn("run_submission");
   setComposerEnabled(canSubmit);
   if (!canSubmit) {
-    setConnMsg("Connected, but server does not advertise run_submission — sending disabled.", "err");
+    setConnMsg("Connected, but server does not advertise run_submission; sending disabled.", "err");
   }
 
   // Hide panel once connected.
@@ -823,7 +823,7 @@ async function pollOnce(runId) {
     return;
   }
 
-  // Not done — schedule the next poll.
+  // Not done; schedule the next poll.
   state.pollTimer = setTimeout(() => pollOnce(runId), POLL_INTERVAL_MS);
 }
 
@@ -860,7 +860,7 @@ function renderRunOutput(run) {
 }
 
 // ============================================================
-// SSE-based run monitoring (DISABLED — kept for when CORS is fixed)
+// SSE-based run monitoring (DISABLED, kept for when CORS is fixed)
 // ------------------------------------------------------------
 // This fetch()-based SSE reader is intentionally left in place but gated behind
 // USE_SSE (currently false). It is DISABLED specifically because on this Hermes
@@ -966,7 +966,7 @@ function dispatchEvent(event, sseEventName, runId) {
   const statusGuess = event.status || (event.data && event.data.status) || "(none)";
   console.log(`[event] type=${typeGuess} status=${statusGuess}`, event);
 
-  // 1. Approval check FIRST — isolated function, easy to correct later.
+  // 1. Approval check FIRST; isolated function, easy to correct later.
   if (isApprovalPending(event)) {
     handleApprovalPending(event, runId);
     return;
@@ -1245,7 +1245,7 @@ function finishRun() {
 }
 
 // ============================================================
-// Sessions API (Phase 3) — plain GET/POST/PATCH only.
+// Sessions API (Phase 3): plain GET/POST/PATCH only.
 // We deliberately avoid POST /api/sessions/{id}/chat/stream: streaming
 // endpoints on this server have shown the missing-CORS-header gap (confirmed on
 // /v1/runs/{id}/events), so we stick to non-streaming calls that all work.
@@ -1275,7 +1275,7 @@ function setActiveSession(id, meta) {
 
 function renderActiveSessionInfo(meta) {
   if (!state.activeSessionId) {
-    dom.activeSessionInfo.innerHTML = "No active session — the next message starts a fresh one.";
+    dom.activeSessionInfo.innerHTML = "No active session; the next message starts a fresh one.";
     dom.connInfo.dataset.session = "";
     return;
   }
@@ -1295,7 +1295,7 @@ function setSessionsMsg(text, kind) {
   dom.sessionsMsg.className = "conn-msg" + (kind ? " " + kind : "");
 }
 
-// GET /api/sessions — list and render.
+// GET /api/sessions: list and render.
 async function loadSessions() {
   if (!state.connected) { setSessionsMsg("Not connected.", "err"); return; }
   setSessionsMsg("Loading sessions…");
@@ -1420,7 +1420,7 @@ function renderHistory(history) {
   }
 }
 
-// POST /api/sessions — create empty session, switch to it.
+// POST /api/sessions: create empty session, switch to it.
 async function createSession() {
   if (!state.connected) { setSessionsMsg("Not connected.", "err"); return; }
   setSessionsMsg("Creating session…");
@@ -1441,7 +1441,7 @@ async function createSession() {
   console.log("[POST /api/sessions] response", created);
   const id = sessionId(created);
   if (!id) {
-    setSessionsMsg("Created, but no id in response — see console.", "err");
+    setSessionsMsg("Created, but no id in response; see console.", "err");
     addDebugPanel("create session response", created);
     return;
   }
@@ -1454,7 +1454,7 @@ async function createSession() {
   showSessionsPanel(false);
 }
 
-// POST /api/sessions/{id}/fork — branch the active session, switch to the fork.
+// POST /api/sessions/{id}/fork: branch the active session, switch to the fork.
 async function forkSession() {
   const id = state.activeSessionId;
   if (!id) { setSessionsMsg("No active session to fork.", "err"); return; }
@@ -1476,7 +1476,7 @@ async function forkSession() {
   console.log("[POST /api/sessions/{id}/fork] response", forked);
   const newId = sessionId(forked);
   if (!newId) {
-    setSessionsMsg("Forked, but no id in response — see console.", "err");
+    setSessionsMsg("Forked, but no id in response; see console.", "err");
     addDebugPanel("fork response", forked);
     return;
   }
@@ -1555,7 +1555,7 @@ dom.stopBtn.addEventListener("click", stopRun);
 // the browser default. Fires on Android Chrome (Add to Home Screen) and
 // desktop Chrome/Edge (Install app). iOS Safari doesn't fire this event
 // (install is manual via Share → Add to Home Screen), so the button just
-// stays hidden there — expected.
+// stays hidden there, expected.
 let deferredInstallPrompt = null;
 
 window.addEventListener("beforeinstallprompt", (e) => {

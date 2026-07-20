@@ -1,4 +1,4 @@
-/* Hermes Console — service worker (Phase 4)
+/* Hermes Console: service worker (Phase 4)
  *
  * Strategy:
  *   - App shell (same-origin static assets): cache-first, so the console

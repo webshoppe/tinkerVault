@@ -5,7 +5,7 @@
 **Current version: 1.1.0**
 
 A single-file Progressive Web App for resolving **Hermes approval-gated tool calls**
-and browsing sessions from your phone or any other device — something no existing
+and browsing sessions from your phone or any other device, something no existing
 Hermes frontend (Open WebUI included) can do. It talks directly to an
 already-running Hermes API server over plain HTTP using the Runs and Sessions APIs.
 
@@ -17,14 +17,14 @@ Built as part of the `tinkerVault` monorepo (`apps/hermes-console/`).
 
 - **Connect** to any Hermes server by host / port / bearer key (stored per-device
   in `localStorage`; nothing is hard-coded).
-- **Chat** — send input, watch the assistant response stream in (via polling).
-- **Approvals** — when a run pauses on an approval-gated tool call, an Approve /
+- **Chat**: send input, watch the assistant response stream in (via polling).
+- **Approvals**: when a run pauses on an approval-gated tool call, an Approve /
   Deny card appears with the tool name and arguments. Tap a decision from
   anywhere; the run continues.
 - **Stop** an in-flight run.
-- **Sessions** — browse, open (with full history), create, and fork sessions.
+- **Sessions**: browse, open (with full history), create, and fork sessions.
   Messages thread into one real conversation instead of scattering.
-- **Installable** — add to home screen on Android / install on desktop; loads
+- **Installable**: add to home screen on Android / install on desktop; loads
   offline (the app shell is cached; live API data never is).
 
 ---
@@ -33,7 +33,7 @@ Built as part of the `tinkerVault` monorepo (`apps/hermes-console/`).
 
 | File | Role |
 |------|------|
-| `index.html` | The entire app — inline CSS + JS, no build step, no runtime dependencies. |
+| `index.html` | The entire app (inline CSS + JS, no build step, no runtime dependencies). |
 | `manifest.json` | PWA manifest (name, icons, colors, `standalone` display). |
 | `sw.js` | Service worker: cache-first app shell, network-only API. |
 | `icon-192.png`, `icon-512.png` | App icons (`purpose: any`). |
@@ -55,10 +55,10 @@ Everything except `build-process/`, `docs/`, `PROJECT_SUMMARY.md`, and
 
 ## Documentation
 
-- **[docs/USER_GUIDE.md](docs/USER_GUIDE.md)** — how to use the app.
-- **[docs/DEV_GUIDE.md](docs/DEV_GUIDE.md)** — architecture, local dev, release process.
-- **[CHANGELOG.md](CHANGELOG.md)** — version history.
-- **[PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)** — the build story.
+- **[docs/USER_GUIDE.md](docs/USER_GUIDE.md)**: how to use the app.
+- **[docs/DEV_GUIDE.md](docs/DEV_GUIDE.md)**: architecture, local dev, release process.
+- **[CHANGELOG.md](CHANGELOG.md)**: version history.
+- **[PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)**: the build story.
 
 ---
 
@@ -75,14 +75,14 @@ The fetch-based SSE reader is still in `index.html`, gated behind
 `const USE_SSE = false;`. If the server ever starts sending the CORS header on
 the events endpoint, flip that to `true` to prefer real-time streaming.
 
-The same assumption applies to `POST /api/sessions/{id}/chat/stream` — it's a
+The same assumption applies to `POST /api/sessions/{id}/chat/stream`: it's a
 streaming endpoint, so the app avoids it and uses plain GET/POST/PATCH for
 sessions.
 
 ### Shell vs. API caching
 The service worker splits traffic by origin:
 
-- **Same-origin GET** (the static HTML/CSS/JS/icons — the "app shell") →
+- **Same-origin GET** (the static HTML/CSS/JS/icons, the "app shell") →
   **cache-first**, so the console opens instantly and works offline.
 - **Cross-origin** (the Hermes server, on a different host:port) →
   **never intercepted**, always live network. Runs and sessions must never be
@@ -94,7 +94,7 @@ so clients drop the old shell instead of getting stuck on it. Old caches are
 purged automatically on the service worker's `activate` event.
 
 ### No push notifications
-Deliberate non-goal — public push infrastructure conflicts with the tailnet-only
+Deliberate non-goal: public push infrastructure conflicts with the tailnet-only
 constraint.
 
 ---
@@ -139,7 +139,7 @@ out of the box.
 5. On Android Chrome you'll get an **Install** button in the header (Add to Home
    Screen); on desktop Chrome/Edge, the same button plus the address-bar install
    icon. iOS Safari installs manually via **Share → Add to Home Screen** (no
-   `beforeinstallprompt` event exists there — the button just stays hidden).
+   `beforeinstallprompt` event exists there; the button just stays hidden).
 
 > **Redeploying:** bump `SHELL_VERSION` in `sw.js` whenever you change any shell
 > file, or returning visitors may keep the cached old version until the SW
@@ -190,18 +190,18 @@ script.
 All bearer-authenticated (`Authorization: Bearer <key>`), all plain GET/POST/PATCH.
 
 **Runs API**
-- `GET /health` — expects `{"status":"ok"}`
-- `GET /v1/capabilities` — feature flags gate the UI
-- `POST /v1/runs` — `{"input": "...", "session_id": "..."}`
-- `GET /v1/runs/{run_id}` — polled for status/output/approval state
-- `POST /v1/runs/{run_id}/approval` — approve / deny
+- `GET /health`: expects `{"status":"ok"}`
+- `GET /v1/capabilities`: feature flags gate the UI
+- `POST /v1/runs`: `{"input": "...", "session_id": "..."}`
+- `GET /v1/runs/{run_id}`: polled for status/output/approval state
+- `POST /v1/runs/{run_id}/approval`: approve / deny
 - `POST /v1/runs/{run_id}/stop`
-- ~~`GET /v1/runs/{run_id}/events`~~ — disabled (missing CORS header)
+- ~~`GET /v1/runs/{run_id}/events`~~: disabled (missing CORS header)
 
 **Sessions API**
-- `GET /api/sessions` — paginated list
-- `POST /api/sessions` — create
-- `GET /api/sessions/{id}/messages` — history
-- `POST /api/sessions/{id}/fork` — branch
-- `PATCH /api/sessions/{id}` — update title (available; not yet wired to UI)
-- ~~`POST /api/sessions/{id}/chat/stream`~~ — avoided (streaming/CORS assumption)
+- `GET /api/sessions`: paginated list
+- `POST /api/sessions`: create
+- `GET /api/sessions/{id}/messages`: history
+- `POST /api/sessions/{id}/fork`: branch
+- `PATCH /api/sessions/{id}`: update title (available; not yet wired to UI)
+- ~~`POST /api/sessions/{id}/chat/stream`~~: avoided (streaming/CORS assumption)
