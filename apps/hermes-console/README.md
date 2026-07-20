@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/webshoppe/tinkerVault?filter=hermes-console*&label=release&sort=semver)](https://github.com/webshoppe/tinkerVault/releases?q=hermes-console)
 
-**Current version: 1.0.0**
+**Current version: 1.1.0**
 
 A single-file Progressive Web App for resolving **Hermes approval-gated tool calls**
 and browsing sessions from your phone or any other device — something no existing
@@ -40,7 +40,7 @@ Built as part of the `tinkerVault` monorepo (`apps/hermes-console/`).
 | `icon-maskable-512.png` | Maskable icon for Android adaptive launchers. |
 | `apple-touch-icon.png` | 180×180 iOS home-screen icon. |
 | `favicon.ico`, `favicon-16.png`, `favicon-32.png` | Browser-tab favicons. |
-| `VERSION` | Semver version string (`1.0.0`). |
+| `VERSION` | Semver version string (`1.1.0`). |
 | `CHANGELOG.md` | App-level changelog. |
 | `PROJECT_SUMMARY.md` | The build story: why this app exists, the phased build, what got verified. |
 | `docs/USER_GUIDE.md` | End-user documentation. |
@@ -48,6 +48,7 @@ Built as part of the `tinkerVault` monorepo (`apps/hermes-console/`).
 | `build-process/make_icons.py` | Regenerates all icon PNGs (requires Pillow). Dev-only, not deployed. |
 | `build-process/preview.png` | Contact sheet of the three main icons. Dev-only, not deployed. |
 | `releases/v1.0.0/` | Self-contained snapshot of the 1.0.0 release. |
+| `releases/v1.1.0/` | Self-contained snapshot of the 1.1.0 release (slimmed: shell + `docs/USER_GUIDE.md`). |
 
 Everything except `build-process/`, `docs/`, `PROJECT_SUMMARY.md`, and
 `releases/` is part of the deployed shell.

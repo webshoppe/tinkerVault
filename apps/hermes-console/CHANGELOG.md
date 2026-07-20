@@ -6,6 +6,46 @@ All notable changes to this app are documented here. Format follows
 (`hermes-console-v1.0.0`) because tags are repo-wide across the tinkerVault
 monorepo.
 
+## [1.1.0] — 2026-07-18
+
+Two scoped fast-follows on top of the shipped v1.0.0 app:
+a per-message toolbar, plus a footer version-field investigation.
+
+### Added
+- **Per-message toolbar.** Every rendered chat message now carries a small
+  action row:
+  - **Copy** (all messages) — copies that message's raw text via the Clipboard
+    API (`navigator.clipboard.writeText`), with a `document.execCommand`
+    fallback for non-secure contexts. The button flashes "Copied" on success.
+  - **Rerun** (user messages only) — resubmits that exact input as a brand-new
+    run through the existing `sendMessage(text)` path in the current session;
+    no history replay, no inline edit (both out of scope for this release).
+  - The toolbar is hidden until the message is hovered (desktop) and stays
+    inside the message bubble; system/status/error lines are unaffected because
+    they don't go through `addMessage()`.
+
+- **App version label.** Hermes Console now displays its own version next to
+  the header title (e.g. "Hermes Console v1.1.0"), read from `./VERSION` at
+  runtime rather than hardcoded, so it can't drift from this file or
+  `README.md`. Falls back to a static placeholder if the fetch can't run
+  (e.g. opened via `file://`). Distinct from, and does not touch, the
+  unrelated `powered-by` footer line below.
+
+### Changed
+- `sendMessage()` now accepts an optional `text` argument (defaults to the
+  composer input) so Rerun can reuse the identical send/stream/poll flow.
+- Service worker precache list now includes `VERSION`; cache version bumped
+  `v2` → `v3` so returning visitors pick up both changes.
+
+### Investigated
+- **Footer "Powered by" version field.** Probed the full live
+  `GET /v1/capabilities` response (every key) for a version-like field. None
+  exists: top-level keys are `object`, `platform`, `model`, `auth`, `runtime`,
+  `features`, `endpoints` — no `version`/`build`/`release`/`agent_version`
+  anywhere. The footer already renders correctly from `model` (`"Powered by:
+  hermes-agent"`), so this was confirmed a non-issue, not a bug. No code change.
+  (Noted here so a future reader doesn't re-litigate it.)
+
 ## [1.0.0] — 2026-07-18
 
 First public release. A single-file PWA for resolving Hermes approval-gated
