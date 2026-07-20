@@ -1,4 +1,4 @@
-# Hermes Console — Developer Guide
+# Hermes Console: Developer Guide
 
 Everything you need to understand, modify, and re-release this app. It's a
 single self-contained `index.html` (inline CSS + JS, no build step, no runtime
@@ -28,14 +28,14 @@ apps/hermes-console/
 │   ├── USER_GUIDE.md       # end-user documentation
 │   └── DEV_GUIDE.md        # this file
 ├── build-process/
-│   ├── make_icons.py       # regenerates all icons (needs Pillow) — dev only
-│   └── preview.png         # icon contact sheet — dev only
+│   ├── make_icons.py       # regenerates all icons (needs Pillow, dev only)
+│   └── preview.png         # icon contact sheet (dev only)
 └── releases/
-    ├── README.md           # index of archived versions
-    └── v1.0.0/             # self-contained snapshot of this release
+    ├── v1.0.0/             # self-contained snapshot, archived
+    └── v1.1.0/             # self-contained snapshot of this release
 ```
 
-`build-process/` and the `releases/` snapshot are developer artifacts; the
+`build-process/` and the `releases/` snapshots are developer artifacts; the
 deployed *shell* is everything else in the app folder.
 
 ---
@@ -66,7 +66,7 @@ node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8'))"
 node -e "const h=require('fs').readFileSync('index.html','utf8'); new Function(h.match(/<script>([\s\S]*)<\/script>/)[1]); console.log('ok')"
 ```
 
-Then load it in a real browser and watch the console — the app logs every run
+Then load it in a real browser and watch the console; the app logs every run
 event, poll, and API request/response.
 
 ---
@@ -76,7 +76,7 @@ event, poll, and API request/response.
 ### State
 A single `state` object holds config, capabilities/features, the active run id,
 polling flags, streaming assistant text, approval state, and the active session
-id. `dom` caches element references. There's no framework — plain DOM APIs.
+id. `dom` caches element references. There's no framework, just plain DOM APIs.
 
 ### Connection
 `connect()` runs `GET /health` then `GET /v1/capabilities`, stores the response,
@@ -90,9 +90,9 @@ events endpoint is CORS-blocked (see below), it then **polls**
 terminal status or an approval-pending state.
 
 ### Approval
-`isApprovalPending(event)` is the single, isolated detector — deliberately one
+`isApprovalPending(event)` is the single, isolated detector (deliberately one
 function so the real event/field shape can be corrected in one place after a
-live test. When it fires, `handleApprovalPending()` renders the Approve/Deny
+live test). When it fires, `handleApprovalPending()` renders the Approve/Deny
 card and `submitApproval()` POSTs to `/v1/runs/{id}/approval` (logging the full
 request and response both ways). Polling resumes after the decision.
 
@@ -120,7 +120,7 @@ header**, so a browser blocks the cross-origin read (`200`, but no CORS header).
 Every other endpoint sends CORS correctly.
 
 The app therefore polls `GET /v1/runs/{run_id}`. The full fetch-based SSE reader
-(`streamEvents()`, which can send an `Authorization` header — native
+(`streamEvents()`, which can send an `Authorization` header; native
 `EventSource` can't) is **retained** behind:
 
 ```js
@@ -129,7 +129,7 @@ const USE_SSE = false;
 
 If the server is fixed to send the CORS header on the events endpoint, flip that
 to `true` to prefer real-time streaming. Same caution applies to
-`POST /api/sessions/{id}/chat/stream` — a streaming endpoint, so it's avoided in
+`POST /api/sessions/{id}/chat/stream`, a streaming endpoint, so it's avoided in
 favor of plain GET/POST/PATCH.
 
 ---
@@ -144,7 +144,7 @@ against the logged raw responses if behavior looks off:
 - **Approval shape**: `isApprovalPending()` looks for `status`
   `requires_approval`/`pending_approval` or a type/status containing
   `"approval"`, including nested `data`.
-- **Approval body**: sent as `{decision, approved, approval_id?}` — a defensive
+- **Approval body**: sent as `{decision, approved, approval_id?}`, a defensive
   superset; trim once the server's expected shape is confirmed.
 - **Capabilities identity** (`renderPoweredBy()`): probes
   `agent`/`name`/`model` and `version`/`build` at top level and under
@@ -189,7 +189,7 @@ tinkerVault monorepo:
 
 ### Human-in-the-loop publishing
 
-All GitHub operations — commit, push, tag, PR, Release publish — are done **by a
+All GitHub operations (commit, push, tag, PR, Release publish) are done **by a
 human (webShoppe) through the GitHub web UI**. This build environment is intentionally
 barred from git. Changes are staged as upload-ready file batches grouped by
 target folder, each with a prepared commit message; a human uploads them via
@@ -200,5 +200,5 @@ target folder, each with a prepared commit message; a human uploads them via
 Because uploads go through the web UI (not a local push), "uploaded" and "live
 and correct" are worth checking separately. Mounted-folder shell reads and raw
 GitHub mirrors can show stale cached content for a few minutes after an edit or
-push — if a cached read contradicts what was just done, re-check with a fresh
+push; if a cached read contradicts what was just done, re-check with a fresh
 direct read or the actual hosted page before concluding anything.
