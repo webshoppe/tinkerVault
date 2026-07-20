@@ -46,6 +46,8 @@ a per-message toolbar, plus a footer version-field investigation.
   hermes-agent"`), so this was confirmed a non-issue, not a bug. No code change.
   (Noted here so a future reader doesn't re-litigate it.)
 
+[1.1.0]: https://github.com/webshoppe/tinkerVault/releases/tag/hermes-console-v1.1.0
+
 ## [1.0.0] - 2026-07-18
 
 First public release. A single-file PWA for resolving Hermes approval-gated
