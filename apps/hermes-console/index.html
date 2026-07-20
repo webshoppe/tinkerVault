@@ -66,6 +66,12 @@
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent;
   }
+  header h1 .app-version {
+    font-size: 11px; font-weight: 500; letter-spacing: 0.3px;
+    color: var(--muted); -webkit-text-fill-color: var(--muted);
+    vertical-align: middle; margin-left: 2px; opacity: 0.85;
+    font-family: var(--mono);
+  }
   .status-dot {
     width: 9px; height: 9px; border-radius: 50%;
     background: var(--danger); flex: 0 0 auto;
@@ -177,6 +183,20 @@
     margin-right: auto; border-bottom-left-radius: 4px;
   }
   .msg .role { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 5px; opacity: 0.8; }
+  .msg-row { display: flex; flex-direction: column; }
+  .msg .body { font-size: 14px; }
+  .msg-actions {
+    display: flex; gap: 6px; margin-top: 8px;
+  }
+  .msg-action {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.3px;
+    color: var(--muted); background: var(--panel-2);
+    border: 1px solid var(--border); border-radius: 5px;
+    padding: 2px 8px; cursor: pointer; opacity: 0; transition: opacity 0.14s ease, color 0.14s ease, background 0.14s ease;
+  }
+  .msg:hover .msg-action { opacity: 0.9; }
+  .msg-action:hover { color: var(--text); background: var(--border); }
+  .msg-action.copied { color: var(--ok); border-color: var(--ok); opacity: 1; }
 
   .status-line {
     font-size: 12px; color: var(--muted); font-family: var(--mono);
@@ -241,7 +261,7 @@
 <body>
 <header>
   <div class="status-dot" id="statusDot" title="Disconnected"></div>
-  <h1>Hermes Console</h1>
+  <h1>Hermes Console <span class="app-version" id="appVersion">v…</span></h1>
   <div class="spacer"></div>
   <div class="conn-info" id="connInfo"></div>
   <button id="installBtn" class="hidden" title="Install Hermes Console">⬇ Install</button>
@@ -345,6 +365,7 @@ const POLL_INTERVAL_MS = 1500;
 const el = (id) => document.getElementById(id);
 const dom = {
   statusDot: el("statusDot"),
+  appVersion: el("appVersion"),
   connInfo: el("connInfo"),
   poweredBy: el("poweredBy"),
   installBtn: el("installBtn"),
@@ -479,17 +500,90 @@ function featureOn(name) {
 function addMessage(role, text) {
   const div = document.createElement("div");
   div.className = "msg " + role;
+  const row = document.createElement("div");
+  row.className = "msg-row";
+
   const roleEl = document.createElement("div");
   roleEl.className = "role";
   roleEl.textContent = role;
   const body = document.createElement("div");
   body.className = "body";
   body.textContent = text || "";
-  div.appendChild(roleEl);
-  div.appendChild(body);
+
+  row.appendChild(roleEl);
+  row.appendChild(body);
+  div.appendChild(row);
+
+  // Per-message toolbar (Phase 1.1): Copy on every message, Rerun on user msgs.
+  const tb = document.createElement("div");
+  tb.className = "msg-actions";
+  const copyBtn = document.createElement("button");
+  copyBtn.className = "msg-action";
+  copyBtn.type = "button";
+  copyBtn.textContent = "Copy";
+  copyBtn.title = "Copy this message";
+  copyBtn.addEventListener("click", () => copyMessage(div, body.textContent));
+  tb.appendChild(copyBtn);
+  if (role === "user") {
+    const rerunBtn = document.createElement("button");
+    rerunBtn.className = "msg-action";
+    rerunBtn.type = "button";
+    rerunBtn.textContent = "Rerun";
+    rerunBtn.title = "Send this input again";
+    rerunBtn.addEventListener("click", () => rerunMessage(body.textContent));
+    tb.appendChild(rerunBtn);
+  }
+  div.appendChild(tb);
+
   dom.chatArea.appendChild(div);
   scrollToBottom();
   return body;
+}
+
+// Copy a message's raw text via the Clipboard API. We read from the stored
+// element text (the same string shown), not from the DOM node passed in, so
+// what gets copied is exactly what was rendered.
+async function copyMessage(div, text) {
+  const btn = div.querySelector(".msg-action");
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      legacyCopy(text);
+    }
+    flashCopied(btn);
+    console.log("[copy] wrote", JSON.stringify(text.slice(0, 80) + (text.length > 80 ? "…" : "")));
+  } catch (e) {
+    console.error("[copy] failed, falling back", e);
+    legacyCopy(text);
+    flashCopied(btn);
+  }
+}
+
+function legacyCopy(text) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); } catch (e) {}
+  document.body.removeChild(ta);
+}
+
+function flashCopied(btn) {
+  if (!btn) return;
+  const prev = btn.textContent;
+  btn.textContent = "Copied";
+  btn.classList.add("copied");
+  setTimeout(() => { btn.textContent = prev; btn.classList.remove("copied"); }, 1200);
+}
+
+// Rerun: resubmit the exact input as a new run via the existing send path.
+// "Send this again" — no history replay, no edit step (out of scope).
+function rerunMessage(text) {
+  console.log("[rerun] resubmitting", JSON.stringify(text.slice(0, 80) + (text.length > 80 ? "…" : "")));
+  sendMessage(text);
 }
 
 function addStatusLine(text) {
@@ -588,8 +682,12 @@ async function connect() {
 // ============================================================
 // Sending a run + SSE streaming
 // ============================================================
-async function sendMessage() {
-  const text = dom.chatInput.value.trim();
+async function sendMessage(text) {
+  // When called with an explicit string (e.g. Rerun button), use that; otherwise
+  // read from the composer input. Note: the click handler passes a PointerEvent
+  // as the first arg, so we only treat genuinely-string args as explicit text.
+  if (typeof text !== "string") text = dom.chatInput.value.trim();
+  else text = text.trim();
   if (!text) return;
   if (!state.connected) { setConnMsg("Not connected.", "err"); return; }
   if (state.activeRunId) { console.warn("A run is already active."); return; }
@@ -1493,10 +1591,28 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+// Fetch the app's own version from ./VERSION at runtime (so it can't drift from
+// CHANGELOG/README). Falls back to the static "v…" placeholder if the fetch
+// fails (e.g. opened via file:// where fetch is blocked).
+async function loadAppVersion() {
+  try {
+    const res = await fetch("./VERSION", { cache: "no-cache" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    let v = (await res.text()).trim();
+    if (!v) throw new Error("empty");
+    if (!v.startsWith("v") && !v.startsWith("V")) v = "v" + v;
+    dom.appVersion.textContent = v;
+    console.log("[version] loaded", v);
+  } catch (e) {
+    console.warn("[version] could not load ./VERSION:", e.message);
+  }
+}
+
 // ============================================================
 // Boot
 // ============================================================
 (function init() {
+  loadAppVersion();
   const cfg = loadConfig();
   if (cfg && cfg.host && cfg.port) {
     state.config = cfg;

@@ -17,7 +17,7 @@
  * the tailnet-only constraint).
  */
 
-const SHELL_VERSION = "hermes-console-shell-v2";
+const SHELL_VERSION = "hermes-console-shell-v3";
 
 // Same-origin shell assets to precache. Paths are relative to the SW scope
 // (/apps/hermes-console/), so they resolve correctly under a subpath deploy.
@@ -32,6 +32,7 @@ const SHELL_ASSETS = [
   "./favicon.ico",
   "./favicon-32.png",
   "./favicon-16.png",
+  "./VERSION",
 ];
 
 // ---- Install: precache the shell ----
