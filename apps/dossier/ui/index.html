@@ -1,0 +1,3305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dossier</title>
+<style>
+:root {
+  --bg: #0f1218;
+  --bg-elevated: #171b24;
+  --bg-panel: #1c2230;
+  --bg-hover: #252c3d;
+  --border: #2a3348;
+  --text: #e8ecf4;
+  --text-muted: #8b95a8;
+  --accent: #5b8def;
+  --accent-soft: rgba(91,141,239,0.15);
+  --danger: #e85d6a;
+  --ok: #3ecf8e;
+  --warn: #f0b429;
+  --radius: 10px;
+  --shadow: 0 8px 28px rgba(0,0,0,0.35);
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --emoji: "Segoe UI Emoji", "Segoe UI Symbol", "Apple Color Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif;
+  --mono: "Cascadia Code", "Consolas", ui-monospace, monospace;
+  --sidebar-w: 248px;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; height: 100%; overflow: hidden;
+  font-family: var(--font); color: var(--text); background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+/* Simple emoji still use color fonts; national flags use embedded SVG (see FLAG_IMGS).
+   Windows Segoe UI Emoji cannot glyph regional-indicator pairs — always renders as CA/US text. */
+.emoji, .emoji-label, .emoji-grid button, .flag-glyph {
+  font-family: var(--emoji);
+  font-variant-emoji: emoji;
+  line-height: 1;
+}
+.flag-img {
+  width: 1.35em; height: 1.35em; vertical-align: -0.15em;
+  display: inline-block; object-fit: contain;
+  border-radius: 2px; box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
+}
+.emoji-grid button.flag-btn {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 36px; padding: 4px;
+}
+.emoji-grid button.flag-btn img.flag-img { width: 28px; height: 28px; }
+.sticky .sh .emoji-label .flag-img { width: 18px; height: 18px; }
+button, input, textarea, select { font-family: inherit; font-size: inherit; }
+button {
+  cursor: pointer; border: 1px solid var(--border); background: var(--bg-panel);
+  border-radius: 8px; padding: 7px 12px; color: var(--text);
+  transition: background .12s, border-color .12s;
+}
+button:hover { background: var(--bg-hover); border-color: #3a4660; }
+button.primary { background: var(--accent); border-color: transparent; color: #fff; font-weight: 600; }
+button.primary:hover { filter: brightness(1.08); }
+button.ghost { background: transparent; }
+button.danger { color: var(--danger); border-color: rgba(232,93,106,0.4); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+button.active-tool { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+/* Explicit text color on all fields — fixes white-on-white title inputs (Paint/Annotate/etc.) */
+input[type="text"], input[type="search"], input[type="number"], input[type="date"], input[type="password"],
+input:not([type]), textarea, select {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  outline: none;
+  width: 100%;
+  caret-color: var(--accent);
+  -webkit-text-fill-color: var(--text);
+}
+input::placeholder, textarea::placeholder { color: var(--text-muted); opacity: 0.85; -webkit-text-fill-color: var(--text-muted); }
+input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+textarea { resize: none; line-height: 1.5; }
+select { width: auto; color: var(--text); background: var(--bg); }
+/* number inputs in toolbars should not stretch full width */
+input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-align: center; }
+
+#app { display: flex; height: 100vh; }
+#setup {
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  width: 100%; height: 100%; gap: 16px; padding: 32px;
+  background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(91,141,239,0.25), transparent), var(--bg);
+}
+#setup h1 { font-size: 2.2rem; margin: 0 0 4px; letter-spacing: -0.03em; }
+#setup .tagline { color: var(--text-muted); margin: 0 0 24px; max-width: 440px; text-align: center; line-height: 1.5; }
+#setup .card {
+  background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px;
+  padding: 28px; width: min(460px, 100%); box-shadow: var(--shadow);
+  display: flex; flex-direction: column; gap: 12px;
+}
+#setup .card p { margin: 0 0 8px; color: var(--text-muted); font-size: 0.92rem; line-height: 1.45; }
+#setup .actions { display: flex; flex-direction: column; gap: 8px; }
+#setup .err { color: var(--danger); font-size: 0.85rem; min-height: 1.2em; }
+#setup .recent { margin-top: 4px; }
+#setup .recent-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+#setup .recent button { width: 100%; text-align: left; margin-bottom: 4px; }
+
+#shell { display: none; width: 100%; height: 100%; }
+#shell.open { display: flex; }
+
+#sidebar {
+  width: var(--sidebar-w); flex-shrink: 0;
+  background: var(--bg-elevated); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+}
+#sidebar .brand { padding: 14px 14px 10px; border-bottom: 1px solid var(--border); }
+#sidebar .brand h1 {
+  margin: 0; font-size: 1.05rem; letter-spacing: -0.02em;
+  display: flex; align-items: center; gap: 8px;
+}
+#sidebar .brand .path {
+  margin-top: 6px; font-size: 0.72rem; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
+}
+#sidebar .brand .path:hover { color: var(--accent); }
+#sidebar .ws-switch { margin-top: 8px; display: flex; gap: 4px; flex-wrap: wrap; }
+#sidebar .ws-switch button { font-size: 0.72rem; padding: 4px 8px; }
+#nav { padding: 8px 8px; display: flex; flex-direction: column; gap: 2px; overflow: auto; flex: 1; }
+#nav button {
+  text-align: left; border: none; background: transparent;
+  padding: 8px 12px; border-radius: 8px; font-size: 0.9rem;
+  display: flex; align-items: center; gap: 10px;
+}
+#nav button:hover { background: var(--bg-hover); }
+#nav button.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+#nav button .icon { width: 1.35em; text-align: center; font-family: var(--emoji); }
+#sidebar .foot {
+  padding: 12px; border-top: 1px solid var(--border);
+  font-size: 0.72rem; color: var(--text-muted);
+}
+
+#main { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--bg); }
+#topbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px; border-bottom: 1px solid var(--border);
+  background: var(--bg-elevated); flex-shrink: 0;
+}
+#topbar h2 { margin: 0; font-size: 1rem; font-weight: 600; flex: 1; min-width: 0; }
+#topbar .tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+#search-wrap { position: relative; }
+#search-wrap::before {
+  content: "⌕"; position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  color: var(--text-muted); z-index: 1; font-size: 0.95rem;
+}
+#search-box { width: min(320px, 40vw); padding-left: 32px; }
+#content { flex: 1; min-height: 0; overflow: hidden; position: relative; }
+.view { display: none; height: 100%; overflow: auto; }
+.view.active { display: flex; flex-direction: column; }
+
+/* Drop overlay */
+#drop-overlay {
+  display: none; position: fixed; inset: 0; z-index: 900;
+  background: rgba(15,18,24,0.72); border: 3px dashed var(--accent);
+  align-items: center; justify-content: center; pointer-events: none;
+}
+#drop-overlay.show { display: flex; }
+#drop-overlay .box {
+  background: var(--bg-elevated); border: 1px solid var(--accent);
+  border-radius: 16px; padding: 28px 40px; text-align: center; box-shadow: var(--shadow);
+}
+#drop-overlay .box strong { font-size: 1.2rem; display: block; margin-bottom: 6px; }
+#drop-overlay .box span { color: var(--text-muted); font-size: 0.9rem; }
+
+/* Documents */
+.doc-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
+.doc-row {
+  display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: start;
+  padding: 12px 14px; border-radius: var(--radius); border: 1px solid var(--border);
+  background: var(--bg-elevated); cursor: pointer;
+}
+.doc-row:hover { border-color: #3a4660; background: var(--bg-panel); }
+.doc-row .kind {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700; background: var(--bg-hover); color: var(--text-muted);
+}
+.doc-row .kind.md { color: #5b8def; background: rgba(91,141,239,0.15); }
+.doc-row .kind.txt { color: #3ecf8e; background: rgba(62,207,142,0.12); }
+.doc-row .kind.pdf { color: #e85d6a; background: rgba(232,93,106,0.12); }
+.doc-row .kind.docx { color: #2b579a; background: rgba(43,87,154,0.15); }
+.doc-row .kind.xlsx { color: #217346; background: rgba(33,115,70,0.15); }
+.doc-row .kind.odt { color: #18a303; background: rgba(24,163,3,0.12); }
+.doc-row .kind.ods { color: #c9211e; background: rgba(201,33,30,0.12); }
+.doc-row .meta { min-width: 0; }
+.doc-row .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.doc-row .sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+.doc-row .preview {
+  font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  line-height: 1.35;
+}
+.doc-row .badge {
+  font-size: 0.7rem; padding: 3px 8px; border-radius: 999px;
+  background: rgba(240,180,41,0.15); color: var(--warn); white-space: nowrap;
+}
+.empty { padding: 48px 24px; text-align: center; color: var(--text-muted); line-height: 1.5; }
+.empty strong { color: var(--text); }
+
+#doc-detail {
+  display: none; position: absolute; inset: 0; background: var(--bg);
+  flex-direction: column; z-index: 5;
+}
+#doc-detail.open { display: flex; }
+#doc-detail .hdr {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--bg-elevated);
+}
+#doc-detail .hdr h3 { margin: 0; flex: 1; font-size: 1rem; }
+#doc-detail .warn-banner {
+  background: rgba(240,180,41,0.12); border-bottom: 1px solid rgba(240,180,41,0.3);
+  color: #f0d078; padding: 10px 16px; font-size: 0.85rem; line-height: 1.4;
+}
+#doc-detail .body {
+  flex: 1; overflow: auto; padding: 20px 24px;
+  font-family: var(--mono); font-size: 0.88rem; line-height: 1.55;
+  white-space: pre-wrap; word-break: break-word;
+}
+#doc-detail .binary-info { padding: 32px; text-align: center; color: var(--text-muted); }
+#doc-detail .binary-info .size { font-size: 1.4rem; color: var(--text); margin: 12px 0; }
+#doc-detail .open-with-menu {
+  display: none; flex-direction: column; gap: 4px;
+  padding: 8px 12px 12px; border-bottom: 1px solid var(--border);
+  background: var(--bg-panel); font-size: 0.85rem;
+}
+#doc-detail .open-with-menu.open { display: flex; }
+#doc-detail .open-with-menu .ow-hint {
+  color: var(--text-muted); font-size: 0.78rem; margin: 2px 0 6px; line-height: 1.35;
+}
+#doc-detail .open-with-menu button {
+  text-align: left; justify-content: flex-start;
+}
+
+/* Notes — responsive side list (collapses / stacks so it isn't clipped) */
+#notes-view { flex-direction: row !important; min-width: 0; }
+#notes-list {
+  width: min(260px, 34vw); min-width: 140px; max-width: 320px;
+  flex: 0 1 260px; border-right: 1px solid var(--border);
+  overflow: auto; background: var(--bg-elevated);
+}
+#notes-view.list-collapsed #notes-list { display: none; }
+.panel-collapse-btn { flex-shrink: 0; font-size: 0.72rem; padding: 4px 8px; white-space: nowrap; }
+/* Default window is 1280px — stack at/above that so panels aren't clipped out of the box */
+@media (max-width: 1320px) {
+  #notes-view { flex-direction: column !important; }
+  #notes-list {
+    width: 100% !important; max-width: none; min-width: 0; flex: 0 0 auto;
+    max-height: 34%; border-right: none; border-bottom: 1px solid var(--border);
+  }
+  #notes-view.list-collapsed #notes-list { display: none; }
+}
+.note-item { padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.note-item:hover { background: var(--bg-hover); }
+.note-item.active { background: var(--accent-soft); border-left: 3px solid var(--accent); }
+.note-item .t { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.note-item .d { font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; }
+#note-editor { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+#note-editor .bar {
+  display: flex; gap: 8px; align-items: center;
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+}
+#note-title { flex: 1; font-weight: 600; }
+#note-body {
+  flex: 1; border: none; border-radius: 0; padding: 16px 20px;
+  font-family: var(--mono); font-size: 0.9rem; line-height: 1.55; background: var(--bg);
+}
+#note-body:focus { box-shadow: none; border: none; }
+#note-status { font-size: 0.75rem; color: var(--text-muted); min-width: 80px; text-align: right; }
+#note-placeholder {
+  flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-muted);
+}
+
+/* Stickies */
+#stickies-view { position: relative; background:
+  linear-gradient(90deg, rgba(91,141,239,0.04) 1px, transparent 1px),
+  linear-gradient(rgba(91,141,239,0.04) 1px, transparent 1px), #12161f;
+  background-size: 24px 24px; overflow: auto;
+}
+#sticky-board { position: relative; min-width: 100%; min-height: 100%; width: 2400px; height: 1600px; }
+.sticky {
+  position: absolute; display: flex; flex-direction: column;
+  border-radius: 2px 2px 4px 4px;
+  box-shadow: 2px 4px 12px rgba(0,0,0,0.28), 0 1px 0 rgba(255,255,255,0.25) inset;
+  min-width: 120px; min-height: 100px; z-index: 1; overflow: hidden; color: #1a1a1a;
+}
+.sticky:focus-within, .sticky.dragging, .sticky.selected {
+  z-index: 100; box-shadow: 4px 10px 24px rgba(0,0,0,0.35);
+  outline: 2px solid rgba(91,141,239,0.65);
+}
+.sticky .sh {
+  display: flex; align-items: center; gap: 2px;
+  padding: 3px 4px; background: rgba(0,0,0,0.08);
+  cursor: grab; user-select: none; flex-shrink: 0;
+  min-height: 26px;
+}
+.sticky.dragging .sh { cursor: grabbing; }
+.sticky .sh .grip {
+  flex: 1 1 auto; min-width: 0; font-size: 11px; opacity: 0.45; letter-spacing: 0.04em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.sticky .sh .emoji-label { font-size: 14px; margin-right: 1px; min-width: 1em; flex-shrink: 0; }
+.sticky .sh .sh-actions {
+  display: flex; align-items: center; gap: 1px; flex-shrink: 0; margin-left: auto;
+}
+.sticky .sh button {
+  padding: 2px 5px; font-size: 12px; line-height: 1.2;
+  border: none; background: transparent; border-radius: 4px;
+  color: #1a1a1a !important;
+  -webkit-text-fill-color: #1a1a1a !important;
+  flex-shrink: 0;
+}
+.sticky .sh button:hover { background: rgba(0,0,0,0.1); }
+.sticky .sh button.sticky-del {
+  font-weight: 700; opacity: 0.85;
+  border: 1px solid rgba(0,0,0,0.18); background: rgba(255,255,255,0.45);
+  min-width: 22px; min-height: 22px;
+}
+.sticky .sh button.sticky-del:hover {
+  opacity: 1; background: rgba(232,93,106,0.35); border-color: rgba(180,40,50,0.5);
+  color: #7a1018 !important; -webkit-text-fill-color: #7a1018 !important;
+}
+/* Mini / narrow stickies: hide grip label so delete + tools always fit */
+.sticky.sticky-compact .sh .grip { display: none; }
+.sticky.sticky-compact .sh .emoji-label { font-size: 12px; }
+.sticky.sticky-compact .sh button { padding: 1px 3px; font-size: 11px; min-width: 20px; }
+/* Global dark-mode textarea -webkit-text-fill-color is light; on yellow post-its that
+   is unreadable (Tier-1 "Quick capture test" etc.). Force dark ink on all stickies. */
+.sticky .sb,
+.sticky textarea.sb {
+  flex: 1; min-height: 0; padding: 8px 10px; border: none; resize: none;
+  background: transparent !important; outline: none; width: 100%;
+  font-size: 13px; line-height: 1.45; font-family: var(--font);
+  color: #1a1a1a !important;
+  -webkit-text-fill-color: #1a1a1a !important;
+  caret-color: #1a1a1a !important;
+}
+.sticky .resize {
+  position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; cursor: nwse-resize;
+  background:
+    linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.22) 50%, rgba(0,0,0,0.22) 60%, transparent 60%),
+    linear-gradient(135deg, transparent 70%, rgba(0,0,0,0.22) 70%, rgba(0,0,0,0.22) 80%, transparent 80%);
+}
+.sticky.c-yellow{background:#fff59d}.sticky.c-pink{background:#f8bbd0}.sticky.c-blue{background:#90caf9}
+.sticky.c-green{background:#a5d6a7}.sticky.c-orange{background:#ffcc80}.sticky.c-red{background:#ef9a9a}
+.sticky.c-purple{background:#ce93d8}.sticky.c-teal{background:#80cbc4}.sticky.c-mint{background:#b2f2bb}
+.sticky.c-peach{background:#ffc9a9}.sticky.c-lavender{background:#d1c4e9}.sticky.c-white{background:#f5f5f5}
+
+.popover {
+  position: absolute; z-index: 200;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px; box-shadow: var(--shadow); display: none;
+  max-height: min(420px, 75vh); overflow-x: hidden; overflow-y: auto;
+  width: min(340px, calc(100vw - 24px));
+  box-sizing: border-box;
+}
+.popover.open { display: block; }
+#pop-emoji { width: min(360px, calc(100vw - 24px)); }
+.color-grid { display: grid; grid-template-columns: repeat(6, 28px); gap: 6px; }
+.color-swatch {
+  width: 28px; height: 28px; border-radius: 6px; border: 2px solid transparent; cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15);
+}
+.color-swatch:hover, .color-swatch.active { border-color: var(--accent); }
+.emoji-tabs { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+.emoji-tabs button { font-size: 0.75rem; padding: 4px 8px; }
+.emoji-tabs button.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+/* Wrap emoji onto rows — no horizontal scroll for normal use */
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+  gap: 4px; width: 100%; max-width: 100%; overflow-x: hidden;
+}
+.emoji-grid button {
+  border: none; background: transparent; font-size: 1.25rem; padding: 4px; border-radius: 6px;
+  font-family: var(--emoji); min-width: 0; width: 100%;
+  aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+}
+.emoji-grid button:hover { background: var(--bg-hover); }
+.size-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.size-row button { font-size: 0.78rem; padding: 5px 8px; }
+
+/* Search */
+#search-view .results { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
+.hit {
+  padding: 12px 14px; border-radius: var(--radius); border: 1px solid var(--border);
+  background: var(--bg-elevated); cursor: pointer;
+}
+.hit:hover { border-color: var(--accent); }
+.hit .k { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+.hit .t { font-weight: 600; margin: 4px 0; }
+.hit .s { font-size: 0.85rem; color: var(--text-muted); }
+.hit .s em { color: var(--accent); font-style: normal; font-weight: 600; }
+
+/* Paint / Annotate shared */
+.canvas-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
+.canvas-row {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elevated); cursor: pointer;
+}
+.canvas-row:hover { border-color: var(--accent); }
+.canvas-row .info { flex: 1; min-width: 0; }
+.canvas-row .info .n { font-weight: 600; }
+.canvas-row .info .d { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+#paint-editor, #annotate-editor {
+  display: none; position: absolute; inset: 0; background: var(--bg); flex-direction: column; z-index: 6;
+}
+#paint-editor.open, #annotate-editor.open { display: flex; }
+.editor-hdr {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--bg-elevated); flex-shrink: 0;
+}
+.editor-hdr .title-in,
+#paint-title, #ann-title, #kb-title, #dec-title, #note-title {
+  width: min(220px, 30vw); font-weight: 600;
+  color: var(--text) !important;
+  -webkit-text-fill-color: var(--text) !important;
+  background: var(--bg) !important;
+}
+.editor-hdr .sep { width: 1px; height: 22px; background: var(--border); margin: 0 4px; }
+.editor-hdr .label { font-size: 0.75rem; color: var(--text-muted); }
+#view-tools input[type="text"], #view-tools input:not([type]), #topbar input[type="text"] {
+  color: var(--text) !important;
+  -webkit-text-fill-color: var(--text) !important;
+  background: var(--bg) !important;
+}
+.editor-hdr input[type="color"] { width: 36px; height: 28px; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: transparent; cursor: pointer; }
+.editor-hdr input[type="range"] { width: 100px; }
+.editor-stage {
+  flex: 1; min-height: 0; overflow: auto; display: flex; align-items: flex-start; justify-content: center;
+  padding: 16px; background: #0c0e14;
+}
+.editor-stage canvas {
+  background: #fff; box-shadow: var(--shadow); border-radius: 4px; touch-action: none; cursor: crosshair;
+  max-width: 100%; display: block;
+}
+#annotate-wrap {
+  position: relative; display: inline-block; max-width: 100%;
+  box-shadow: var(--shadow); border-radius: 4px;
+}
+#annotate-wrap canvas { box-shadow: none; border-radius: 4px; }
+.ann-text {
+  position: absolute; cursor: move; user-select: none;
+  white-space: pre; line-height: 1.15; font-weight: 700;
+  padding: 2px 4px; border: 1px dashed transparent; border-radius: 3px;
+  text-shadow: 0 0 3px #fff, 0 0 2px #fff, 1px 1px 0 #fff, -1px -1px 0 #fff;
+  min-width: 24px; z-index: 2;
+}
+.ann-text:hover, .ann-text.selected { border-color: var(--accent); background: rgba(91,141,239,0.08); }
+.ann-text .ann-resize {
+  position: absolute; right: -4px; bottom: -4px; width: 12px; height: 12px;
+  background: var(--accent); border-radius: 2px; cursor: nwse-resize;
+  box-shadow: 0 0 0 1px #fff;
+}
+.annotate-hint {
+  color: var(--text-muted); text-align: center; padding: 48px 24px; line-height: 1.5;
+}
+/* First-open intros */
+.intro-banner {
+  flex-shrink: 0; margin: 10px 16px 0; padding: 12px 14px;
+  background: var(--accent-soft); border: 1px solid rgba(91,141,239,0.35);
+  border-radius: 10px; display: flex; gap: 12px; align-items: flex-start;
+  font-size: 0.88rem; line-height: 1.45;
+}
+.intro-banner .intro-body { flex: 1; min-width: 0; }
+.intro-banner strong { display: block; margin-bottom: 4px; color: var(--accent); }
+.intro-banner p { margin: 0; color: var(--text); }
+.intro-banner button { flex-shrink: 0; }
+/* Settings panel */
+#settings-view .settings-panel { max-width: 520px; padding: 20px 24px; }
+#settings-view h3 { margin: 0 0 6px; font-size: 1rem; }
+#settings-view .settings-desc { color: var(--text-muted); font-size: 0.85rem; margin: 0 0 16px; line-height: 1.4; }
+#settings-view .settings-row {
+  display: flex; align-items: center; gap: 12px; padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+#settings-view .settings-row label { flex: 1; font-size: 0.92rem; }
+#settings-view .settings-row .hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+#settings-view input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+#settings-view input[type="number"] { width: 90px; }
+/* Agent chat */
+#agent-view { min-height: 0; }
+.agent-panel { display: flex; flex-direction: column; height: 100%; min-height: 0; padding: 12px 16px; gap: 10px; }
+.agent-hint { font-size: 0.85rem; color: var(--text-muted); line-height: 1.45; }
+.agent-log {
+  flex: 1; min-height: 120px; overflow: auto; border: 1px solid var(--border);
+  border-radius: 10px; background: var(--bg-elevated); padding: 12px; display: flex; flex-direction: column; gap: 10px;
+}
+.agent-msg { max-width: 92%; padding: 10px 12px; border-radius: 10px; font-size: 0.9rem; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
+.agent-msg.user { align-self: flex-end; background: var(--accent-soft); border: 1px solid rgba(91,141,239,0.35); }
+.agent-msg.bot { align-self: flex-start; background: var(--bg-panel); border: 1px solid var(--border); }
+.agent-msg.err { align-self: stretch; color: var(--danger); border-color: rgba(232,93,106,0.4); }
+.agent-compose { display: flex; gap: 8px; align-items: flex-end; }
+.agent-compose textarea { flex: 1; min-height: 52px; max-height: 140px; resize: vertical; }
+.agent-ctx { font-size: 0.75rem; color: var(--text-muted); min-height: 1.2em; }
+.swatch-row { display: flex; gap: 4px; align-items: center; }
+.swatch-btn {
+  width: 22px; height: 22px; border-radius: 4px; border: 2px solid transparent; cursor: pointer; padding: 0;
+}
+.swatch-btn.on { border-color: #fff; box-shadow: 0 0 0 1px var(--accent); }
+
+/* Kanban */
+#kanban-view { flex-direction: column !important; }
+.kanban-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
+#kanban-board-ui {
+  display: none; flex: 1; min-height: 0; flex-direction: column;
+}
+#kanban-board-ui.open { display: flex; }
+.kanban-cols {
+  flex: 1; min-height: 0; overflow: auto; display: flex; align-items: stretch; gap: 12px;
+  padding: 14px 16px 20px;
+}
+.kanban-col {
+  flex: 0 0 280px; width: 280px; background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 10px; display: flex; flex-direction: column; max-height: 100%; min-height: 200px;
+}
+.kanban-col.drag-over { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.kanban-col-header {
+  display: flex; align-items: center; gap: 6px; padding: 10px; border-bottom: 1px solid var(--border);
+}
+.kanban-col-title {
+  flex: 1; min-width: 0; font-weight: 700; font-size: 13px; border: none;
+  background: transparent; padding: 4px 6px; border-radius: 5px;
+  color: var(--text) !important; -webkit-text-fill-color: var(--text) !important;
+}
+.kanban-col-title:focus { background: var(--bg); outline: none; }
+.kanban-col-count {
+  display: inline-flex; align-items: center; gap: 2px;
+  font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent); white-space: nowrap;
+}
+.kanban-col-count.over { background: rgba(232,93,106,0.2); color: var(--danger); }
+.kanban-col-count .wip-input {
+  width: 36px; padding: 1px 3px; font-size: 11px; font-weight: 700;
+  border-radius: 4px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text) !important; -webkit-text-fill-color: var(--text) !important;
+}
+.kanban-col-count .wip-label { opacity: 0.75; font-weight: 600; font-size: 10px; margin-right: 2px; }
+.kanban-cards { flex: 1; min-height: 40px; overflow: auto; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+.kanban-card {
+  background: #fff59d; border: 1px solid rgba(0,0,0,0.1); border-radius: 6px;
+  color: #1a1a1a; display: flex; flex-direction: column; min-height: 72px; touch-action: none;
+}
+.kanban-card.dragging { opacity: 0.35; }
+.kanban-card .kc-toolbar {
+  display: flex; align-items: center; gap: 2px; padding: 4px 6px 0; cursor: grab;
+}
+.kanban-card .kc-toolbar .grip {
+  flex: 1; font-size: 11px; color: rgba(0,0,0,0.45); user-select: none; padding: 6px 4px; min-height: 28px;
+  display: flex; align-items: center;
+}
+.kanban-card .kc-toolbar button {
+  padding: 2px 5px; font-size: 11px; border: none; background: transparent; color: #1a1a1a; border-radius: 4px;
+}
+.kanban-card .kc-toolbar button:hover { background: rgba(0,0,0,0.08); }
+.kanban-card textarea {
+  flex: 1; min-height: 48px; border: none; resize: none; /* no fake resize grip */
+  overflow: hidden; background: transparent; outline: none;
+  width: 100%; padding: 4px 8px 8px; font-size: 13px; line-height: 1.4;
+  color: #1a1a1a !important; -webkit-text-fill-color: #1a1a1a !important;
+  font-family: inherit;
+}
+.kanban-card.c-yellow{background:#fff59d}.kanban-card.c-pink{background:#f8bbd0}.kanban-card.c-blue{background:#90caf9}
+.kanban-card.c-green{background:#a5d6a7}.kanban-card.c-orange{background:#ffcc80}.kanban-card.c-red{background:#ef9a9a}
+.kanban-add-card {
+  margin: 0 8px 8px; width: calc(100% - 16px); font-size: 12px; color: var(--text-muted);
+  background: transparent; border-style: dashed;
+}
+.kanban-add-card:hover { color: var(--accent); border-color: var(--accent); }
+.kanban-card-ghost {
+  position: fixed; z-index: 500; pointer-events: none; opacity: 0.92;
+  box-shadow: var(--shadow); transform: rotate(1.5deg); width: 260px;
+}
+
+/* Decisions timeline — responsive spine so it isn't clipped at default width */
+#decisions-view { flex-direction: row !important; min-width: 0; }
+#decision-spine {
+  width: min(300px, 36vw); min-width: 160px; max-width: 360px;
+  flex: 0 1 300px; border-right: 1px solid var(--border);
+  overflow: auto; background: var(--bg-elevated); padding: 16px 12px;
+}
+#decisions-view.spine-collapsed #decision-spine { display: none; }
+@media (max-width: 1320px) {
+  #decisions-view { flex-direction: column !important; }
+  #decision-spine {
+    width: 100% !important; max-width: none; min-width: 0; flex: 0 0 auto;
+    max-height: 36%; border-right: none; border-bottom: 1px solid var(--border);
+  }
+  #decisions-view.spine-collapsed #decision-spine { display: none; }
+}
+.spine-item {
+  position: relative; padding: 0 0 18px 22px; cursor: pointer;
+  border-left: 2px solid var(--border); margin-left: 8px;
+}
+.spine-item:last-child { border-left-color: transparent; }
+.spine-item::before {
+  content: ""; position: absolute; left: -7px; top: 4px; width: 12px; height: 12px;
+  border-radius: 50%; background: var(--bg-elevated); border: 2px solid var(--accent);
+}
+.spine-item.active::before { background: var(--accent); }
+.spine-item .when { font-size: 0.72rem; color: var(--text-muted); }
+.spine-item .ttl { font-weight: 600; margin-top: 2px; font-size: 0.92rem; }
+.spine-item .snip { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+#decision-detail { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 16px 20px; overflow: auto; }
+#decision-detail .row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+#decision-detail label { font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px; }
+#decision-detail .field { margin-bottom: 14px; }
+#decision-detail textarea { min-height: 140px; }
+#decision-detail .version-box {
+  border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; background: var(--bg-elevated);
+}
+#decision-placeholder {
+  flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-muted);
+}
+
+#toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--bg-panel); border: 1px solid var(--border); color: var(--text);
+  padding: 10px 18px; border-radius: 999px; box-shadow: var(--shadow);
+  opacity: 0; transition: all .25s; z-index: 999; font-size: 0.88rem; pointer-events: none;
+  max-width: 90vw; text-align: center;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.modal {
+  background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 14px;
+  padding: 20px; width: min(420px, 100%); box-shadow: var(--shadow);
+}
+.modal h3 { margin: 0 0 12px; }
+.modal .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.modal select, .modal input { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="setup">
+    <h1>📁 Dossier</h1>
+    <p class="tagline">One folder per workspace. Real documents. Local search.<br/>Stickies, paint, kanban, decisions — all portable.</p>
+    <div class="card">
+      <p>Choose a folder to hold this dossier’s documents, notes, boards, and database. Everything lives there.</p>
+      <div class="actions">
+        <button class="primary" id="btn-create">Create / open folder…</button>
+        <button id="btn-open-last" style="display:none">Open last dossier</button>
+      </div>
+      <div class="recent" id="setup-recent" style="display:none"></div>
+      <div class="err" id="setup-err"></div>
+    </div>
+  </div>
+
+  <div id="shell">
+    <aside id="sidebar">
+      <div class="brand">
+        <h1>📁 Dossier</h1>
+        <div class="path" id="dossier-path" title="Open folder in Explorer"></div>
+        <div class="ws-switch">
+          <button type="button" id="btn-switch-ws" title="Switch workspace">Switch…</button>
+          <button type="button" id="btn-new-ws" title="Open another folder">+ Folder</button>
+          <button type="button" id="btn-close-ws" title="Close workspace">Close</button>
+        </div>
+      </div>
+      <nav id="nav">
+        <button data-view="documents" class="active"><span class="icon">📄</span> Documents</button>
+        <button data-view="notes"><span class="icon">📝</span> Notes</button>
+        <button data-view="stickies"><span class="icon">📌</span> Sticky Notes</button>
+        <button data-view="paint"><span class="icon">🎨</span> Paint</button>
+        <button data-view="annotate"><span class="icon">✂️</span> Annotate</button>
+        <button data-view="kanban"><span class="icon">📋</span> Kanban</button>
+        <button data-view="decisions"><span class="icon">⚖️</span> Decisions</button>
+        <button data-view="search"><span class="icon">🔍</span> Search</button>
+        <button data-view="agent" id="nav-agent" style="display:none"><span class="icon">🤖</span> Ask dossier</button>
+        <button data-view="settings"><span class="icon">⚙️</span> Settings</button>
+      </nav>
+      <div class="foot">
+        <div>v<span id="ver">2.0.0-t1</span></div>
+        <div style="margin-top:4px">All data in the folder above</div>
+      </div>
+    </aside>
+    <section id="main">
+      <div id="topbar">
+        <h2 id="view-title">Documents</h2>
+        <div class="tools" id="view-tools"></div>
+      </div>
+      <div id="content">
+        <div class="view active" id="documents-view">
+          <div class="doc-list" id="doc-list"></div>
+          <div id="doc-detail">
+            <div class="hdr">
+              <button class="ghost" id="doc-back">← Back</button>
+              <h3 id="doc-title"></h3>
+              <button id="doc-open-ext" title="Open with Dossier’s preferred app if set, otherwise Windows default">Open externally</button>
+              <button type="button" id="doc-open-with" title="Choose app / set preferred">Open with…</button>
+              <button class="danger" id="doc-delete">Delete</button>
+            </div>
+            <div id="doc-open-menu" class="open-with-menu" style="display:none" hidden></div>
+            <div class="warn-banner" id="doc-warn" style="display:none"></div>
+            <div class="body" id="doc-body"></div>
+          </div>
+        </div>
+        <div class="view" id="notes-view">
+          <div id="notes-list"></div>
+          <div id="note-editor" style="display:none">
+            <div class="bar">
+              <input type="text" id="note-title" placeholder="Note title" />
+              <span id="note-status"></span>
+              <button type="button" id="note-revert" title="Restore title and body to when you opened this note (before this session’s edits)" style="display:none">Revert edits</button>
+              <button type="button" id="note-copy" title="Copy note body to clipboard">Copy</button>
+              <button class="danger" id="note-delete">Delete</button>
+            </div>
+            <textarea id="note-body" placeholder="Write in Markdown…" spellcheck="true"></textarea>
+          </div>
+          <div id="note-placeholder">Select a note or create a new one</div>
+        </div>
+        <div class="view" id="stickies-view">
+          <div id="sticky-board"></div>
+        </div>
+        <div class="view" id="paint-view">
+          <div class="canvas-list" id="paint-list"></div>
+          <div id="paint-editor">
+            <div class="editor-hdr" id="paint-tools"></div>
+            <div class="editor-stage"><canvas id="paint-canvas" width="960" height="640"></canvas></div>
+          </div>
+        </div>
+        <div class="view" id="annotate-view">
+          <div class="canvas-list" id="annotate-list"></div>
+          <div id="annotate-editor">
+            <div class="editor-hdr" id="annotate-tools"></div>
+            <div class="editor-stage" id="annotate-stage">
+              <div class="annotate-hint" id="annotate-hint">Paste (Ctrl+V) or drop an image here to annotate.<br/>Then highlight, arrow, label (with font size — drag &amp; resize labels), redact, or crop.</div>
+              <div id="annotate-wrap" style="display:none">
+                <canvas id="annotate-canvas" width="800" height="500"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="view" id="kanban-view">
+          <div class="kanban-list" id="kanban-list"></div>
+          <div id="kanban-board-ui">
+            <div class="kanban-cols" id="kanban-cols"></div>
+          </div>
+        </div>
+        <div class="view" id="decisions-view">
+          <div id="decision-spine"></div>
+          <div id="decision-detail" style="display:none"></div>
+          <div id="decision-placeholder">Pin a decision to build the chronological spine</div>
+        </div>
+        <div class="view" id="search-view">
+          <div class="results" id="search-results"></div>
+        </div>
+        <div class="view" id="agent-view">
+          <div class="agent-panel" id="agent-panel">
+            <div class="agent-hint" id="agent-hint">
+              Ask questions about this dossier. Relevant documents/notes are selected via full-text search and sent as context (capped). Configure host/port/token under Settings.
+            </div>
+            <div class="agent-log" id="agent-log"></div>
+            <div class="agent-compose">
+              <textarea id="agent-q" placeholder="Ask your dossier…" rows="2"></textarea>
+              <button type="button" class="primary" id="agent-send">Ask</button>
+            </div>
+            <div class="agent-ctx" id="agent-ctx"></div>
+          </div>
+        </div>
+        <div class="view" id="settings-view">
+          <div class="settings-panel" id="settings-panel"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div id="drop-overlay"><div class="box"><strong>Drop to import</strong><span>Files will be added to this dossier’s documents folder</span></div></div>
+<div id="toast"></div>
+<div class="popover" id="pop-color"><div class="color-grid" id="color-grid"></div></div>
+<div class="popover" id="pop-emoji">
+  <div class="emoji-tabs" id="emoji-tabs"></div>
+  <div class="emoji-grid" id="emoji-grid"></div>
+</div>
+<div class="popover" id="pop-size"><div class="size-row" id="size-row"></div></div>
+
+<script>
+/* ========== Bridge ========== */
+function bridge(name) { return typeof window[name] === 'function' ? window[name] : null; }
+async function call(name, ...args) {
+  const fn = bridge(name);
+  if (!fn) throw new Error('Bridge missing: ' + name);
+  return await fn(...args);
+}
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('show'), 2800);
+}
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmtSize(n) {
+  const u = ['B','KB','MB','GB'];
+  let i = 0, v = Number(n) || 0;
+  while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
+  return (i === 0 ? v : v.toFixed(1)) + ' ' + u[i];
+}
+function kindLabel(k) {
+  return ({ markdown: 'MD', text: 'TXT', pdf: 'PDF', docx: 'DOCX', xlsx: 'XLSX', odt: 'ODT', ods: 'ODS', other: 'FILE' })[k] || 'FILE';
+}
+function fmtDate(iso) {
+  if (!iso) return '';
+  const s = String(iso).replace('T', ' ').replace('Z', '');
+  return s.slice(0, 16);
+}
+function uid() { return 'id_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
+
+/* ========== State ========== */
+const state = {
+  view: 'documents',
+  docs: [], notes: [], stickies: [],
+  paints: [], annotates: [], kanbans: [], decisions: [],
+  currentNoteId: null, noteDirty: false, saveTimer: null,
+  // Shallow safety net: snapshot of title+body when the note was opened (one level, in-session).
+  noteOpenedSnapshot: null,
+  stickyMeta: { colors: [], sizes: {} },
+  popTarget: null,
+  paint: null, annotate: null, kanban: null, decisionId: null,
+  emojiCat: 'faces',
+  // Documents list sort — in-memory for the session (matches other UI state; no localStorage elsewhere)
+  docSort: 'nameAsc',
+  appSettings: { noteAutosaveMs: 500, confirmDeletes: true, showIntros: true, autoOpenLast: false, dismissedIntros: [] },
+};
+
+// Auto-generated Twemoji flag SVGs (CC-BY 4.0 Twitter/Twemoji). Offline display for Windows which cannot glyph flags.
+/*__FLAG_DATA__*/
+// Fallback only if inject failed — assign, do not redeclare
+if (typeof FLAG_IMGS === 'undefined') { FLAG_IMGS = {}; }
+
+/** Build regional-indicator flag string from ISO 3166-1 alpha-2 (stored value). */
+function flagEmojiFromIso(iso) {
+  iso = String(iso || '').toUpperCase();
+  if (!/^[A-Z]{2}$/.test(iso)) return '';
+  return String.fromCodePoint(...[...iso].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+}
+function isFlagEmoji(s) {
+  if (!s) return false;
+  const chars = [...s];
+  if (chars.length !== 2) return false;
+  return chars.every(ch => {
+    const cp = ch.codePointAt(0);
+    return cp >= 0x1F1E6 && cp <= 0x1F1FF;
+  });
+}
+function flagIsoFromEmoji(s) {
+  return [...s].map(ch => String.fromCharCode(ch.codePointAt(0) - 0x1F1E6 + 65)).join('');
+}
+/** Visual flag: embedded Twemoji SVG (Windows cannot glyph RI pairs). */
+function flagImgEl(iso, className) {
+  iso = String(iso || '').toUpperCase();
+  const img = document.createElement('img');
+  img.className = className || 'flag-img';
+  img.alt = iso;
+  img.draggable = false;
+  img.title = iso;
+  if (FLAG_IMGS[iso]) img.src = FLAG_IMGS[iso];
+  else img.alt = iso; // last resort text
+  return img;
+}
+function appendEmojiDisplay(parent, emoji) {
+  parent.textContent = '';
+  if (!emoji) return;
+  if (isFlagEmoji(emoji)) {
+    const iso = flagIsoFromEmoji(emoji);
+    if (FLAG_IMGS[iso]) { parent.appendChild(flagImgEl(iso)); return; }
+  }
+  parent.textContent = emoji;
+}
+
+const FLAG_ISOS = Object.keys(FLAG_IMGS).sort();
+const EMOJI_CATS = {
+  // 🚩 triangular priority/milestone flag (U+1F6A9) — was missing since Tier 2
+  faces: ['😀','😁','😂','🤣','😊','😍','🤩','😎','🤔','😅','😢','😡','👍','👎','👏','🙏','🔥','⭐','💡','✅','❌','⚠️','📌','🚩','📎','📝','💼','🎯','🚀','❤️','💯','🎉','📅','⏰','🔗','💬','🐛','✨','🏆','🗂️','💪'],
+  // flags list is ISO codes; rendered as SVG images, stored as RI emoji pairs
+  flags: FLAG_ISOS.length ? FLAG_ISOS : ['CA','US','GB','FR','DE','JP','KR','CN','IN','AU','BR','MX','ES','IT','NL','SE','NO','FI','DK','IE','PT','PL','UA','RU','TR','SA','AE','IL','ZA','NG','EG','KE','AR','CL','CO','PE','NZ','SG','TH','VN','PH','ID','MY','HK','TW','CH','AT','BE','GR','CZ'],
+};
+
+const INTRO_COPY = {
+  documents: { title: 'Documents', body: 'Import files with “+ Import files…” or drag them onto the window. Markdown, text, and PDF text are searchable; other files attach and open externally.' },
+  notes: { title: 'Notes', body: 'Create markdown notes that live as real files in the dossier’s notes/ folder. Edits auto-save. Search finds them with everything else.' },
+  stickies: { title: 'Sticky Notes', body: 'Add colorful stickies on a free board. Drag the header to move, resize from the corner, and pick emoji (including country flags as real flag images).' },
+  paint: { title: 'Paint', body: 'Freehand canvas for quick sketches. Choose pen or eraser, colors, brush size, undo/redo. Each canvas is saved inside this dossier.' },
+  annotate: { title: 'Annotate', body: 'Paste, drop, or open an image, then highlight, arrow, label, redact, or crop. Text labels can be dragged and resized after placing. Drop an image on this tab to start a new board.' },
+  kanban: { title: 'Kanban', body: 'Track work across columns. Set a WIP limit per column (count/limit badge). Drag cards by the ⋮⋮ grip. Card text auto-grows — no broken resize handle.' },
+  decisions: { title: 'Decisions', body: 'Pin decisions on a chronological spine. Optionally attach a frozen document snapshot (Attach version) under decision-versions/ so the exact file at decision time is preserved.' },
+};
+const SIZE_LABELS = {
+  mini: 'Mini', standard: 'Standard', classic: 'Classic 3×3',
+  wide: 'Wide', tall: 'Tall', large: 'Large'
+};
+const PAINT_COLORS = ['#1a1a1a','#e03131','#f08c00','#f0b429','#2f9e44','#1971c2','#9c36b5','#ffffff'];
+const CARD_COLORS = ['yellow','pink','blue','green','orange','red'];
+
+/* ========== Drag & drop import ========== */
+(function setupDnD() {
+  let dragDepth = 0;
+  const overlay = document.getElementById('drop-overlay');
+  function hasFiles(e) {
+    const dt = e.dataTransfer;
+    if (!dt) return false;
+    if (dt.types && (dt.types.includes('Files') || dt.types.contains?.('Files'))) return true;
+    return dt.files && dt.files.length > 0;
+  }
+  function show(on) { overlay.classList.toggle('show', on); }
+  window.addEventListener('dragenter', (e) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault(); e.stopPropagation();
+    dragDepth++;
+    show(true);
+  }, true);
+  window.addEventListener('dragleave', (e) => {
+    if (!hasFiles(e) && dragDepth === 0) return;
+    e.preventDefault(); e.stopPropagation();
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (dragDepth === 0) show(false);
+  }, true);
+  window.addEventListener('dragover', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+    if (hasFiles(e)) show(true);
+  }, true);
+  window.addEventListener('drop', async (e) => {
+    e.preventDefault(); e.stopPropagation();
+    dragDepth = 0; show(false);
+    const files = e.dataTransfer && e.dataTransfer.files;
+    if (!files || !files.length) return;
+    // Annotate tab: open dropped image as annotate canvas (new or existing)
+    if (state.view === 'annotate') {
+      const img = [...files].find(f => f.type && f.type.startsWith('image/'));
+      if (img) {
+        if (state.annotate && state.annotate.id) {
+          await annotateLoadFile(img);
+        } else {
+          await newAnnotateFromFile(img);
+        }
+        return;
+      }
+    }
+    await importFileList(files);
+  }, true);
+})();
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const r = String(reader.result || '');
+      const i = r.indexOf(',');
+      resolve(i >= 0 ? r.slice(i + 1) : r);
+    };
+    reader.onerror = () => reject(reader.error || new Error('read failed'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function importFileList(fileList) {
+  try {
+    const st = await call('GetStatus');
+    if (!st.open) {
+      toast('Open a dossier first, then drop files to import');
+      return;
+    }
+    const items = [];
+    for (const f of fileList) {
+      if (!f || f.name == null) continue;
+      // Skip directories (size 0 + no type can be dirs in some browsers)
+      try {
+        const dataB64 = await fileToBase64(f);
+        items.push({ filename: f.name, dataB64 });
+      } catch (err) {
+        console.warn('skip file', f.name, err);
+      }
+    }
+    if (!items.length) { toast('No files to import'); return; }
+    const imported = await call('ImportDropped', items);
+    toast(`Imported ${imported.length} file(s)`);
+    if (state.view === 'documents') await loadDocs();
+    else await loadDocs();
+    if (imported.length) setView('documents');
+  } catch (e) {
+    toast('Drop import failed: ' + (e.message || e));
+  }
+}
+
+/* ========== Boot / multi-dossier ========== */
+async function boot() {
+  try {
+    const st = await call('GetStatus');
+    document.getElementById('ver').textContent = String(st.version || '2.0.0-t1').replace(/^v/i, '');
+    if (st.open) { await enterShell(st); return; }
+    document.getElementById('setup').style.display = 'flex';
+    renderSetupRecents(st);
+    if (st.hasLastPath) {
+      const btn = document.getElementById('btn-open-last');
+      btn.style.display = 'block';
+      btn.textContent = 'Open last: ' + (st.lastPath || '').split(/[/\\]/).pop();
+      btn.onclick = async () => {
+        try { await enterShell(await call('OpenLastDossier')); }
+        catch (e) { showSetupErr(e); }
+      };
+    }
+    document.getElementById('btn-create').onclick = async () => {
+      try {
+        const s = await call('CreateDossier');
+        await enterShell(s);
+      } catch (e) {
+        if (String(e).includes('cancelled')) return;
+        showSetupErr(e);
+      }
+    };
+  } catch (e) {
+    document.getElementById('setup').style.display = 'flex';
+    showSetupErr(e);
+  }
+}
+function showSetupErr(e) {
+  document.getElementById('setup-err').textContent = String(e.message || e);
+}
+function renderSetupRecents(st) {
+  const box = document.getElementById('setup-recent');
+  const paths = st.recentPaths || [];
+  const names = st.recentNames || [];
+  if (!paths.length) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  box.innerHTML = `<div class="recent-label">Recent workspaces</div>` +
+    paths.map((p, i) => `<button type="button" data-path="${esc(p)}">${esc(names[i] || p.split(/[/\\]/).pop())}<div style="font-size:0.7rem;color:var(--text-muted);font-weight:400">${esc(p)}</div></button>`).join('');
+  box.querySelectorAll('button').forEach(btn => {
+    btn.onclick = async () => {
+      try { await enterShell(await call('OpenDossierPath', btn.dataset.path)); }
+      catch (e) { showSetupErr(e); }
+    };
+  });
+}
+
+async function enterShell(st) {
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('shell').classList.add('open');
+  document.getElementById('dossier-path').textContent = st.root || st.name || '';
+  document.getElementById('dossier-path').onclick = () => call('OpenDossierFolder').catch(() => {});
+  try { state.stickyMeta = await call('StickyMeta'); } catch (_) {}
+  try { state.appSettings = await call('GetAppSettings'); } catch (_) {}
+  updateAgentNav();
+  buildPopovers();
+  setView('documents');
+  await refreshAll();
+}
+function updateAgentNav() {
+  const btn = document.getElementById('nav-agent');
+  if (!btn) return;
+  const on = !!(state.appSettings && state.appSettings.agentConfigured);
+  btn.style.display = on ? '' : 'none';
+  if (!on && state.view === 'agent') setView('documents');
+}
+
+document.getElementById('btn-new-ws').onclick = async () => {
+  try {
+    const s = await call('CreateDossier');
+    await enterShell(s);
+    toast('Opened workspace: ' + (s.name || s.root));
+  } catch (e) {
+    if (String(e).includes('cancelled')) return;
+    toast(String(e.message || e));
+  }
+};
+document.getElementById('btn-close-ws').onclick = async () => {
+  try {
+    const st = await call('CloseDossier');
+    document.getElementById('shell').classList.remove('open');
+    document.getElementById('setup').style.display = 'flex';
+    renderSetupRecents(st);
+    if (st.hasLastPath) {
+      const btn = document.getElementById('btn-open-last');
+      btn.style.display = 'block';
+      btn.textContent = 'Open last: ' + (st.lastPath || '').split(/[/\\]/).pop();
+    }
+  } catch (e) { toast(String(e)); }
+};
+document.getElementById('btn-switch-ws').onclick = async () => {
+  try {
+    const list = await call('ListRecentDossiers') || [];
+    if (!list.length) { toast('No other recent dossiers — use + Folder'); return; }
+    showSwitcher(list);
+  } catch (e) { toast(String(e)); }
+};
+function showSwitcher(list) {
+  const bd = document.createElement('div');
+  bd.className = 'modal-backdrop';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.innerHTML = `<h3>Switch workspace</h3>
+    <div id="sw-list"></div>
+    <div class="actions"><button type="button" id="sw-cancel">Cancel</button>
+    <button type="button" class="primary" id="sw-browse">Browse…</button></div>`;
+  bd.appendChild(modal);
+  document.body.appendChild(bd);
+  const box = modal.querySelector('#sw-list');
+  box.innerHTML = list.map(r =>
+    `<button type="button" style="width:100%;text-align:left;margin-bottom:6px" data-path="${esc(r.path)}">
+      <strong>${esc(r.name)}</strong><div style="font-size:0.72rem;color:var(--text-muted)">${esc(r.path)}</div>
+    </button>`).join('');
+  box.querySelectorAll('button').forEach(btn => {
+    btn.onclick = async () => {
+      try {
+        const s = await call('SwitchDossier', btn.dataset.path);
+        document.body.removeChild(bd);
+        await enterShell(s);
+        toast('Switched to ' + (s.name || ''));
+      } catch (e) { toast(String(e.message || e)); }
+    };
+  });
+  modal.querySelector('#sw-cancel').onclick = () => document.body.removeChild(bd);
+  modal.querySelector('#sw-browse').onclick = async () => {
+    document.body.removeChild(bd);
+    try {
+      const s = await call('PickAndOpenDossier');
+      await enterShell(s);
+    } catch (e) {
+      if (String(e).includes('cancelled')) return;
+      toast(String(e.message || e));
+    }
+  };
+  bd.onclick = (e) => { if (e.target === bd) document.body.removeChild(bd); };
+};
+
+async function refreshAll() {
+  await Promise.all([loadDocs(), loadNotes(), loadStickies(), loadPaints(), loadAnnotates(), loadKanbans(), loadDecisions()]);
+}
+
+/* ========== Navigation ========== */
+document.querySelectorAll('#nav button').forEach(btn => {
+  btn.addEventListener('click', () => setView(btn.dataset.view));
+});
+
+function setView(name) {
+  // Leave editors
+  if (name !== 'paint') closePaintEditor(false);
+  if (name !== 'annotate') closeAnnotateEditor(false);
+  if (name !== 'kanban') closeKanbanBoard(false);
+
+  state.view = name;
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === name + '-view'));
+  const titles = {
+    documents: 'Documents', notes: 'Notes', stickies: 'Sticky Notes',
+    paint: 'Paint', annotate: 'Annotate', kanban: 'Kanban', decisions: 'Decisions',
+    search: 'Search', agent: 'Ask your dossier', settings: 'Settings'
+  };
+  document.getElementById('view-title').textContent = titles[name] || name;
+  const tools = document.getElementById('view-tools');
+  tools.innerHTML = '';
+  if (name === 'documents') {
+    tools.innerHTML = `
+      <label class="tools-label" for="doc-sort" style="font-size:0.8rem;color:var(--text-muted);margin:0">Sort</label>
+      <select id="doc-sort" title="Sort documents">
+        <option value="nameAsc">Name A–Z</option>
+        <option value="nameDesc">Name Z–A</option>
+        <option value="dateNew">Date added (newest)</option>
+        <option value="dateOld">Date added (oldest)</option>
+      </select>
+      <button class="primary" id="btn-import">+ Import files…</button>
+      <button id="btn-rescan">Rescan</button>`;
+    const sortSel = tools.querySelector('#doc-sort');
+    sortSel.value = state.docSort || 'nameAsc';
+    sortSel.onchange = () => {
+      state.docSort = sortSel.value;
+      renderDocs();
+    };
+    tools.querySelector('#btn-import').onclick = doImport;
+    tools.querySelector('#btn-rescan').onclick = doRescan;
+  } else if (name === 'notes') {
+    tools.innerHTML = `
+      <button type="button" class="panel-collapse-btn" id="btn-toggle-notes-list" title="Show or hide the notes list">☰ List</button>
+      <button class="primary" id="btn-new-note">+ New note</button>`;
+    tools.querySelector('#btn-new-note').onclick = newNote;
+    tools.querySelector('#btn-toggle-notes-list').onclick = () => {
+      document.getElementById('notes-view').classList.toggle('list-collapsed');
+    };
+  } else if (name === 'stickies') {
+    tools.innerHTML = `
+      <button class="primary" id="btn-new-sticky">+ Add sticky</button>
+      <select id="new-sticky-color">${(state.stickyMeta.colors || []).map(c => `<option value="${c}">${c}</option>`).join('')}</select>
+      <select id="new-sticky-size">${Object.keys(SIZE_LABELS).map(s => `<option value="${s}">${SIZE_LABELS[s]}</option>`).join('')}</select>`;
+    tools.querySelector('#btn-new-sticky').onclick = newSticky;
+  } else if (name === 'paint') {
+    tools.innerHTML = `<button class="primary" id="btn-new-paint">+ New canvas</button>`;
+    tools.querySelector('#btn-new-paint').onclick = newPaint;
+    loadPaints();
+  } else if (name === 'annotate') {
+    tools.innerHTML = `<button class="primary" id="btn-new-ann">+ New annotate</button>`;
+    tools.querySelector('#btn-new-ann').onclick = newAnnotate;
+    loadAnnotates();
+  } else if (name === 'kanban') {
+    tools.innerHTML = `<button class="primary" id="btn-new-kb">+ New board</button>`;
+    tools.querySelector('#btn-new-kb').onclick = newKanban;
+    loadKanbans();
+  } else if (name === 'decisions') {
+    tools.innerHTML = `
+      <button type="button" class="panel-collapse-btn" id="btn-toggle-spine" title="Show or hide the decision spine">☰ Spine</button>
+      <button class="primary" id="btn-new-dec">+ Pin decision</button>`;
+    tools.querySelector('#btn-new-dec').onclick = newDecision;
+    tools.querySelector('#btn-toggle-spine').onclick = () => {
+      document.getElementById('decisions-view').classList.toggle('spine-collapsed');
+    };
+    loadDecisions();
+  } else if (name === 'search') {
+    tools.innerHTML = `<div id="search-wrap"><input type="search" id="search-box" placeholder="Search everything…" /></div>`;
+    const box = tools.querySelector('#search-box');
+    let t;
+    box.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => runSearch(box.value), 200); });
+    box.focus();
+  } else if (name === 'agent') {
+    tools.innerHTML = `
+      <span style="font-size:0.8rem;color:var(--text-muted)">Uses FTS-selected dossier context</span>
+      <button type="button" id="btn-agent-clear" title="Clear conversation history">Clear conversation</button>`;
+    tools.querySelector('#btn-agent-clear').onclick = clearAgentConversation;
+    ensureAgentUI();
+  } else if (name === 'settings') {
+    renderSettings();
+  }
+  closePopovers();
+  showIntroIfNeeded(name);
+}
+
+function introDismissed(view) {
+  const d = state.appSettings.dismissedIntros || [];
+  return d.includes(view);
+}
+function showIntroIfNeeded(view) {
+  // Remove any existing intro banners
+  document.querySelectorAll('.intro-banner').forEach(el => el.remove());
+  if (!INTRO_COPY[view]) return;
+  if (state.appSettings.showIntros === false) return;
+  if (introDismissed(view)) return;
+  const viewEl = document.getElementById(view + '-view');
+  if (!viewEl) return;
+  const copy = INTRO_COPY[view];
+  const ban = document.createElement('div');
+  ban.className = 'intro-banner';
+  ban.innerHTML = `<div class="intro-body"><strong>${esc(copy.title)}</strong><p>${esc(copy.body)}</p></div>
+    <button type="button" class="primary">Got it</button>`;
+  ban.querySelector('button').onclick = async () => {
+    ban.remove();
+    try {
+      state.appSettings = await call('DismissIntro', view);
+    } catch (_) {
+      state.appSettings.dismissedIntros = [...(state.appSettings.dismissedIntros || []), view];
+    }
+  };
+  viewEl.insertBefore(ban, viewEl.firstChild);
+}
+
+function renderSettings() {
+  const panel = document.getElementById('settings-panel');
+  const s = state.appSettings || {};
+  const confirm = s.confirmDeletes !== false;
+  const showIntros = s.showIntros !== false;
+  const autoOpenLast = s.autoOpenLast === true;
+  const ms = s.noteAutosaveMs || 500;
+  // Host is the enable/hide gate. Prefill 127.0.0.1 only when never configured so first enable is “type a port”.
+  // Once configured (or explicitly cleared), show the real saved host — empty means panel off.
+  const neverAgent = !(s.agentHost && String(s.agentHost).trim()) && !(s.agentPort > 0);
+  const aHost = (s.agentHost && String(s.agentHost).trim())
+    ? s.agentHost
+    : (neverAgent ? '127.0.0.1' : '');
+  const aPort = s.agentPort || '';
+  const aToken = s.agentToken || '';
+  const aPath = s.agentPath || '/v1/chat/completions';
+  panel.innerHTML = `
+    <h3>Settings</h3>
+    <p class="settings-desc">App-wide preferences (stored in %APPDATA%\\Dossier, not inside a dossier folder). Visual style stays a solid dark shell — glass-morphism was considered and rejected for readability in a productivity tool.</p>
+    <div class="settings-row">
+      <div><label>Confirm before deletes</label><div class="hint">Ask before removing documents, notes, stickies, boards</div></div>
+      <input type="checkbox" id="set-confirm" ${confirm ? 'checked' : ''} />
+    </div>
+    <div class="settings-row">
+      <div><label>Show first-open intros</label><div class="hint">Brief tips the first time you open each surface</div></div>
+      <input type="checkbox" id="set-intros" ${showIntros ? 'checked' : ''} />
+    </div>
+    <div class="settings-row">
+      <div><label>Open last workspace on launch</label><div class="hint">When on, skip the launcher if the last dossier folder still exists (you can still Close to the launcher). Default off.</div></div>
+      <input type="checkbox" id="set-auto-open-last" ${autoOpenLast ? 'checked' : ''} />
+    </div>
+    <div class="settings-row">
+      <div><label>Note auto-save delay (ms)</label><div class="hint">How long to wait after typing before saving a note</div></div>
+      <input type="number" id="set-autosave" min="200" max="5000" step="100" value="${ms}" />
+    </div>
+    <div class="settings-row">
+      <div><label>Reset all intros</label><div class="hint">Show first-open tips again on every surface</div></div>
+      <button type="button" id="set-reset-intros">Reset intros</button>
+    </div>
+    <h3 style="margin-top:22px">Optional agent (Ask your dossier)</h3>
+    <p class="settings-desc">Client-only. Point at any local HTTP agent endpoint you run yourself. <strong>Clear the host field entirely and save</strong> to hide the Ask panel (port alone does not enable it). Dossier never auto-detects or modifies local AI software.</p>
+    <div class="settings-row">
+      <div><label>Agent host</label><div class="hint">Required to show the Ask panel. Clear and save to hide it. First-time default is 127.0.0.1.</div></div>
+      <input type="text" id="set-agent-host" value="${esc(aHost)}" placeholder="127.0.0.1" style="width:min(220px,40vw)" />
+    </div>
+    <div class="settings-row">
+      <div><label>Agent port</label><div class="hint">Required with a non-empty host to enable the panel</div></div>
+      <input type="number" id="set-agent-port" min="1" max="65535" value="${esc(aPort)}" />
+    </div>
+    <div class="settings-row">
+      <div><label>Bearer token</label><div class="hint">Optional Authorization: Bearer …</div></div>
+      <input type="password" id="set-agent-token" value="${esc(aToken)}" style="width:min(220px,40vw)" autocomplete="off" />
+    </div>
+    <div class="settings-row">
+      <div><label>HTTP path</label><div class="hint">Default OpenAI-compatible chat path</div></div>
+      <input type="text" id="set-agent-path" value="${esc(aPath)}" style="width:min(260px,45vw)" />
+    </div>
+    <div class="settings-row">
+      <div><label>Sample files</label><div class="hint">Starter content ships next to the app in sample-files/</div></div>
+      <span style="font-size:0.8rem;color:var(--text-muted)">Import from sample-files/</span>
+    </div>
+    <h3 style="margin-top:22px">Open externally (per file type)</h3>
+    <p class="settings-desc">Dossier can remember its own preferred app for each extension (e.g. .pdf), independent of Windows defaults. Set from a document’s <strong>Open with…</strong> menu, or clear below.</p>
+    <div id="set-openwith-list"></div>
+    <div style="margin-top:16px">
+      <button type="button" class="primary" id="set-save">Save settings</button>
+    </div>`;
+  const ow = s.openWith || {};
+  const owKeys = Object.keys(ow).sort();
+  const owList = panel.querySelector('#set-openwith-list');
+  if (!owKeys.length) {
+    owList.innerHTML = `<div class="settings-row"><div class="hint">No preferred apps yet. Open a document → <strong>Open with…</strong> → <strong>Always open … with…</strong></div></div>`;
+  } else {
+    owList.innerHTML = owKeys.map(k => {
+      const app = ow[k];
+      const short = (app || '').split(/[/\\]/).pop();
+      return `<div class="settings-row" data-ext="${esc(k)}">
+        <div><label>${esc(k)}</label><div class="hint" title="${esc(app)}">${esc(short || app)}</div></div>
+        <button type="button" class="danger ow-clear" data-ext="${esc(k)}">Clear</button>
+      </div>`;
+    }).join('');
+    owList.querySelectorAll('.ow-clear').forEach(btn => {
+      btn.onclick = async () => {
+        try {
+          state.appSettings = await call('SetOpenWithPreference', btn.dataset.ext, '');
+          toast('Cleared preferred app for ' + btn.dataset.ext);
+          renderSettings();
+        } catch (e) { toast(String(e.message || e)); }
+      };
+    });
+  }
+  panel.querySelector('#set-save').onclick = async () => {
+    try {
+      const portVal = panel.querySelector('#set-agent-port').value;
+      const portNum = portVal === '' ? 0 : (+portVal || 0);
+      // Live DOM only — empty host stays empty (do not re-inject 127.0.0.1).
+      const hostVal = String(panel.querySelector('#set-agent-host').value || '').trim();
+      state.appSettings = await call('SaveAppSettings', {
+        noteAutosaveMs: +panel.querySelector('#set-autosave').value || 500,
+        confirmDeletes: panel.querySelector('#set-confirm').checked,
+        showIntros: panel.querySelector('#set-intros').checked,
+        autoOpenLast: panel.querySelector('#set-auto-open-last').checked,
+        agentHost: hostVal,
+        agentPort: portNum,
+        agentToken: panel.querySelector('#set-agent-token').value,
+        agentPath: panel.querySelector('#set-agent-path').value,
+      });
+      updateAgentNav();
+      toast('Settings saved' + (state.appSettings.agentConfigured ? ' → Ask dossier panel enabled' : ' → Ask panel hidden'));
+    } catch (e) { toast(String(e.message || e)); }
+  };
+  panel.querySelector('#set-reset-intros').onclick = async () => {
+    try {
+      state.appSettings = await call('ResetIntros');
+      toast('Intros reset — reopen a surface to see them');
+    } catch (e) { toast(String(e.message || e)); }
+  };
+}
+
+/** Clear Ask panel Q/A history only — does not touch Settings/host config. */
+function clearAgentConversation() {
+  const log = document.getElementById('agent-log');
+  const ctx = document.getElementById('agent-ctx');
+  const q = document.getElementById('agent-q');
+  if (log) log.innerHTML = '';
+  if (ctx) ctx.textContent = '';
+  if (q) {
+    q.value = '';
+    q.focus();
+  }
+  const send = document.getElementById('agent-send');
+  if (send) send.disabled = false;
+}
+
+function ensureAgentUI() {
+  const send = document.getElementById('agent-send');
+  const q = document.getElementById('agent-q');
+  if (!send || send._bound) return;
+  send._bound = true;
+  const doAsk = async () => {
+    const question = (q.value || '').trim();
+    if (!question) return;
+    const log = document.getElementById('agent-log');
+    const ctx = document.getElementById('agent-ctx');
+    const u = document.createElement('div');
+    u.className = 'agent-msg user';
+    u.textContent = question;
+    log.appendChild(u);
+    q.value = '';
+    send.disabled = true;
+    ctx.textContent = 'Searching dossier + calling agent…';
+    try {
+      const res = await call('AskDossier', { question });
+      if (res.error) {
+        const e = document.createElement('div');
+        e.className = 'agent-msg err';
+        e.textContent = res.error;
+        log.appendChild(e);
+      } else {
+        const b = document.createElement('div');
+        b.className = 'agent-msg bot';
+        b.textContent = res.answer || '(empty answer)';
+        log.appendChild(b);
+      }
+      const used = res.contextUsed || [];
+      ctx.textContent = used.length
+        ? ('Context: ' + used.map(x => (x.kind + ':' + (x.title || x.id))).join(' · ') + (res.endpoint ? ' → ' + res.endpoint : ''))
+        : ('No FTS hits' + (res.endpoint ? ' → ' + res.endpoint : ''));
+      log.scrollTop = log.scrollHeight;
+    } catch (e) {
+      const err = document.createElement('div');
+      err.className = 'agent-msg err';
+      err.textContent = String(e.message || e);
+      log.appendChild(err);
+      ctx.textContent = '';
+    } finally {
+      send.disabled = false;
+    }
+  };
+  send.onclick = doAsk;
+  q.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doAsk(); }
+  });
+}
+
+async function confirmDelete(msg) {
+  if (state.appSettings && state.appSettings.confirmDeletes === false) return true;
+  return confirm(msg);
+}
+
+/* ========== Documents ========== */
+async function loadDocs() {
+  try { state.docs = await call('ListDocuments') || []; renderDocs(); }
+  catch (e) { toast('Load docs: ' + e); }
+}
+function kindClass(k) {
+  return ({ markdown: 'md', text: 'txt', pdf: 'pdf', docx: 'docx', xlsx: 'xlsx', odt: 'odt', ods: 'ods' })[k] || '';
+}
+function sortedDocs() {
+  const docs = (state.docs || []).slice();
+  const mode = state.docSort || 'nameAsc';
+  const nameCmp = (a, b) => String(a.filename || '').localeCompare(String(b.filename || ''), undefined, { sensitivity: 'base', numeric: true });
+  const dateCmp = (a, b) => String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
+  if (mode === 'nameDesc') docs.sort((a, b) => -nameCmp(a, b));
+  else if (mode === 'dateNew') docs.sort((a, b) => -dateCmp(a, b) || nameCmp(a, b));
+  else if (mode === 'dateOld') docs.sort((a, b) => dateCmp(a, b) || nameCmp(a, b));
+  else docs.sort(nameCmp); // nameAsc default
+  return docs;
+}
+function renderDocs() {
+  const list = document.getElementById('doc-list');
+  if (!state.docs.length) {
+    list.innerHTML = `<div class="empty"><strong>No documents yet</strong><br/>Import or <strong>drag & drop</strong> files onto the window.<br/>Markdown, text, PDF, Word (.docx), Excel (.xlsx), OpenDocument (.odt/.ods), or any attachment.</div>`;
+    return;
+  }
+  list.innerHTML = sortedDocs().map(d => {
+    let badge = '';
+    if (d.pdfFlags && d.pdfFlags.hasImageOnly) badge = `<span class="badge">⚠ image-only pages</span>`;
+    else if (d.officeFlags && d.officeFlags.partial) badge = `<span class="badge">⚠ partial extract</span>`;
+    const preview = d.preview ? `<div class="preview">${esc(d.preview)}</div>` : '';
+    return `<div class="doc-row" data-id="${esc(d.id)}">
+      <div class="kind ${esc(kindClass(d.kind))}">${kindLabel(d.kind)}</div>
+      <div class="meta">
+        <div class="name">${esc(d.filename)}</div>
+        <div class="sub">${fmtSize(d.sizeBytes)} · ${esc(d.kind)} · imported ${esc(fmtDate(d.createdAt))}</div>
+        ${preview}
+      </div>
+      ${badge}
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.doc-row').forEach(row => { row.onclick = () => openDoc(row.dataset.id); });
+}
+async function doImport() {
+  try {
+    const imported = await call('ImportFiles');
+    toast(`Imported ${imported.length} file(s)`);
+    await loadDocs();
+  } catch (e) {
+    if (String(e).includes('cancelled')) return;
+    toast('Import failed: ' + e);
+  }
+}
+async function doRescan() {
+  try {
+    const r = await call('Rescan');
+    toast(`Rescanned: ${r.documents} docs, ${r.notes} notes`);
+    await refreshAll();
+  } catch (e) { toast(String(e)); }
+}
+async function openDoc(id) {
+  try {
+    const res = await call('GetDocument', id);
+    const d = res.document;
+    const body = res.body || '';
+    const detail = document.getElementById('doc-detail');
+    detail.classList.add('open');
+    document.getElementById('doc-title').textContent = d.filename;
+    const warn = document.getElementById('doc-warn');
+    if (d.pdfFlags && (d.pdfFlags.hasImageOnly || d.pdfFlags.extractionNote)) {
+      warn.style.display = 'block';
+      let msg = d.pdfFlags.extractionNote || '';
+      if (d.pdfFlags.imageOnlyPages && d.pdfFlags.imageOnlyPages.length) {
+        msg += ' Image-only page(s): ' + d.pdfFlags.imageOnlyPages.join(', ') + '.';
+      }
+      warn.textContent = '⚠ PDF extraction: ' + msg;
+    } else if (d.officeFlags && d.officeFlags.extractionNote) {
+      warn.style.display = 'block';
+      warn.textContent = '⚠ Office extraction (' + (d.officeFlags.format || d.kind) + '): ' + d.officeFlags.extractionNote +
+        ' Dossier does not replace Word/Excel — use Open externally for the full file.';
+    } else warn.style.display = 'none';
+    const bodyEl = document.getElementById('doc-body');
+    const office = d.kind === 'docx' || d.kind === 'xlsx' || d.kind === 'odt' || d.kind === 'ods';
+    if (d.kind === 'other' || (!body && d.kind !== 'pdf' && !office)) {
+      bodyEl.innerHTML = `<div class="binary-info"><div>📎 Attached file</div><div class="size">${esc(d.filename)}</div>
+        <div>${fmtSize(d.sizeBytes)} · ${esc(d.mimeType || 'unknown type')}</div>
+        <p style="margin-top:16px">Not previewed inside Dossier. Use <strong>Open externally</strong>.</p></div>`;
+    } else if (!body && d.kind === 'pdf') {
+      bodyEl.innerHTML = `<div class="binary-info"><div>📕 PDF — no extractable text</div>
+        <p style="margin-top:12px">Image-only/scanned. Use <strong>Open externally</strong>.</p></div>`;
+    } else if (!body && office) {
+      bodyEl.innerHTML = `<div class="binary-info"><div>📄 ${esc(d.kind.toUpperCase())} — no extractable text</div>
+        <p style="margin-top:12px">Search index has no text for this file. Use <strong>Open externally</strong> for the full Office/OpenDocument file.</p></div>`;
+    } else {
+      bodyEl.textContent = body;
+      if (office) {
+        const note = document.createElement('div');
+        note.className = 'warn-banner';
+        note.style.display = 'block';
+        const realApp = ({ docx: 'Word', xlsx: 'Excel', odt: 'Writer/ODT', ods: 'Calc/ODS' })[d.kind] || 'Office';
+        note.textContent = 'Preview is best-effort extracted text only (lossy). Open externally for the real ' + realApp + ' document.';
+        bodyEl.prepend(note);
+      }
+    }
+    document.getElementById('doc-back').onclick = () => {
+      hideOpenWithMenu();
+      detail.classList.remove('open');
+    };
+    const openBtn = document.getElementById('doc-open-ext');
+    const ext = fileExt(d.filename);
+    const preferred = preferredAppForExt(ext);
+    openBtn.title = preferred
+      ? ('Open with Dossier preferred: ' + preferred)
+      : 'Open with Windows default app for this type';
+    openBtn.onclick = async () => {
+      try {
+        await call('OpenDocumentExternally', id, false);
+        toast(preferred ? 'Opened with Dossier preferred app' : 'Opened with Windows default');
+      } catch (e) { toast(String(e.message || e)); }
+    };
+    document.getElementById('doc-open-with').onclick = (ev) => {
+      ev.stopPropagation();
+      toggleOpenWithMenu(id, d.filename);
+    };
+    document.getElementById('doc-delete').onclick = async () => {
+      if (!(await confirmDelete('Delete this document from the dossier?'))) return;
+      hideOpenWithMenu();
+      await call('DeleteDocument', id);
+      detail.classList.remove('open');
+      await loadDocs();
+      toast('Deleted');
+    };
+  } catch (e) { toast(String(e)); }
+}
+
+function fileExt(name) {
+  const m = String(name || '').match(/(\.[A-Za-z0-9]+)$/);
+  return m ? m[1].toLowerCase() : '';
+}
+function preferredAppForExt(ext) {
+  const map = (state.appSettings && state.appSettings.openWith) || {};
+  const key = (ext || '').toLowerCase();
+  return map[key] || map[key.replace(/^\./, '')] || '';
+}
+function hideOpenWithMenu() {
+  const m = document.getElementById('doc-open-menu');
+  if (!m) return;
+  m.classList.remove('open');
+  m.style.display = 'none';
+  m.hidden = true;
+  m.innerHTML = '';
+}
+function toggleOpenWithMenu(docId, filename) {
+  const m = document.getElementById('doc-open-menu');
+  if (!m) return;
+  if (m.classList.contains('open') && m.dataset.docId === docId) {
+    hideOpenWithMenu();
+    return;
+  }
+  const ext = fileExt(filename) || '(no extension)';
+  const pref = preferredAppForExt(fileExt(filename));
+  const prefLabel = pref ? pref.split(/[/\\]/).pop() : '';
+  m.dataset.docId = docId;
+  m.hidden = false;
+  m.style.display = 'flex';
+  m.classList.add('open');
+  m.innerHTML = `
+    <div class="ow-hint">Dossier remembers its own preferred app per file type (e.g. ${esc(ext)}), separate from Windows defaults.</div>
+    <button type="button" data-act="preferred" ${pref ? '' : 'disabled'}>Open with preferred${prefLabel ? ' (' + esc(prefLabel) + ')' : ''}</button>
+    <button type="button" data-act="default">Open with Windows default</button>
+    <button type="button" data-act="once">Choose app for this once…</button>
+    <button type="button" data-act="always">Always open ${esc(ext)} with…</button>
+    <button type="button" data-act="clear" ${pref ? '' : 'disabled'}>Clear preferred for ${esc(ext)}</button>
+  `;
+  m.querySelectorAll('button').forEach(btn => {
+    btn.onclick = async () => {
+      const act = btn.dataset.act;
+      try {
+        if (act === 'preferred') {
+          await call('OpenDocumentExternally', docId, false);
+          toast('Opened with preferred app');
+        } else if (act === 'default') {
+          await call('OpenDocumentExternally', docId, true);
+          toast('Opened with Windows default');
+        } else if (act === 'once') {
+          const app = await call('PickOpenApp');
+          if (!app) return;
+          await call('OpenDocumentWithApp', docId, app);
+          toast('Opened with ' + app.split(/[/\\]/).pop());
+        } else if (act === 'always') {
+          const app = await call('PickOpenApp');
+          if (!app) return;
+          state.appSettings = await call('SetOpenWithPreference', filename, app);
+          toast('Preferred app for ' + fileExt(filename) + ': ' + app.split(/[/\\]/).pop());
+          hideOpenWithMenu();
+          // refresh button title
+          const openBtn = document.getElementById('doc-open-ext');
+          if (openBtn) openBtn.title = 'Open with Dossier preferred: ' + app;
+        } else if (act === 'clear') {
+          state.appSettings = await call('SetOpenWithPreference', filename, '');
+          toast('Cleared preferred app for ' + fileExt(filename));
+          hideOpenWithMenu();
+          const openBtn = document.getElementById('doc-open-ext');
+          if (openBtn) openBtn.title = 'Open with Windows default app for this type';
+        }
+      } catch (e) {
+        toast(String(e.message || e));
+      }
+    };
+  });
+}
+
+/* ========== Notes ========== */
+async function loadNotes() {
+  try { state.notes = await call('ListNotes') || []; renderNotesList(); }
+  catch (e) { toast(String(e)); }
+}
+function renderNotesList() {
+  const list = document.getElementById('notes-list');
+  if (!state.notes.length) { list.innerHTML = `<div class="empty" style="padding:24px">No notes yet</div>`; return; }
+  list.innerHTML = state.notes.map(n => `
+    <div class="note-item ${n.id === state.currentNoteId ? 'active' : ''}" data-id="${esc(n.id)}">
+      <div class="t">${esc(n.title)}</div>
+      <div class="d">${esc(fmtDate(n.updatedAt))}</div>
+    </div>`).join('');
+  list.querySelectorAll('.note-item').forEach(el => { el.onclick = () => openNote(el.dataset.id); });
+}
+async function newNote() {
+  try {
+    const n = await call('CreateNote', 'Untitled note');
+    state.notes.unshift(n); renderNotesList(); await openNote(n.id);
+  } catch (e) { toast(String(e)); }
+}
+async function openNote(id) {
+  if (state.noteDirty && state.currentNoteId) await saveCurrentNote();
+  try {
+    const n = await call('GetNote', id);
+    state.currentNoteId = id; state.noteDirty = false;
+    // Safety net: one snapshot of content as loaded (before this editing session).
+    state.noteOpenedSnapshot = { id, title: n.title || '', body: n.body || '' };
+    document.getElementById('note-placeholder').style.display = 'none';
+    document.getElementById('note-editor').style.display = 'flex';
+    document.getElementById('note-title').value = n.title || '';
+    document.getElementById('note-body').value = n.body || '';
+    document.getElementById('note-status').textContent = 'Saved';
+    updateNoteRevertBtn();
+    renderNotesList();
+  } catch (e) { toast(String(e)); }
+}
+function noteDiffersFromSnapshot() {
+  const snap = state.noteOpenedSnapshot;
+  if (!snap || snap.id !== state.currentNoteId) return false;
+  const t = document.getElementById('note-title').value || '';
+  const b = document.getElementById('note-body').value || '';
+  return t !== snap.title || b !== snap.body;
+}
+function updateNoteRevertBtn() {
+  const btn = document.getElementById('note-revert');
+  if (!btn) return;
+  const show = !!(state.currentNoteId && state.noteOpenedSnapshot && noteDiffersFromSnapshot());
+  btn.style.display = show ? '' : 'none';
+}
+function scheduleSave() {
+  state.noteDirty = true;
+  document.getElementById('note-status').textContent = 'Editing…';
+  updateNoteRevertBtn();
+  clearTimeout(state.saveTimer);
+  const ms = (state.appSettings && state.appSettings.noteAutosaveMs) || 500;
+  state.saveTimer = setTimeout(saveCurrentNote, ms);
+}
+async function saveCurrentNote() {
+  if (!state.currentNoteId) return;
+  try {
+    const n = await call('SaveNote', state.currentNoteId, document.getElementById('note-title').value, document.getElementById('note-body').value);
+    state.noteDirty = false;
+    document.getElementById('note-status').textContent = 'Saved';
+    const i = state.notes.findIndex(x => x.id === n.id);
+    if (i >= 0) state.notes[i] = { ...state.notes[i], ...n };
+    else state.notes.unshift(n);
+    updateNoteRevertBtn();
+    renderNotesList();
+  } catch (e) {
+    document.getElementById('note-status').textContent = 'Error';
+    toast(String(e));
+  }
+}
+document.getElementById('note-title').addEventListener('input', scheduleSave);
+document.getElementById('note-body').addEventListener('input', scheduleSave);
+document.getElementById('note-revert').onclick = async () => {
+  const snap = state.noteOpenedSnapshot;
+  if (!snap || snap.id !== state.currentNoteId) {
+    toast('No open-session snapshot to revert to');
+    return;
+  }
+  if (!noteDiffersFromSnapshot()) {
+    toast('Nothing to revert');
+    return;
+  }
+  if (!confirm('Revert this note to how it looked when you opened it? Autosaved edits since then will be overwritten.')) {
+    return;
+  }
+  document.getElementById('note-title').value = snap.title;
+  document.getElementById('note-body').value = snap.body;
+  state.noteDirty = true;
+  await saveCurrentNote();
+  toast('Reverted to content from when you opened this note');
+  updateNoteRevertBtn();
+};
+document.getElementById('note-copy').onclick = async () => {
+  if (!state.currentNoteId) { toast('Open a note first'); return; }
+  const title = document.getElementById('note-title').value || '';
+  const body = document.getElementById('note-body').value || '';
+  const text = title ? (title + '\n\n' + body) : body;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+    }
+    toast('Note copied to clipboard');
+  } catch (e) {
+    toast('Copy failed: ' + (e.message || e));
+  }
+};
+document.getElementById('note-delete').onclick = async () => {
+  if (!state.currentNoteId || !(await confirmDelete('Delete this note?'))) return;
+  await call('DeleteNote', state.currentNoteId);
+  state.currentNoteId = null; state.noteDirty = false;
+  state.noteOpenedSnapshot = null;
+  document.getElementById('note-editor').style.display = 'none';
+  document.getElementById('note-placeholder').style.display = 'flex';
+  updateNoteRevertBtn();
+  await loadNotes(); toast('Note deleted');
+};
+
+/* ========== Stickies + flag emoji ========== */
+function buildPopovers() {
+  const colors = state.stickyMeta.colors || ['yellow','pink','blue','green','orange','red','purple','teal','mint','peach','lavender','white'];
+  const colorCss = {
+    yellow:'#fff59d', pink:'#f8bbd0', blue:'#90caf9', green:'#a5d6a7',
+    orange:'#ffcc80', red:'#ef9a9a', purple:'#ce93d8', teal:'#80cbc4',
+    mint:'#b2f2bb', peach:'#ffc9a9', lavender:'#d1c4e9', white:'#f5f5f5'
+  };
+  const grid = document.getElementById('color-grid');
+  grid.innerHTML = colors.map(c =>
+    `<div class="color-swatch" data-color="${c}" style="background:${colorCss[c]||'#ccc'}" title="${c}"></div>`
+  ).join('');
+  grid.querySelectorAll('.color-swatch').forEach(el => {
+    el.onclick = async () => {
+      if (!state.popTarget) return;
+      const st = state.stickies.find(s => s.id === state.popTarget);
+      if (!st) return;
+      st.color = el.dataset.color;
+      await persistSticky(st); renderStickies(); closePopovers();
+    };
+  });
+
+  const tabs = document.getElementById('emoji-tabs');
+  tabs.innerHTML = `
+    <button type="button" data-cat="faces" class="${state.emojiCat==='faces'?'on':''}">Faces</button>
+    <button type="button" data-cat="flags" class="${state.emojiCat==='flags'?'on':''}">Flags</button>
+    <button type="button" data-e-clear>Clear</button>`;
+  tabs.querySelectorAll('button[data-cat]').forEach(btn => {
+    btn.onclick = () => { state.emojiCat = btn.dataset.cat; buildPopovers(); openPopover('pop-emoji', state._emojiAnchor, state.popTarget); };
+  });
+  tabs.querySelector('[data-e-clear]').onclick = async () => {
+    if (!state.popTarget) return;
+    const st = state.stickies.find(s => s.id === state.popTarget);
+    if (!st) return;
+    st.emoji = '';
+    await persistSticky(st); renderStickies(); closePopovers();
+  };
+  renderEmojiGrid();
+
+  const sr = document.getElementById('size-row');
+  sr.innerHTML = Object.keys(SIZE_LABELS).map(s =>
+    `<button type="button" data-size="${s}">${SIZE_LABELS[s]}</button>`
+  ).join('');
+  sr.querySelectorAll('button').forEach(btn => {
+    btn.onclick = async () => {
+      if (!state.popTarget) return;
+      const st = state.stickies.find(s => s.id === state.popTarget);
+      if (!st) return;
+      st.size = btn.dataset.size;
+      const dims = (state.stickyMeta.sizes || {})[st.size];
+      if (dims) { st.w = dims[0]; st.h = dims[1]; }
+      await persistSticky(st); renderStickies(); closePopovers();
+    };
+  });
+}
+function renderEmojiGrid() {
+  const eg = document.getElementById('emoji-grid');
+  const list = EMOJI_CATS[state.emojiCat] || EMOJI_CATS.faces;
+  eg.innerHTML = '';
+  list.forEach(item => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    if (state.emojiCat === 'flags') {
+      // item is ISO code — show Twemoji SVG, store RI pair
+      const iso = String(item).toUpperCase();
+      btn.className = 'flag-btn';
+      btn.title = iso;
+      if (FLAG_IMGS[iso]) btn.appendChild(flagImgEl(iso));
+      else btn.textContent = iso;
+      btn.onclick = async () => {
+        if (!state.popTarget) return;
+        const st = state.stickies.find(s => s.id === state.popTarget);
+        if (!st) return;
+        st.emoji = flagEmojiFromIso(iso);
+        await persistSticky(st); renderStickies(); closePopovers();
+      };
+    } else {
+      btn.className = 'flag-glyph';
+      btn.textContent = item;
+      btn.title = item;
+      btn.onclick = async () => {
+        if (!state.popTarget) return;
+        const st = state.stickies.find(s => s.id === state.popTarget);
+        if (!st) return;
+        st.emoji = item;
+        await persistSticky(st); renderStickies(); closePopovers();
+      };
+    }
+    eg.appendChild(btn);
+  });
+}
+function closePopovers() {
+  document.querySelectorAll('.popover').forEach(p => p.classList.remove('open'));
+  state.popTarget = null;
+}
+function openPopover(id, anchor, stickyId) {
+  closePopovers();
+  state.popTarget = stickyId;
+  if (id === 'pop-emoji') state._emojiAnchor = anchor;
+  const pop = document.getElementById(id);
+  const r = anchor.getBoundingClientRect();
+  pop.style.left = Math.min(r.left, window.innerWidth - 320) + 'px';
+  pop.style.top = Math.min(r.bottom + 6, window.innerHeight - 200) + 'px';
+  pop.classList.add('open');
+}
+document.addEventListener('mousedown', (e) => {
+  if (!e.target.closest('.popover') && !e.target.closest('.sticky .sh button')) closePopovers();
+});
+
+async function loadStickies() {
+  try { state.stickies = await call('ListStickies') || []; renderStickies(); }
+  catch (e) { toast(String(e)); }
+}
+function renderStickies() {
+  const board = document.getElementById('sticky-board');
+  board.innerHTML = '';
+  state.stickies.forEach(st => {
+    const el = document.createElement('div');
+    const compact = (st.size === 'mini') || (Number(st.w) > 0 && Number(st.w) < 175);
+    el.className = 'sticky c-' + (st.color || 'yellow') + (compact ? ' sticky-compact' : '');
+    el.dataset.id = st.id;
+    el.style.left = st.x + 'px';
+    el.style.top = st.y + 'px';
+    el.style.width = st.w + 'px';
+    el.style.height = st.h + 'px';
+    el.style.zIndex = st.zIndex || 1;
+
+    const sh = document.createElement('div');
+    sh.className = 'sh';
+    const emojiSpan = document.createElement('span');
+    emojiSpan.className = 'emoji-label flag-glyph';
+    appendEmojiDisplay(emojiSpan, st.emoji); // flags → SVG img (Windows cannot glyph RI pairs)
+    const grip = document.createElement('span');
+    grip.className = 'grip';
+    grip.textContent = '⠿ sticky';
+    grip.title = 'Drag to move';
+    sh.appendChild(emojiSpan);
+    sh.appendChild(grip);
+    const actions = document.createElement('div');
+    actions.className = 'sh-actions';
+    [
+      ['emoji', '😀', 'Emoji'],
+      ['color', '🎨', 'Color'],
+      ['size', '⬚', 'Size'],
+      ['del', '🗑', 'Delete sticky'],
+    ].forEach(([act, label, title]) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.act = act;
+      b.textContent = label;
+      b.title = title;
+      b.setAttribute('aria-label', title);
+      if (act === 'del') b.className = 'sticky-del';
+      actions.appendChild(b);
+    });
+    sh.appendChild(actions);
+    const ta = document.createElement('textarea');
+    ta.className = 'sb';
+    ta.spellcheck = true;
+    ta.value = st.text || '';
+    ta.style.color = '#1a1a1a';
+    ta.style.webkitTextFillColor = '#1a1a1a';
+    ta.style.caretColor = '#1a1a1a';
+    const rz = document.createElement('div');
+    rz.className = 'resize';
+    el.appendChild(sh); el.appendChild(ta); el.appendChild(rz);
+    board.appendChild(el);
+
+    let saveT;
+    ta.addEventListener('input', () => {
+      st.text = ta.value;
+      clearTimeout(saveT);
+      saveT = setTimeout(() => persistSticky(st), 400);
+    });
+    sh.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('mousedown', e => e.stopPropagation());
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const act = btn.dataset.act;
+        if (act === 'del') {
+          if (!(await confirmDelete('Delete this sticky?'))) return;
+          await call('DeleteSticky', st.id);
+          state.stickies = state.stickies.filter(x => x.id !== st.id);
+          renderStickies();
+          return;
+        }
+        if (act === 'color') openPopover('pop-color', btn, st.id);
+        if (act === 'emoji') openPopover('pop-emoji', btn, st.id);
+        if (act === 'size') openPopover('pop-size', btn, st.id);
+      });
+    });
+    sh.addEventListener('mousedown', (e) => {
+      if (e.target.closest('button')) return;
+      e.preventDefault();
+      el.classList.add('dragging');
+      const startX = e.clientX, startY = e.clientY, origX = st.x, origY = st.y;
+      st.zIndex = (Math.max(0, ...state.stickies.map(s => s.zIndex || 0)) + 1);
+      el.style.zIndex = st.zIndex;
+      function move(ev) {
+        st.x = Math.max(0, origX + (ev.clientX - startX));
+        st.y = Math.max(0, origY + (ev.clientY - startY));
+        el.style.left = st.x + 'px'; el.style.top = st.y + 'px';
+      }
+      function up() {
+        document.removeEventListener('mousemove', move);
+        document.removeEventListener('mouseup', up);
+        el.classList.remove('dragging');
+        persistSticky(st);
+      }
+      document.addEventListener('mousemove', move);
+      document.addEventListener('mouseup', up);
+    });
+    rz.addEventListener('mousedown', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const startX = e.clientX, startY = e.clientY, origW = st.w, origH = st.h;
+      function move(ev) {
+        st.w = Math.max(120, origW + (ev.clientX - startX));
+        st.h = Math.max(100, origH + (ev.clientY - startY));
+        el.style.width = st.w + 'px'; el.style.height = st.h + 'px';
+        el.classList.toggle('sticky-compact', st.size === 'mini' || st.w < 175);
+      }
+      function up() {
+        document.removeEventListener('mousemove', move);
+        document.removeEventListener('mouseup', up);
+        persistSticky(st);
+      }
+      document.addEventListener('mousemove', move);
+      document.addEventListener('mouseup', up);
+    });
+  });
+}
+async function persistSticky(st) {
+  try { Object.assign(st, await call('UpdateSticky', st)); }
+  catch (e) { console.error(e); }
+}
+async function newSticky() {
+  const color = document.getElementById('new-sticky-color')?.value || 'yellow';
+  const size = document.getElementById('new-sticky-size')?.value || 'standard';
+  try {
+    const st = await call('CreateSticky', color, size, '');
+    state.stickies.push(st); renderStickies();
+  } catch (e) { toast(String(e)); }
+}
+
+/* ========== Paint ========== */
+async function loadPaints() {
+  try {
+    state.paints = await call('ListCanvases', 'paint') || [];
+    renderPaintList();
+  } catch (e) { toast(String(e)); }
+}
+function renderPaintList() {
+  const list = document.getElementById('paint-list');
+  if (state.paint && state.paint.id) { list.style.display = 'none'; return; }
+  list.style.display = 'flex';
+  if (!state.paints.length) {
+    list.innerHTML = `<div class="empty"><strong>No paint canvases yet</strong><br/>Freehand drawing with colors, brush sizes, undo — improved from the whiteboard reference.</div>`;
+    return;
+  }
+  list.innerHTML = state.paints.map(c => `
+    <div class="canvas-row" data-id="${esc(c.id)}">
+      <div class="info"><div class="n">${esc(c.title)}</div><div class="d">Updated ${esc(fmtDate(c.updatedAt))}</div></div>
+      <button type="button" class="danger" data-del="${esc(c.id)}">Delete</button>
+    </div>`).join('');
+  list.querySelectorAll('.canvas-row').forEach(row => {
+    row.onclick = (e) => {
+      if (e.target.closest('[data-del]')) return;
+      openPaint(row.dataset.id);
+    };
+  });
+  list.querySelectorAll('[data-del]').forEach(btn => {
+    btn.onclick = async (e) => {
+      e.stopPropagation();
+      if (!confirm('Delete this canvas?')) return;
+      await call('DeleteCanvas', btn.dataset.del);
+      await loadPaints();
+    };
+  });
+}
+async function newPaint() {
+  try {
+    const c = await call('CreateCanvas', 'paint', 'Untitled paint');
+    state.paints.unshift(c);
+    await openPaint(c.id);
+  } catch (e) { toast(String(e)); }
+}
+async function openPaint(id) {
+  try {
+    const c = await call('GetCanvas', id);
+    let st = {};
+    try { st = JSON.parse(c.stateJson || '{}'); } catch (_) {}
+    state.paint = {
+      id: c.id, title: c.title, tool: st.tool || 'pen', color: st.color || '#1a1a1a',
+      brush: st.brush || 4, bg: st.bg || '#ffffff', imageDataUrl: st.imageDataUrl || '',
+      history: [], histIdx: -1, dirty: false
+    };
+    document.getElementById('paint-list').style.display = 'none';
+    document.getElementById('paint-editor').classList.add('open');
+    buildPaintTools();
+    const canvas = document.getElementById('paint-canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = state.paint.bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (state.paint.imageDataUrl) {
+      const img = new Image();
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0);
+        paintPushHistory(false);
+      };
+      img.src = state.paint.imageDataUrl;
+    } else paintPushHistory(false);
+    wirePaintCanvas();
+  } catch (e) { toast(String(e)); }
+}
+function buildPaintTools() {
+  const p = state.paint;
+  const el = document.getElementById('paint-tools');
+  el.innerHTML = `
+    <button type="button" class="ghost" id="paint-back">← Back</button>
+    <input class="title-in" id="paint-title" value="${esc(p.title)}" />
+    <div class="sep"></div>
+    <button type="button" data-tool="pen" class="${p.tool==='pen'?'active-tool':''}">Pen</button>
+    <button type="button" data-tool="eraser" class="${p.tool==='eraser'?'active-tool':''}">Eraser</button>
+    <div class="sep"></div>
+    <span class="label">Color</span>
+    <div class="swatch-row" id="paint-swatches"></div>
+    <input type="color" id="paint-color" value="${p.color}" />
+    <div class="sep"></div>
+    <span class="label">Brush</span>
+    <input type="range" id="paint-brush" min="1" max="48" value="${p.brush}" />
+    <span class="label" id="paint-brush-val">${p.brush}px</span>
+    <div class="sep"></div>
+    <button type="button" id="paint-undo">Undo</button>
+    <button type="button" id="paint-redo">Redo</button>
+    <button type="button" id="paint-clear" class="danger">Clear</button>
+    <button type="button" class="primary" id="paint-save">Save</button>`;
+  const sw = el.querySelector('#paint-swatches');
+  PAINT_COLORS.forEach(c => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'swatch-btn' + (c === p.color ? ' on' : '');
+    b.style.background = c;
+    if (c === '#ffffff') b.style.boxShadow = 'inset 0 0 0 1px #888';
+    b.onclick = () => { p.color = c; el.querySelector('#paint-color').value = c; buildPaintTools(); };
+    sw.appendChild(b);
+  });
+  el.querySelector('#paint-back').onclick = () => closePaintEditor(true);
+  el.querySelector('#paint-title').oninput = (e) => { p.title = e.target.value; p.dirty = true; };
+  el.querySelectorAll('[data-tool]').forEach(b => {
+    b.onclick = () => { p.tool = b.dataset.tool; buildPaintTools(); };
+  });
+  el.querySelector('#paint-color').oninput = (e) => { p.color = e.target.value; };
+  el.querySelector('#paint-brush').oninput = (e) => {
+    p.brush = +e.target.value;
+    el.querySelector('#paint-brush-val').textContent = p.brush + 'px';
+  };
+  el.querySelector('#paint-undo').onclick = () => paintUndo();
+  el.querySelector('#paint-redo').onclick = () => paintRedo();
+  el.querySelector('#paint-clear').onclick = () => {
+    if (!confirm('Clear canvas?')) return;
+    const canvas = document.getElementById('paint-canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = p.bg; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    paintPushHistory(true);
+  };
+  el.querySelector('#paint-save').onclick = () => savePaint(true);
+}
+function paintPushHistory(markDirty) {
+  const canvas = document.getElementById('paint-canvas');
+  const url = canvas.toDataURL('image/png');
+  const p = state.paint;
+  p.history = p.history.slice(0, p.histIdx + 1);
+  p.history.push(url);
+  if (p.history.length > 40) p.history.shift();
+  p.histIdx = p.history.length - 1;
+  p.imageDataUrl = url;
+  if (markDirty) p.dirty = true;
+}
+function paintUndo() {
+  const p = state.paint; if (!p || p.histIdx <= 0) return;
+  p.histIdx--; paintRestore(p.history[p.histIdx]); p.dirty = true;
+}
+function paintRedo() {
+  const p = state.paint; if (!p || p.histIdx >= p.history.length - 1) return;
+  p.histIdx++; paintRestore(p.history[p.histIdx]); p.dirty = true;
+}
+function paintRestore(url) {
+  const canvas = document.getElementById('paint-canvas');
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  img.onload = () => { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); };
+  img.src = url;
+  state.paint.imageDataUrl = url;
+}
+function wirePaintCanvas() {
+  const canvas = document.getElementById('paint-canvas');
+  const ctx = canvas.getContext('2d');
+  let drawing = false, lastX = 0, lastY = 0;
+  function pos(e) {
+    const r = canvas.getBoundingClientRect();
+    const sx = canvas.width / Math.max(1, r.width);
+    const sy = canvas.height / Math.max(1, r.height);
+    return { x: (e.clientX - r.left) * sx, y: (e.clientY - r.top) * sy };
+  }
+  canvas.onmousedown = (e) => {
+    e.preventDefault();
+    drawing = true;
+    const p = pos(e); lastX = p.x; lastY = p.y;
+  };
+  canvas.onmousemove = (e) => {
+    if (!drawing) return;
+    const p = state.paint;
+    const pt = pos(e);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.lineWidth = p.brush;
+    if (p.tool === 'eraser') {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.strokeStyle = 'rgba(0,0,0,1)';
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = p.color;
+    }
+    ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(pt.x, pt.y); ctx.stroke();
+    lastX = pt.x; lastY = pt.y;
+  };
+  function end() {
+    if (!drawing) return;
+    drawing = false;
+    ctx.globalCompositeOperation = 'source-over';
+    paintPushHistory(true);
+    schedulePaintSave();
+  }
+  canvas.onmouseup = end;
+  canvas.onmouseleave = end;
+}
+let paintSaveT;
+function schedulePaintSave() {
+  clearTimeout(paintSaveT);
+  paintSaveT = setTimeout(() => savePaint(false), 800);
+}
+async function savePaint(toastOk) {
+  const p = state.paint; if (!p) return;
+  const canvas = document.getElementById('paint-canvas');
+  p.imageDataUrl = canvas.toDataURL('image/png');
+  const stateJson = JSON.stringify({
+    tool: p.tool, color: p.color, brush: p.brush, bg: p.bg, imageDataUrl: p.imageDataUrl
+  });
+  try {
+    await call('SaveCanvas', p.id, p.title, stateJson);
+    p.dirty = false;
+    if (toastOk) toast('Paint saved');
+  } catch (e) { toast(String(e)); }
+}
+async function closePaintEditor(save) {
+  if (state.paint && save) await savePaint(false);
+  state.paint = null;
+  document.getElementById('paint-editor').classList.remove('open');
+  document.getElementById('paint-list').style.display = 'flex';
+  await loadPaints();
+}
+
+/* ========== Annotate (with real font-size) ========== */
+async function loadAnnotates() {
+  try {
+    state.annotates = await call('ListCanvases', 'annotate') || [];
+    renderAnnotateList();
+  } catch (e) { toast(String(e)); }
+}
+function renderAnnotateList() {
+  const list = document.getElementById('annotate-list');
+  if (state.annotate && state.annotate.id) { list.style.display = 'none'; return; }
+  list.style.display = 'flex';
+  if (!state.annotates.length) {
+    list.innerHTML = `<div class="empty"><strong>No annotate boards yet</strong><br/>Paste or drop an image, then highlight, arrow, label, redact, crop.<br/>Text labels have real font-size control (reference was fixed 18px).</div>`;
+    return;
+  }
+  list.innerHTML = state.annotates.map(c => `
+    <div class="canvas-row" data-id="${esc(c.id)}">
+      <div class="info"><div class="n">${esc(c.title)}</div><div class="d">Updated ${esc(fmtDate(c.updatedAt))}</div></div>
+      <button type="button" class="danger" data-del="${esc(c.id)}">Delete</button>
+    </div>`).join('');
+  list.querySelectorAll('.canvas-row').forEach(row => {
+    row.onclick = (e) => {
+      if (e.target.closest('[data-del]')) return;
+      openAnnotate(row.dataset.id);
+    };
+  });
+  list.querySelectorAll('[data-del]').forEach(btn => {
+    btn.onclick = async (e) => {
+      e.stopPropagation();
+      if (!confirm('Delete this board?')) return;
+      await call('DeleteCanvas', btn.dataset.del);
+      await loadAnnotates();
+    };
+  });
+}
+async function newAnnotate() {
+  try {
+    const c = await call('CreateCanvas', 'annotate', 'Untitled annotate');
+    state.annotates.unshift(c);
+    await openAnnotate(c.id);
+  } catch (e) { toast(String(e)); }
+}
+async function newAnnotateFromFile(file) {
+  try {
+    const name = (file && file.name) ? file.name.replace(/\.[^.]+$/, '') : 'Dropped image';
+    const c = await call('CreateCanvas', 'annotate', name || 'Dropped image');
+    state.annotates.unshift(c);
+    await openAnnotate(c.id);
+    await annotateLoadFile(file);
+    toast('Opened as new Annotate board');
+  } catch (e) { toast(String(e.message || e)); }
+}
+async function openAnnotate(id) {
+  try {
+    const c = await call('GetCanvas', id);
+    let st = {};
+    try { st = JSON.parse(c.stateJson || '{}'); } catch (_) {}
+    const layers = Array.isArray(st.textLayers) ? st.textLayers.map((t, i) => ({
+      id: t.id || ('tl_' + i + '_' + Math.random().toString(36).slice(2, 6)),
+      text: t.text || '',
+      x: +t.x || 0,
+      y: +t.y || 0,
+      fontSize: +t.fontSize || 24,
+      color: t.color || st.strokeColor || '#e03131',
+      scale: +t.scale || 1,
+    })) : [];
+    // baseImageDataUrl: bitmap without editable text overlays; fall back to imageDataUrl
+    state.annotate = {
+      id: c.id, title: c.title,
+      tool: st.tool || 'highlight',
+      strokeColor: st.strokeColor || '#e03131',
+      fontSize: st.fontSize || 24,
+      highlightBrush: st.highlightBrush || 20,
+      highlightMode: st.highlightMode === 'box' ? 'box' : 'freehand',
+      baseImageDataUrl: st.baseImageDataUrl || st.imageDataUrl || '',
+      imageDataUrl: st.imageDataUrl || '',
+      textLayers: layers,
+      history: [], histIdx: -1, dirty: false, hasImage: false,
+      selectedTextId: null,
+    };
+    document.getElementById('annotate-list').style.display = 'none';
+    document.getElementById('annotate-editor').classList.add('open');
+    buildAnnotateTools();
+    clearTextOverlays();
+    if (state.annotate.baseImageDataUrl) {
+      await annotateLoadDataUrl(state.annotate.baseImageDataUrl, true);
+      renderTextOverlays();
+    } else {
+      document.getElementById('annotate-wrap').style.display = 'none';
+      document.getElementById('annotate-hint').style.display = 'block';
+      state.annotate.hasImage = false;
+    }
+    wireAnnotateCanvas();
+  } catch (e) { toast(String(e)); }
+}
+function buildAnnotateTools() {
+  const a = state.annotate;
+  const el = document.getElementById('annotate-tools');
+  const toolLabel = { highlight: 'Highlight', arrow: 'Arrow', text: 'Text', blur: 'Blur', crop: 'Crop' };
+  const brush = a.highlightBrush || 20;
+  const mode = a.highlightMode === 'box' ? 'box' : 'freehand';
+  let extra = '';
+  if (a.tool === 'highlight') {
+    extra =
+      '<div class="sep"></div>' +
+      '<button type="button" data-hl-mode="freehand" class="' + (mode === 'freehand' ? 'active-tool' : '') + '" title="Freehand highlight">Freehand</button>' +
+      '<button type="button" data-hl-mode="box" class="' + (mode === 'box' ? 'active-tool' : '') + '" title="Box highlight">Box</button>' +
+      '<span class="label">Width</span>' +
+      '<input type="range" id="ann-hl-brush" min="6" max="64" value="' + brush + '"' + (mode === 'box' ? ' disabled' : '') + ' />' +
+      '<span class="label" id="ann-hl-brush-val">' + brush + 'px</span>';
+  } else if (a.tool === 'text') {
+    extra =
+      '<div class="sep"></div><span class="label">Font size</span>' +
+      '<input type="range" id="ann-font" min="10" max="96" value="' + a.fontSize + '" />' +
+      '<input type="number" id="ann-font-num" class="compact" min="10" max="96" value="' + a.fontSize + '" />' +
+      '<span class="label">px</span>';
+  } else if (a.tool === 'blur') {
+    extra = '<span class="label" style="opacity:0.85">Drag a box — soft-blurs pixels underneath</span>';
+  }
+  el.innerHTML =
+    '<button type="button" class="ghost" id="ann-back">← Back</button>' +
+    '<input class="title-in" id="ann-title" value="' + esc(a.title) + '" />' +
+    '<div class="sep"></div>' +
+    ['highlight', 'arrow', 'text', 'blur', 'crop'].map(function (t) {
+      return '<button type="button" data-tool="' + t + '" class="' + (a.tool === t ? 'active-tool' : '') + '">' + toolLabel[t] + '</button>';
+    }).join('') +
+    '<div class="sep"></div><span class="label">Color</span>' +
+    '<input type="color" id="ann-color" value="' + a.strokeColor + '" />' +
+    extra +
+    '<div class="sep"></div>' +
+    '<button type="button" id="ann-undo">Undo</button>' +
+    '<button type="button" id="ann-redo">Redo</button>' +
+    '<button type="button" id="ann-open">Open image…</button>' +
+    '<button type="button" class="primary" id="ann-save">Save</button>';
+  el.querySelector('#ann-back').onclick = function () { closeAnnotateEditor(true); };
+  el.querySelector('#ann-title').oninput = function (e) { a.title = e.target.value; a.dirty = true; };
+  el.querySelectorAll('[data-tool]').forEach(function (b) {
+    b.onclick = function () { a.tool = b.dataset.tool; buildAnnotateTools(); };
+  });
+  el.querySelector('#ann-color').oninput = function (e) { a.strokeColor = e.target.value; };
+  el.querySelectorAll('[data-hl-mode]').forEach(function (b) {
+    b.onclick = function () { a.highlightMode = b.dataset.hlMode; a.dirty = true; buildAnnotateTools(); };
+  });
+  var brushEl = el.querySelector('#ann-hl-brush');
+  if (brushEl) {
+    brushEl.oninput = function (e) {
+      a.highlightBrush = Math.max(6, Math.min(64, +e.target.value || 20));
+      var lab = el.querySelector('#ann-hl-brush-val');
+      if (lab) lab.textContent = a.highlightBrush + 'px';
+      a.dirty = true;
+    };
+  }
+  function syncFont(v) {
+    a.fontSize = Math.max(10, Math.min(96, +v || 24));
+    var r = el.querySelector('#ann-font');
+    var n = el.querySelector('#ann-font-num');
+    if (r) r.value = a.fontSize;
+    if (n) n.value = a.fontSize;
+    if (a.selectedTextId) {
+      var layer = a.textLayers.find(function (t) { return t.id === a.selectedTextId; });
+      if (layer) { layer.fontSize = a.fontSize; a.dirty = true; renderTextOverlays(); scheduleAnnotateSave(); }
+    }
+  }
+  if (el.querySelector('#ann-font')) {
+    el.querySelector('#ann-font').oninput = function (e) { syncFont(e.target.value); };
+    el.querySelector('#ann-font-num').oninput = function (e) { syncFont(e.target.value); };
+  }
+  el.querySelector('#ann-undo').onclick = function () { annotateUndo(); };
+  el.querySelector('#ann-redo').onclick = function () { annotateRedo(); };
+  el.querySelector('#ann-open').onclick = function () {
+    var inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'image/*';
+    inp.onchange = function () { if (inp.files[0]) annotateLoadFile(inp.files[0]); };
+    inp.click();
+  };
+  el.querySelector('#ann-save').onclick = function () { saveAnnotate(true); };
+}
+async function annotateLoadFile(file) {
+  const reader = new FileReader();
+  return new Promise((resolve, reject) => {
+    reader.onload = async () => {
+      try {
+        await annotateLoadDataUrl(reader.result, false);
+        // new image clears text layers
+        state.annotate.textLayers = [];
+        clearTextOverlays();
+        scheduleAnnotateSave();
+        resolve();
+      } catch (e) { reject(e); }
+    };
+    reader.onerror = () => reject(reader.error || new Error('read failed'));
+    reader.readAsDataURL(file);
+  });
+}
+function annotateLoadDataUrl(url, fromHistory) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.getElementById('annotate-canvas');
+      const wrap = document.getElementById('annotate-wrap');
+      const hint = document.getElementById('annotate-hint');
+      const maxW = 1400;
+      let w = img.naturalWidth || img.width;
+      let h = img.naturalHeight || img.height;
+      if (w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
+      canvas.width = w; canvas.height = h;
+      wrap.style.display = 'inline-block';
+      hint.style.display = 'none';
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = 1;
+      ctx.clearRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      state.annotate.hasImage = true;
+      state.annotate.baseImageDataUrl = canvas.toDataURL('image/png');
+      if (!fromHistory) annotatePushHistory(true);
+      else {
+        state.annotate.history = [state.annotate.baseImageDataUrl];
+        state.annotate.histIdx = 0;
+      }
+      renderTextOverlays();
+      resolve();
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+function annotatePushHistory(dirty) {
+  const canvas = document.getElementById('annotate-canvas');
+  if (!state.annotate.hasImage) return;
+  const url = canvas.toDataURL('image/png');
+  const a = state.annotate;
+  a.history = a.history.slice(0, a.histIdx + 1);
+  a.history.push(url);
+  if (a.history.length > 40) a.history.shift();
+  a.histIdx = a.history.length - 1;
+  a.baseImageDataUrl = url;
+  if (dirty) a.dirty = true;
+}
+function annotateUndo() {
+  const a = state.annotate; if (!a || a.histIdx <= 0) return;
+  a.histIdx--; annotateRestore(a.history[a.histIdx]); a.dirty = true;
+}
+function annotateRedo() {
+  const a = state.annotate; if (!a || a.histIdx >= a.history.length - 1) return;
+  a.histIdx++; annotateRestore(a.history[a.histIdx]); a.dirty = true;
+}
+function annotateRestore(url) {
+  const canvas = document.getElementById('annotate-canvas');
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  img.onload = () => {
+    canvas.width = img.width; canvas.height = img.height;
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+    ctx.drawImage(img, 0, 0);
+    renderTextOverlays();
+  };
+  img.src = url;
+  state.annotate.baseImageDataUrl = url;
+}
+function clearTextOverlays() {
+  const wrap = document.getElementById('annotate-wrap');
+  if (!wrap) return;
+  wrap.querySelectorAll('.ann-text').forEach(el => el.remove());
+}
+function canvasDisplayScale() {
+  const canvas = document.getElementById('annotate-canvas');
+  const r = canvas.getBoundingClientRect();
+  return {
+    sx: r.width / Math.max(1, canvas.width),
+    sy: r.height / Math.max(1, canvas.height),
+  };
+}
+function renderTextOverlays() {
+  const a = state.annotate;
+  const wrap = document.getElementById('annotate-wrap');
+  const canvas = document.getElementById('annotate-canvas');
+  if (!a || !wrap || !canvas) return;
+  clearTextOverlays();
+  if (!a.hasImage) return;
+  const { sx, sy } = canvasDisplayScale();
+  (a.textLayers || []).forEach(layer => {
+    const el = document.createElement('div');
+    el.className = 'ann-text' + (a.selectedTextId === layer.id ? ' selected' : '');
+    el.dataset.id = layer.id;
+    el.textContent = layer.text;
+    const fs = (layer.fontSize || 24) * (layer.scale || 1);
+    el.style.fontSize = (fs * sy) + 'px';
+    el.style.color = layer.color || a.strokeColor;
+    el.style.left = (layer.x * sx) + 'px';
+    el.style.top = (layer.y * sy - fs * sy) + 'px'; // baseline-ish: y is text baseline on canvas
+    const rz = document.createElement('div');
+    rz.className = 'ann-resize';
+    el.appendChild(rz);
+    // drag move
+    el.addEventListener('pointerdown', (e) => {
+      if (e.target === rz) return;
+      e.preventDefault(); e.stopPropagation();
+      a.selectedTextId = layer.id;
+      a.fontSize = layer.fontSize || a.fontSize;
+      buildAnnotateTools();
+      renderTextOverlays();
+      const startX = e.clientX, startY = e.clientY;
+      const ox = layer.x, oy = layer.y;
+      const scale = canvasDisplayScale();
+      function move(ev) {
+        layer.x = Math.max(0, ox + (ev.clientX - startX) / scale.sx);
+        layer.y = Math.max(0, oy + (ev.clientY - startY) / scale.sy);
+        a.dirty = true;
+        // live position without full rebuild of all for snappiness
+        el.style.left = (layer.x * scale.sx) + 'px';
+        el.style.top = (layer.y * scale.sy - (layer.fontSize || 24) * (layer.scale || 1) * scale.sy) + 'px';
+      }
+      function up() {
+        document.removeEventListener('pointermove', move);
+        document.removeEventListener('pointerup', up);
+        renderTextOverlays();
+        scheduleAnnotateSave();
+      }
+      document.addEventListener('pointermove', move);
+      document.addEventListener('pointerup', up);
+    });
+    // resize via fontSize
+    rz.addEventListener('pointerdown', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      a.selectedTextId = layer.id;
+      const startY = e.clientY;
+      const startFs = layer.fontSize || 24;
+      function move(ev) {
+        layer.fontSize = Math.max(10, Math.min(96, Math.round(startFs + (ev.clientY - startY) * 0.4)));
+        a.fontSize = layer.fontSize;
+        a.dirty = true;
+        el.style.fontSize = (layer.fontSize * canvasDisplayScale().sy) + 'px';
+      }
+      function up() {
+        document.removeEventListener('pointermove', move);
+        document.removeEventListener('pointerup', up);
+        buildAnnotateTools();
+        renderTextOverlays();
+        scheduleAnnotateSave();
+      }
+      document.addEventListener('pointermove', move);
+      document.addEventListener('pointerup', up);
+    });
+    el.addEventListener('dblclick', async (e) => {
+      e.stopPropagation();
+      const t = prompt('Edit label:', layer.text);
+      if (t != null) {
+        layer.text = t;
+        a.dirty = true;
+        renderTextOverlays();
+        scheduleAnnotateSave();
+      }
+    });
+    wrap.appendChild(el);
+  });
+}
+function compositeAnnotateToDataUrl() {
+  const a = state.annotate;
+  const canvas = document.getElementById('annotate-canvas');
+  if (!a || !a.hasImage) return a ? (a.baseImageDataUrl || '') : '';
+  // draw base + text layers for export
+  const tmp = document.createElement('canvas');
+  tmp.width = canvas.width; tmp.height = canvas.height;
+  const ctx = tmp.getContext('2d');
+  ctx.drawImage(canvas, 0, 0);
+  (a.textLayers || []).forEach(layer => {
+    const fs = layer.fontSize || 24;
+    ctx.font = `bold ${fs}px "Segoe UI", system-ui, sans-serif`;
+    ctx.lineWidth = Math.max(2, Math.round(fs / 10));
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.fillStyle = layer.color || a.strokeColor;
+    ctx.strokeText(layer.text, layer.x, layer.y);
+    ctx.fillText(layer.text, layer.x, layer.y);
+  });
+  return tmp.toDataURL('image/png');
+}
+function wireAnnotateCanvas() {
+  const canvas = document.getElementById('annotate-canvas');
+  const ctx = canvas.getContext('2d');
+  let drawing = false, sx = 0, sy = 0, lx = 0, ly = 0, snap = null;
+  function pos(e) {
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / Math.max(1, r.width);
+    const scaleY = canvas.height / Math.max(1, r.height);
+    return { x: (e.clientX - r.left) * scaleX, y: (e.clientY - r.top) * scaleY };
+  }
+  function drawArrow(x1, y1, x2, y2) {
+    const a = state.annotate;
+    const head = 14;
+    const ang = Math.atan2(y2 - y1, x2 - x1);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = a.strokeColor; ctx.fillStyle = a.strokeColor;
+    ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - head * Math.cos(ang - 0.4), y2 - head * Math.sin(ang - 0.4));
+    ctx.lineTo(x2 - head * Math.cos(ang + 0.4), y2 - head * Math.sin(ang + 0.4));
+    ctx.closePath(); ctx.fill();
+  }
+  canvas.onmousedown = (e) => {
+    if (!state.annotate.hasImage) return;
+    e.preventDefault();
+    const p = pos(e);
+    const a = state.annotate;
+    if (a.tool === 'text') {
+      const text = prompt('Label text:');
+      if (text) {
+        a.textLayers.push({
+          id: uid(),
+          text,
+          x: p.x,
+          y: p.y,
+          color: a.strokeColor,
+          fontSize: a.fontSize || 24,
+          scale: 1,
+        });
+        a.dirty = true;
+        renderTextOverlays();
+        scheduleAnnotateSave();
+      }
+      return;
+    }
+    a.selectedTextId = null;
+    drawing = true; sx = lx = p.x; sy = ly = p.y;
+    try { snap = ctx.getImageData(0, 0, canvas.width, canvas.height); } catch (_) { snap = null; }
+  };
+  function applyRegionBlur(x, y, w, h) {
+    x = Math.max(0, Math.floor(x));
+    y = Math.max(0, Math.floor(y));
+    w = Math.min(canvas.width - x, Math.floor(w));
+    h = Math.min(canvas.height - y, Math.floor(h));
+    if (w < 2 || h < 2) return false;
+    try {
+      const tmp = document.createElement('canvas');
+      tmp.width = w; tmp.height = h;
+      const tctx = tmp.getContext('2d');
+      const factor = Math.max(4, Math.round(Math.min(w, h) / 18));
+      const small = document.createElement('canvas');
+      small.width = Math.max(1, Math.floor(w / factor));
+      small.height = Math.max(1, Math.floor(h / factor));
+      const sctx = small.getContext('2d');
+      sctx.imageSmoothingEnabled = true;
+      sctx.drawImage(canvas, x, y, w, h, 0, 0, small.width, small.height);
+      tctx.imageSmoothingEnabled = true;
+      if (typeof tctx.filter === 'string') tctx.filter = 'blur(6px)';
+      tctx.drawImage(small, 0, 0, small.width, small.height, 0, 0, w, h);
+      if (typeof tctx.filter === 'string') {
+        tctx.filter = 'blur(4px)';
+        tctx.drawImage(tmp, 0, 0);
+        tctx.filter = 'none';
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = 1;
+      ctx.drawImage(tmp, x, y);
+      return true;
+    } catch (err) {
+      console.warn('blur failed', err);
+      return false;
+    }
+  }
+  function fillHighlightBox(x, y, w, h) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.globalAlpha = 0.45;
+    ctx.fillStyle = '#ffe032';
+    ctx.fillRect(x, y, w, h);
+    ctx.restore();
+  }
+  canvas.onmousemove = (e) => {
+    if (!drawing) return;
+    const p = pos(e);
+    const a = state.annotate;
+    const hlBox = a.tool === 'highlight' && a.highlightMode === 'box';
+    if (a.tool === 'highlight' && !hlBox) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.globalAlpha = 0.35;
+      ctx.strokeStyle = '#ffe032';
+      ctx.lineWidth = a.highlightBrush || 20;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(lx, ly);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      ctx.restore();
+      lx = p.x; ly = p.y;
+      return;
+    }
+    if (snap) ctx.putImageData(snap, 0, 0);
+    if (a.tool === 'arrow') drawArrow(sx, sy, p.x, p.y);
+    else if (a.tool === 'blur' || a.tool === 'crop' || hlBox) {
+      const x = Math.min(sx, p.x), y = Math.min(sy, p.y);
+      const w = Math.abs(p.x - sx), h = Math.abs(p.y - sy);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = 1;
+      if (hlBox) {
+        fillHighlightBox(x, y, w, h);
+        ctx.strokeStyle = 'rgba(240,180,41,0.9)';
+      } else {
+        ctx.strokeStyle = a.tool === 'crop' ? '#4a7cff' : '#5b8def';
+      }
+      ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+      ctx.strokeRect(x, y, w, h); ctx.setLineDash([]);
+      if (a.tool === 'blur') {
+        ctx.fillStyle = 'rgba(91,141,239,0.12)';
+        ctx.fillRect(x, y, w, h);
+      }
+    }
+    lx = p.x; ly = p.y;
+  };
+  function end(e) {
+    if (!drawing) return;
+    drawing = false;
+    const p = e ? pos(e) : { x: lx, y: ly };
+    const a = state.annotate;
+    const hlBox = a.tool === 'highlight' && a.highlightMode === 'box';
+    if (a.tool === 'highlight' && !hlBox) {
+      annotatePushHistory(true); scheduleAnnotateSave(); return;
+    }
+    if (snap) ctx.putImageData(snap, 0, 0);
+    if (hlBox) {
+      const x = Math.min(sx, p.x), y = Math.min(sy, p.y);
+      const w = Math.abs(p.x - sx), h = Math.abs(p.y - sy);
+      if (w > 2 && h > 2) fillHighlightBox(x, y, w, h);
+      annotatePushHistory(true); scheduleAnnotateSave();
+    } else if (a.tool === 'arrow') {
+      drawArrow(sx, sy, p.x, p.y);
+      annotatePushHistory(true); scheduleAnnotateSave();
+    } else if (a.tool === 'blur') {
+      const x = Math.min(sx, p.x), y = Math.min(sy, p.y);
+      const w = Math.abs(p.x - sx), h = Math.abs(p.y - sy);
+      if (w > 2 && h > 2) {
+        if (!applyRegionBlur(x, y, w, h)) {
+          ctx.fillStyle = 'rgba(40,40,40,0.35)';
+          ctx.fillRect(x, y, w, h);
+        }
+        annotatePushHistory(true); scheduleAnnotateSave();
+      }
+    } else if (a.tool === 'crop') {
+      const x = Math.max(0, Math.floor(Math.min(sx, p.x)));
+      const y = Math.max(0, Math.floor(Math.min(sy, p.y)));
+      const w = Math.min(canvas.width - x, Math.floor(Math.abs(p.x - sx)));
+      const h = Math.min(canvas.height - y, Math.floor(Math.abs(p.y - sy)));
+      if (w > 4 && h > 4) {
+        try {
+          const cropped = ctx.getImageData(x, y, w, h);
+          canvas.width = w; canvas.height = h;
+          ctx.putImageData(cropped, 0, 0);
+          a.textLayers.forEach(t => { t.x -= x; t.y -= y; });
+          annotatePushHistory(true); renderTextOverlays(); scheduleAnnotateSave();
+        } catch (_) { toast('Crop failed'); }
+      }
+    }
+    snap = null;
+  }
+  canvas.onmouseup = end;
+  canvas.onmouseleave = () => { if (drawing) end(); };
+  window.addEventListener('resize', () => {
+    if (state.annotate && state.annotate.hasImage) renderTextOverlays();
+  });
+}
+let annSaveT;
+function scheduleAnnotateSave() {
+  clearTimeout(annSaveT);
+  annSaveT = setTimeout(() => saveAnnotate(false), 800);
+}
+async function saveAnnotate(toastOk) {
+  const a = state.annotate; if (!a) return;
+  if (a.hasImage) {
+    // keep base without burned text
+    a.baseImageDataUrl = document.getElementById('annotate-canvas').toDataURL('image/png');
+    a.imageDataUrl = compositeAnnotateToDataUrl();
+  }
+  const stateJson = JSON.stringify({
+    tool: a.tool, strokeColor: a.strokeColor, fontSize: a.fontSize,
+    highlightBrush: a.highlightBrush || 20,
+    highlightMode: a.highlightMode === 'box' ? 'box' : 'freehand',
+    baseImageDataUrl: a.baseImageDataUrl,
+    imageDataUrl: a.imageDataUrl,
+    textLayers: a.textLayers
+  });
+  try {
+    await call('SaveCanvas', a.id, a.title, stateJson);
+    a.dirty = false;
+    if (toastOk) toast('Annotate saved');
+  } catch (e) { toast(String(e)); }
+}
+async function closeAnnotateEditor(save) {
+  if (state.annotate && save) await saveAnnotate(false);
+  state.annotate = null;
+  clearTextOverlays();
+  document.getElementById('annotate-editor').classList.remove('open');
+  document.getElementById('annotate-list').style.display = 'flex';
+  await loadAnnotates();
+}
+// Paste image into annotate when open
+window.addEventListener('paste', (e) => {
+  if (state.view !== 'annotate' || !state.annotate) return;
+  const items = e.clipboardData && e.clipboardData.items;
+  if (!items) return;
+  for (const it of items) {
+    if (it.type.startsWith('image/')) {
+      e.preventDefault();
+      const f = it.getAsFile();
+      if (f) annotateLoadFile(f);
+      return;
+    }
+  }
+});
+
+/* ========== Kanban ========== */
+async function loadKanbans() {
+  try {
+    state.kanbans = await call('ListKanbanBoards') || [];
+    renderKanbanList();
+  } catch (e) { toast(String(e)); }
+}
+function renderKanbanList() {
+  const list = document.getElementById('kanban-list');
+  if (state.kanban && state.kanban.id) { list.style.display = 'none'; return; }
+  list.style.display = 'flex';
+  if (!state.kanbans.length) {
+    list.innerHTML = `<div class="empty"><strong>No kanban boards yet</strong><br/>Columns with WIP counts, grip-handle card drag, colors — improved from the whiteboard reference.</div>`;
+    return;
+  }
+  list.innerHTML = state.kanbans.map(b => `
+    <div class="canvas-row" data-id="${esc(b.id)}">
+      <div class="info"><div class="n">${esc(b.title)}</div><div class="d">Updated ${esc(fmtDate(b.updatedAt))}</div></div>
+      <button type="button" class="danger" data-del="${esc(b.id)}">Delete</button>
+    </div>`).join('');
+  list.querySelectorAll('.canvas-row').forEach(row => {
+    row.onclick = (e) => {
+      if (e.target.closest('[data-del]')) return;
+      openKanban(row.dataset.id);
+    };
+  });
+  list.querySelectorAll('[data-del]').forEach(btn => {
+    btn.onclick = async (e) => {
+      e.stopPropagation();
+      if (!confirm('Delete this board?')) return;
+      await call('DeleteKanbanBoard', btn.dataset.del);
+      await loadKanbans();
+    };
+  });
+}
+async function newKanban() {
+  try {
+    const b = await call('CreateKanbanBoard', 'Kanban');
+    state.kanbans.unshift(b);
+    await openKanban(b.id);
+  } catch (e) { toast(String(e)); }
+}
+async function openKanban(id) {
+  try {
+    const b = await call('GetKanbanBoard', id);
+    let st = { columns: [], cards: [] };
+    try { st = JSON.parse(b.stateJson || '{}'); } catch (_) {}
+    if (!Array.isArray(st.columns)) st.columns = [];
+    if (!Array.isArray(st.cards)) st.cards = [];
+    state.kanban = { id: b.id, title: b.title, columns: st.columns, cards: st.cards, dirty: false };
+    document.getElementById('kanban-list').style.display = 'none';
+    document.getElementById('kanban-board-ui').classList.add('open');
+    const tools = document.getElementById('view-tools');
+    tools.innerHTML = `
+      <button type="button" class="ghost" id="kb-back">← Boards</button>
+      <input type="text" id="kb-title" value="${esc(b.title)}" style="width:180px;font-weight:600" />
+      <button type="button" id="kb-add-col">+ Column</button>
+      <button type="button" class="primary" id="kb-save">Save</button>`;
+    tools.querySelector('#kb-back').onclick = () => closeKanbanBoard(true);
+    tools.querySelector('#kb-title').oninput = (e) => { state.kanban.title = e.target.value; state.kanban.dirty = true; };
+    tools.querySelector('#kb-add-col').onclick = () => {
+      state.kanban.columns.push({ id: uid(), title: 'New column', wipLimit: 0 });
+      state.kanban.dirty = true; renderKanbanBoard(); scheduleKanbanSave();
+    };
+    tools.querySelector('#kb-save').onclick = () => saveKanban(true);
+    renderKanbanBoard();
+  } catch (e) { toast(String(e)); }
+}
+function renderKanbanBoard() {
+  const k = state.kanban; if (!k) return;
+  const root = document.getElementById('kanban-cols');
+  root.innerHTML = '';
+  k.columns.forEach(col => {
+    const cards = k.cards.filter(c => c.columnId === col.id).sort((a,b) => (a.order||0) - (b.order||0));
+    const colEl = document.createElement('div');
+    colEl.className = 'kanban-col';
+    colEl.dataset.id = col.id;
+    if (col.wipLimit == null || col.wipLimit === '') col.wipLimit = 0;
+    col.wipLimit = Math.max(0, parseInt(col.wipLimit, 10) || 0);
+    const over = col.wipLimit > 0 && cards.length > col.wipLimit;
+    colEl.innerHTML = `
+      <div class="kanban-col-header">
+        <input class="kanban-col-title" value="${esc(col.title)}" />
+        <span class="kanban-col-count ${over?'over':''}" title="Cards / WIP limit (edit the number; 0 = no limit)">
+          <span class="wip-label">WIP</span>
+          <span data-count>${cards.length}</span>/<input type="number" class="wip-input" min="0" max="99" value="${col.wipLimit}" />
+        </span>
+        <button type="button" title="Delete column" data-del-col>✕</button>
+      </div>
+      <div class="kanban-cards" data-col="${esc(col.id)}"></div>
+      <button type="button" class="kanban-add-card">+ Add card</button>`;
+    const cardsEl = colEl.querySelector('.kanban-cards');
+    cards.forEach(card => {
+      const cel = document.createElement('div');
+      cel.className = 'kanban-card c-' + (card.color || 'yellow');
+      cel.dataset.id = card.id;
+      cel.innerHTML = `
+        <div class="kc-toolbar">
+          <span class="grip">⋮⋮ drag</span>
+          <button type="button" data-ccolor title="Color">🎨</button>
+          <button type="button" data-cdel title="Delete">✕</button>
+        </div>
+        <textarea rows="2">${esc(card.text || '')}</textarea>`;
+      const ta = cel.querySelector('textarea');
+      const autosize = () => {
+        ta.style.height = 'auto';
+        ta.style.height = Math.max(48, ta.scrollHeight) + 'px';
+      };
+      autosize();
+      ta.oninput = () => {
+        card.text = ta.value; k.dirty = true; autosize(); scheduleKanbanSave();
+      };
+      cel.querySelector('[data-cdel]').onclick = () => {
+        k.cards = k.cards.filter(c => c.id !== card.id);
+        k.dirty = true; renderKanbanBoard(); scheduleKanbanSave();
+      };
+      cel.querySelector('[data-ccolor]').onclick = () => {
+        const i = CARD_COLORS.indexOf(card.color || 'yellow');
+        card.color = CARD_COLORS[(i + 1) % CARD_COLORS.length];
+        k.dirty = true; renderKanbanBoard(); scheduleKanbanSave();
+      };
+      const grip = cel.querySelector('.grip');
+      grip.addEventListener('pointerdown', (e) => startCardDrag(e, card, cel));
+      cardsEl.appendChild(cel);
+    });
+    colEl.querySelector('.kanban-col-title').oninput = (e) => {
+      col.title = e.target.value; k.dirty = true; scheduleKanbanSave();
+    };
+    colEl.querySelector('.wip-input').onchange = (e) => {
+      col.wipLimit = Math.max(0, Math.min(99, parseInt(e.target.value, 10) || 0));
+      e.target.value = col.wipLimit;
+      k.dirty = true; renderKanbanBoard(); scheduleKanbanSave();
+    };
+    colEl.querySelector('.wip-input').onclick = (e) => e.stopPropagation();
+    colEl.querySelector('[data-del-col]').onclick = async () => {
+      if (k.cards.some(c => c.columnId === col.id) && !(await confirmDelete('Delete column and its cards?'))) return;
+      k.cards = k.cards.filter(c => c.columnId !== col.id);
+      k.columns = k.columns.filter(c => c.id !== col.id);
+      k.dirty = true; renderKanbanBoard(); scheduleKanbanSave();
+    };
+    colEl.querySelector('.kanban-add-card').onclick = () => {
+      if (col.wipLimit > 0 && cards.length >= col.wipLimit) {
+        toast('WIP limit reached (' + col.wipLimit + '). Raise the limit or move cards.');
+        return;
+      }
+      k.cards.push({ id: uid(), columnId: col.id, text: '', color: 'yellow', order: cards.length });
+      k.dirty = true; renderKanbanBoard(); scheduleKanbanSave();
+    };
+    root.appendChild(colEl);
+  });
+}
+function startCardDrag(e, card, cel) {
+  e.preventDefault();
+  const k = state.kanban;
+  cel.classList.add('dragging');
+  const ghost = cel.cloneNode(true);
+  ghost.classList.add('kanban-card-ghost');
+  ghost.style.width = cel.offsetWidth + 'px';
+  document.body.appendChild(ghost);
+  const ox = e.clientX - cel.getBoundingClientRect().left;
+  const oy = e.clientY - cel.getBoundingClientRect().top;
+  function move(ev) {
+    ghost.style.left = (ev.clientX - ox) + 'px';
+    ghost.style.top = (ev.clientY - oy) + 'px';
+    document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
+    const el = document.elementFromPoint(ev.clientX, ev.clientY);
+    const col = el && el.closest('.kanban-col');
+    if (col) col.classList.add('drag-over');
+  }
+  function up(ev) {
+    document.removeEventListener('pointermove', move);
+    document.removeEventListener('pointerup', up);
+    ghost.remove();
+    cel.classList.remove('dragging');
+    document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
+    const el = document.elementFromPoint(ev.clientX, ev.clientY);
+    const col = el && el.closest('.kanban-col');
+    if (col) {
+      const colId = col.dataset.id;
+      const colMeta = k.columns.find(c => c.id === colId);
+      const destCount = k.cards.filter(c => c.columnId === colId && c.id !== card.id).length;
+      const limit = colMeta ? (parseInt(colMeta.wipLimit, 10) || 0) : 0;
+      if (limit > 0 && card.columnId !== colId && destCount >= limit) {
+        toast('WIP limit reached for that column (' + limit + ')');
+        return;
+      }
+      const targetCard = el.closest('.kanban-card');
+      card.columnId = colId;
+      if (targetCard && targetCard.dataset.id !== card.id) {
+        const tid = targetCard.dataset.id;
+        const others = k.cards.filter(c => c.columnId === colId && c.id !== card.id);
+        const idx = others.findIndex(c => c.id === tid);
+        others.splice(Math.max(0, idx), 0, card);
+        others.forEach((c, i) => { c.order = i; });
+        k.cards.filter(c => c.columnId === colId).forEach(c => {
+          const o = others.findIndex(x => x.id === c.id);
+          if (o >= 0) c.order = o;
+        });
+      } else {
+        card.order = destCount;
+      }
+      k.dirty = true;
+      renderKanbanBoard();
+      scheduleKanbanSave();
+    }
+  }
+  document.addEventListener('pointermove', move);
+  document.addEventListener('pointerup', up);
+  ghost.style.left = (e.clientX - ox) + 'px';
+  ghost.style.top = (e.clientY - oy) + 'px';
+}
+let kbSaveT;
+function scheduleKanbanSave() {
+  clearTimeout(kbSaveT);
+  kbSaveT = setTimeout(() => saveKanban(false), 600);
+}
+async function saveKanban(toastOk) {
+  const k = state.kanban; if (!k) return;
+  const stateJson = JSON.stringify({ columns: k.columns, cards: k.cards });
+  try {
+    await call('SaveKanbanBoard', k.id, k.title, stateJson);
+    k.dirty = false;
+    if (toastOk) toast('Kanban saved');
+  } catch (e) { toast(String(e)); }
+}
+async function closeKanbanBoard(save) {
+  if (state.kanban && save) await saveKanban(false);
+  state.kanban = null;
+  document.getElementById('kanban-board-ui').classList.remove('open');
+  document.getElementById('kanban-list').style.display = 'flex';
+  // restore tools for list
+  if (state.view === 'kanban') {
+    document.getElementById('view-tools').innerHTML = `<button class="primary" id="btn-new-kb">+ New board</button>`;
+    document.getElementById('btn-new-kb').onclick = newKanban;
+  }
+  await loadKanbans();
+}
+
+/* ========== Decisions ========== */
+async function loadDecisions() {
+  try {
+    state.decisions = await call('ListDecisions') || [];
+    renderDecisionSpine();
+    if (state.decisionId) {
+      const still = state.decisions.find(d => d.id === state.decisionId);
+      if (still) renderDecisionDetail(still);
+      else { state.decisionId = null; showDecisionPlaceholder(); }
+    } else showDecisionPlaceholder();
+  } catch (e) { toast(String(e)); }
+}
+function showDecisionPlaceholder() {
+  document.getElementById('decision-detail').style.display = 'none';
+  document.getElementById('decision-placeholder').style.display = 'flex';
+}
+function renderDecisionSpine() {
+  const spine = document.getElementById('decision-spine');
+  if (!state.decisions.length) {
+    spine.innerHTML = `<div class="empty" style="padding:16px">No pinned decisions yet</div>`;
+    return;
+  }
+  spine.innerHTML = state.decisions.map(d => `
+    <div class="spine-item ${d.id === state.decisionId ? 'active' : ''}" data-id="${esc(d.id)}">
+      <div class="when">${esc(fmtDate(d.decidedAt))}</div>
+      <div class="ttl">${esc(d.title)}</div>
+      <div class="snip">${esc((d.body || '').slice(0, 80))}${d.docVersionRel ? ' · 📎' : ''}</div>
+    </div>`).join('');
+  spine.querySelectorAll('.spine-item').forEach(el => {
+    el.onclick = () => {
+      const d = state.decisions.find(x => x.id === el.dataset.id);
+      if (d) { state.decisionId = d.id; renderDecisionSpine(); renderDecisionDetail(d); }
+    };
+  });
+}
+function renderDecisionDetail(d) {
+  document.getElementById('decision-placeholder').style.display = 'none';
+  const box = document.getElementById('decision-detail');
+  box.style.display = 'flex';
+  // Ensure docs list is fresh for the dropdown
+  const docsOpts = (state.docs || []).map(doc =>
+    `<option value="${esc(doc.id)}" ${doc.id === d.documentId ? 'selected' : ''}>${esc(doc.filename)}</option>`
+  ).join('');
+  const dateVal = (d.decidedAt || '').slice(0, 10);
+  const hasSnap = !!(d.docVersionRel && String(d.docVersionRel).trim());
+  box.innerHTML = `
+    <div class="field"><label>Title</label><input type="text" id="dec-title" value="${esc(d.title)}" /></div>
+    <div class="field"><label>Decided on</label><input type="date" id="dec-date" value="${esc(dateVal)}" /></div>
+    <div class="field"><label>Rationale / notes</label><textarea id="dec-body">${esc(d.body || '')}</textarea></div>
+    <div class="field version-box">
+      <label>Attached document version</label>
+      ${hasSnap
+        ? `<div style="margin:8px 0;padding:10px;border-radius:8px;background:rgba(62,207,142,0.1);border:1px solid rgba(62,207,142,0.35)">
+             <div style="color:var(--ok);font-weight:600;margin-bottom:4px">✓ Snapshot attached</div>
+             <strong>${esc(d.docVersionNote || d.docVersionRel)}</strong>
+             <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px;word-break:break-all">${esc(d.docVersionRel)}</div>
+             <button type="button" id="dec-open-ver" style="margin-top:8px">Open version file</button>
+           </div>`
+        : `<div id="dec-no-snap" style="color:var(--text-muted);font-size:0.85rem;margin:6px 0">No version snapshot yet. Pick a document below and click <strong>Attach version</strong> to freeze a copy under decision-versions/.</div>`}
+      <div class="row">
+        <select id="dec-doc" style="flex:1;color:var(--text);background:var(--bg)"><option value="">— document —</option>${docsOpts}</select>
+        <button type="button" class="primary" id="dec-attach">Attach version</button>
+      </div>
+      <div id="dec-attach-status" style="font-size:0.8rem;color:var(--text-muted);margin-top:8px;min-height:1.2em"></div>
+    </div>
+    <div class="row">
+      <button type="button" class="primary" id="dec-save">Save</button>
+      <button type="button" class="danger" id="dec-del">Delete</button>
+    </div>`;
+  box.querySelector('#dec-save').onclick = async () => {
+    try {
+      const updated = await call('UpdateDecision', {
+        id: d.id,
+        title: box.querySelector('#dec-title').value,
+        body: box.querySelector('#dec-body').value,
+        decidedAt: box.querySelector('#dec-date').value,
+        documentId: box.querySelector('#dec-doc').value || d.documentId || '',
+        docVersionRel: d.docVersionRel || '',
+        docVersionNote: d.docVersionNote || ''
+      });
+      Object.assign(d, updated);
+      state.decisionId = d.id;
+      await loadDecisions();
+      toast('Decision saved');
+    } catch (e) { toast(String(e.message || e)); }
+  };
+  box.querySelector('#dec-del').onclick = async () => {
+    if (!(await confirmDelete('Delete this decision?'))) return;
+    await call('DeleteDecision', d.id);
+    state.decisionId = null;
+    await loadDecisions();
+    toast('Deleted');
+  };
+  box.querySelector('#dec-attach').onclick = async () => {
+    const docId = box.querySelector('#dec-doc').value;
+    const status = box.querySelector('#dec-attach-status');
+    if (!docId) {
+      status.textContent = 'Select a document in the dropdown first.';
+      status.style.color = 'var(--warn)';
+      toast('Select a document first');
+      return;
+    }
+    status.textContent = 'Creating snapshot…';
+    status.style.color = 'var(--text-muted)';
+    try {
+      const updated = await call('AttachDocumentVersion', d.id, docId, '');
+      if (!updated || !updated.docVersionRel) {
+        status.textContent = 'Attach returned no path — check dossier.log';
+        status.style.color = 'var(--danger)';
+        toast('Attach version failed: no snapshot path returned');
+        return;
+      }
+      Object.assign(d, updated);
+      // update list cache
+      const i = state.decisions.findIndex(x => x.id === d.id);
+      if (i >= 0) state.decisions[i] = { ...state.decisions[i], ...updated };
+      state.decisionId = d.id;
+      status.textContent = 'Snapshot written: ' + updated.docVersionRel;
+      status.style.color = 'var(--ok)';
+      toast('Document version attached');
+      // re-render detail from updated object so helper text updates immediately
+      renderDecisionSpine();
+      renderDecisionDetail(updated);
+    } catch (e) {
+      status.textContent = 'Error: ' + (e.message || e);
+      status.style.color = 'var(--danger)';
+      toast('Attach version failed: ' + (e.message || e));
+    }
+  };
+  const openVer = box.querySelector('#dec-open-ver');
+  if (openVer) openVer.onclick = async () => {
+    try { await call('OpenDecisionVersion', d.id); } catch (e) { toast(String(e.message || e)); }
+  };
+}
+async function newDecision() {
+  try {
+    const d = await call('CreateDecision', 'New decision', '', new Date().toISOString().slice(0, 10));
+    state.decisions.push(d);
+    state.decisionId = d.id;
+    renderDecisionSpine();
+    renderDecisionDetail(d);
+  } catch (e) { toast(String(e)); }
+}
+
+/* ========== Search ========== */
+async function runSearch(q) {
+  const box = document.getElementById('search-results');
+  if (!q || !q.trim()) {
+    box.innerHTML = `<div class="empty">Type to search documents, notes, stickies, kanban, decisions</div>`;
+    return;
+  }
+  try {
+    const hits = await call('Search', q.trim()) || [];
+    if (!hits.length) {
+      box.innerHTML = `<div class="empty">No results for “${esc(q)}”</div>`;
+      return;
+    }
+    box.innerHTML = hits.map(h => `
+      <div class="hit" data-kind="${esc(h.kind)}" data-id="${esc(h.id)}">
+        <div class="k">${esc(h.kind)}${h.emoji ? ' · <span class="hit-emoji"></span>' : ''}</div>
+        <div class="t">${esc(h.title)}</div>
+        <div class="s">${formatSnippet(h.snippet)}</div>
+      </div>`).join('');
+    box.querySelectorAll('.hit').forEach((el, i) => {
+      const h = hits[i];
+      const em = el.querySelector('.hit-emoji');
+      if (em && h && h.emoji) appendEmojiDisplay(em, h.emoji);
+      el.onclick = () => {
+        const kind = el.dataset.kind, id = el.dataset.id;
+        if (kind === 'document') { setView('documents'); openDoc(id); }
+        else if (kind === 'note') { setView('notes'); openNote(id); }
+        else if (kind === 'sticky') setView('stickies');
+        else if (kind === 'kanban') { setView('kanban'); openKanban(id); }
+        else if (kind === 'decision') {
+          setView('decisions');
+          state.decisionId = id;
+          loadDecisions();
+        }
+      };
+    });
+  } catch (e) {
+    box.innerHTML = `<div class="empty">Search error: ${esc(e)}</div>`;
+  }
+}
+function formatSnippet(s) {
+  return esc(s || '').replace(/«/g, '<em>').replace(/»/g, '</em>');
+}
+
+/* ========== Go ========== */
+boot();
+</script>
+
+</body>
+</html>
