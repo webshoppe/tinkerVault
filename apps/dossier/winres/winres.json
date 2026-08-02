@@ -18,7 +18,7 @@
           "name": "Dossier",
           "version": "2.0.0"
         },
-        "description": "Dossier — portable dossier workspace",
+        "description": "Dossier; portable dossier workspace",
         "minimum-os": "win7",
         "execution-level": "as invoker",
         "ui-access": false,
