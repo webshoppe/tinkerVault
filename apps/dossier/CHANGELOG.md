@@ -4,7 +4,7 @@ All notable changes to this app are listed here. See [PROJECT_SUMMARY.md](PROJEC
 
 ## v1.0.3, 2026-07-26
 
-Current shipped version. Built up over five feature tiers, then a packaging pass and three packaging gap-fixes (internal versions 1.0.0-1.0.2, not published separately as their own release folders — see PROJECT_SUMMARY.md for why).
+Current shipped version. Built up over five feature tiers, then a packaging pass and three packaging gap-fixes (internal versions 1.0.0-1.0.2, not published separately as their own release folders; see PROJECT_SUMMARY.md for why).
 
 ### Added
 - Native Win32 desktop window (go-webview2), not a browser tab

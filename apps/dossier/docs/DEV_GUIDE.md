@@ -1,4 +1,4 @@
-# Developer guide — Dossier 1.0.3
+# Developer guide; Dossier 1.0.3
 
 For people who want to **read or change** the codebase.  
 End-user instructions: [USER_GUIDE.md](./USER_GUIDE.md). Overview: [README.md](../README.md).
@@ -120,10 +120,10 @@ Documented from the Tier 4.2 gap-fix pass (see PROJECT_SUMMARY.md's Tier history
 | PDF | Image-only / scanned pages often have no extractable text |
 | Office | Best-effort ZIP/XML text; no formulas/charts fidelity; encrypted OOXML unsupported |
 | Agent | No embedded model; HTTP client only; live agent optional |
-| Per-dossier taskbar icon | **Still skipped** — one process/one window; no separate taskbar buttons per dossier (see [releases/1.0.3/STATUS.md](../releases/1.0.3/STATUS.md)) |
+| Per-dossier taskbar icon | **Still skipped**; one process/one window; no separate taskbar buttons per dossier (see [releases/1.0.3/STATUS.md](../releases/1.0.3/STATUS.md)) |
 | Open externally prefs | `AppSettings.OpenWith` map `".ext" → exe path` in `%APPDATA%\Dossier\config.json`; `OpenDocumentExternally(id, forceDefault)` |
 | Notes safety net | UI-only snapshot at `openNote`; **Revert edits** restores that snapshot (not multi-version history) |
-| Icon alpha | `assets/dossier-icon.png` and `winres/icon_*.png` must be **RGBA** (color type 6); packaging briefly shipped RGB-only — fixed in 1.0.1 |
+| Icon alpha | `assets/dossier-icon.png` and `winres/icon_*.png` must be **RGBA** (color type 6); packaging briefly shipped RGB-only; fixed in 1.0.1 |
 | Cross-compile | Build from Linux/WSL with `CGO_ENABLED=0`; needs Go + go-winres |
 | `ui/index.html` edits | Single ~3k+ line file; a bulk find-replace once truncated it mid-pass (lost the annotate/kanban sections), the actual cause of the Tier 3 blank-window regression (see PROJECT_SUMMARY.md's Tier 3 / 3.1 history). Use surgical, scoped patches, never a bulk rewrite of the whole file |
 

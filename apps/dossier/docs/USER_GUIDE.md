@@ -10,7 +10,7 @@ This guide covers every surface in Dossier. Double-click `Dossier.exe` to open. 
 
 1. Launch **Dossier.exe**.
 2. Choose **Create / open folder…** (or **Open last** / a recent workspace).
-3. That folder is your **dossier** — documents, notes, and boards all live there.
+3. That folder is your **dossier**; documents, notes, and boards all live there.
 4. Use the left sidebar to switch surfaces. Footer shows **v1.0.3**.
 5. Optional first-open tips appear once per surface; dismiss with **Got it** (or turn them off in Settings).
 
@@ -27,17 +27,17 @@ Import files into `documents/` and browse them with sort and detail preview.
 | Import | **+ Import files…** or drag files onto the window |
 | Sort | Topbar **Sort**: Name A–Z / Z–A, Date added newest / oldest (remembers for this session) |
 | Open detail | Click a row |
-| External app | **Open externally** — uses Dossier’s preferred app for that file type if set, otherwise the Windows default |
-| Choose / remember app | **Open with…** — Windows default, choose once, **Always open .ext with…**, or clear preferred |
+| External app | **Open externally**; uses Dossier’s preferred app for that file type if set, otherwise the Windows default |
+| Choose / remember app | **Open with…**; Windows default, choose once, **Always open .ext with…**, or clear preferred |
 | Delete | **Delete** in the detail header (confirm if enabled) |
 | Rescan | **Rescan** re-indexes the folder |
 
 **Supported kinds**
 
-- **Markdown / text** — full preview + search  
-- **PDF** — best-effort text extract; image-only pages get a warning badge  
-- **Word / Excel (.docx / .xlsx)** — best-effort text for search; preview is lossy; use **Open externally** for the real file  
-- **Other** — stored as attachments  
+- **Markdown / text**; full preview + search  
+- **PDF**; best-effort text extract; image-only pages get a warning badge  
+- **Word / Excel (.docx / .xlsx)**; best-effort text for search; preview is lossy; use **Open externally** for the real file  
+- **Other**; stored as attachments  
 
 Office lock files (`~$…`) are skipped on import.
 
@@ -51,8 +51,8 @@ Markdown notes stored as real `.md` files under `notes/`.
 |--------|-----|
 | New | **+ New note** |
 | Edit | Title + body; auto-saves after a short delay (Settings) |
-| Copy | **Copy** next to Delete — puts title + body on the clipboard |
-| Revert edits | **Revert edits** appears after you change the note — restores title+body to how they looked **when you opened** this note (one level; not full history) |
+| Copy | **Copy** next to Delete; puts title + body on the clipboard |
+| Revert edits | **Revert edits** appears after you change the note; restores title+body to how they looked **when you opened** this note (one level; not full history) |
 | Delete | **Delete** |
 | Collapse list | **☰ List** on narrow layouts |
 
@@ -69,7 +69,7 @@ Freeform board of colorful notes.
 | Add | **+ Add sticky** (pick color/size in the topbar) |
 | Move | Drag the header |
 | Resize | Corner handle |
-| Emoji / flags | Header controls — country flags show as real flag images on Windows |
+| Emoji / flags | Header controls; country flags show as real flag images on Windows |
 | Delete | Trash control on the sticky header |
 
 ---
@@ -94,7 +94,7 @@ Paste, drop, or open an image, then mark it up.
 |------|-----|
 | Highlight | Translucent box |
 | Arrow | Point at something |
-| Label | Text label — drag and resize after placing |
+| Label | Text label; drag and resize after placing |
 | Redact | Solid blackout |
 | Crop | Crop the canvas |
 
@@ -111,7 +111,7 @@ Track work across columns.
 | New board | **+ New board** |
 | Columns | Add / rename; set a **WIP limit** (count/limit badge) |
 | Cards | **+ Card**; edit text (auto-grows) |
-| Drag | Use the **⋮⋮** grip — not the text field |
+| Drag | Use the **⋮⋮** grip; not the text field |
 
 ---
 
@@ -140,7 +140,7 @@ Hidden until Settings has a **non-empty host** and **port &gt; 0**.
 
 1. Settings → set **Agent host** (e.g. `127.0.0.1`) and **Agent port**.  
 2. Optional bearer token and HTTP path (default `/v1/chat/completions`).  
-3. **Save settings** — toast says panel **enabled** or **hidden**.  
+3. **Save settings**; toast says panel **enabled** or **hidden**.  
 4. **Clear the host field entirely and save** to hide the panel again.  
 
 In the Ask panel:
@@ -167,9 +167,9 @@ App-wide preferences in `%APPDATA%\Dossier\config.json`:
 
 ## Multiple workspaces
 
-- **Switch…** — open another recent or browse  
-- **+ Folder** — create/open another dossier folder  
-- **Close** — return to the launcher without quitting  
+- **Switch…**; open another recent or browse  
+- **+ Folder**; create/open another dossier folder  
+- **Close**; return to the launcher without quitting  
 
 Each dossier folder is isolated (its own `dossier.db` and files).
 
@@ -190,6 +190,6 @@ Each dossier folder is isolated (its own `dossier.db` and files).
 |-------|-----|
 | Window won’t open | Install/update **WebView2 Runtime** |
 | Ask panel missing | Settings: non-empty **host** + port; **Save** |
-| Flags look like “CA”/“US” letters | Should not happen in 1.0 — flags are embedded images |
-| PDF/Word empty in search | Image-only PDF or encrypted Office — use Open externally |
+| Flags look like “CA”/“US” letters | Should not happen in 1.0; flags are embedded images |
+| PDF/Word empty in search | Image-only PDF or encrypted Office; use Open externally |
 | Log file | `%LOCALAPPDATA%\Dossier\dossier.log` |

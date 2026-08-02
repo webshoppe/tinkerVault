@@ -2,7 +2,7 @@
 
 <img src="assets/dossier-icon.png" width="48" height="48" alt="Dossier icon" />
 
-**Version 1.0.3** - a portable, offline **dossier workspace** for Windows.
+**Version 1.0.3**; a portable, offline **dossier workspace** for Windows.
 
 One native `.exe` (not a browser tab). Pick a folder; that folder becomes a self-contained workspace with real documents, notes, stickies, boards, search, and an optional local agent panel. Backup = copy the folder.
 
@@ -31,7 +31,7 @@ Requires the **Microsoft Edge WebView2 Runtime** (preinstalled on modern Windows
 
 ## How to run
 
-1. Get `Dossier.exe` from `releases/1.0.3/` (or build it - see below).
+1. Get `Dossier.exe` from `releases/1.0.3/` (or build it; see below).
 2. Double-click it on Windows.
 3. **Create / open folder…** or **Open last** / pick a recent workspace.
 4. Work. Everything for that workspace lives inside the folder you chose.
@@ -103,8 +103,8 @@ See [releases/1.0.3/STATUS.md](./releases/1.0.3/STATUS.md) for the current versi
 
 | Doc | Audience |
 |-----|----------|
-| [USER_GUIDE.md](./docs/USER_GUIDE.md) | End users - one section per surface |
-| [DEV_GUIDE.md](./docs/DEV_GUIDE.md) | Developers - architecture, tiers, limits |
+| [USER_GUIDE.md](./docs/USER_GUIDE.md) | End users; one section per surface |
+| [DEV_GUIDE.md](./docs/DEV_GUIDE.md) | Developers; architecture, tiers, limits |
 | [PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md) | Tier history + room for a cold-read note |
 | [CHANGELOG.md](./CHANGELOG.md) | What changed, in brief |
 | [build-process/](./build-process/) | Re-runnable verify scripts |

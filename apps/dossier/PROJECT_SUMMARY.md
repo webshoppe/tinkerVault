@@ -1,4 +1,4 @@
-# Dossier — Project Summary
+# Dossier; Project Summary
 
 **Current version:** 1.0.3 (packaging + 3 gap-fix passes)  
 **Binary:** single Windows GUI `.exe` (Go + WebView2), cross-built from WSL2  
@@ -10,20 +10,20 @@ This document consolidates the tier-by-tier history that previously lived across
 
 ## Product intent
 
-A **portable dossier workspace**: one folder per project, real files on disk, local full-text search, sticky/paint/kanban/annotate boards, decision spine, optional “ask your local agent” client — as a **native window**, not a browser tab.
+A **portable dossier workspace**: one folder per project, real files on disk, local full-text search, sticky/paint/kanban/annotate boards, decision spine, optional “ask your local agent” client; as a **native window**, not a browser tab.
 
 ---
 
 ## Tier history
 
-### Tier 1 — Foundation
+### Tier 1; Foundation
 
 - Native Win32 window via **go-webview2** (no CGO)  
 - Dossier folder marker + **SQLite FTS5**  
 - Import markdown/text/PDF (best-effort) + attachments  
 - Notes (`notes/*.md`), sticky notes, search  
 
-### Tier 2 — Boards & multi-workspace
+### Tier 2; Boards & multi-workspace
 
 - Drag-and-drop import  
 - Paint, Kanban, Annotate  
@@ -31,21 +31,21 @@ A **portable dossier workspace**: one folder per project, real files on disk, lo
 - Decisions + document version snapshots  
 - Richer document list (date + preview)  
 
-### Tier 3 / gap-fix 3.1 — Polish
+### Tier 3 / gap-fix 3.1; Polish
 
 - Twemoji offline flag images (Windows cannot glyph RI pairs)  
 - Sticky ink contrast, mini delete, blur/highlight fixes  
 - First-open intros, Settings shell, sample-files, generated icon **asset** (not yet PE-embedded)  
 - Root cause of the Tier 3 blank-window regression: a bulk Python find-replace mid-pass truncated `ui/index.html` (lost the annotate/kanban sections); restored from the Tier-3-fixed backup and gap-fix edits re-applied surgically (see `STATUS-GAPFIX.md`, "Process note"). Surfaced independently during the v2 self-directed reflection pass, 2026-07-26.  
 
-### Tier 4 / 4.1 / 4.2 — Agent & Office
+### Tier 4 / 4.1 / 4.2; Agent & Office
 
 - Optional **Ask dossier** (host/port/token; hidden when unconfigured)  
 - FTS context: stopword OR → **bm25** rank → **top 4**  
 - Host first-save UX refinements; `~$` lock skip; toast glyph fix  
 - **.docx / .xlsx** extract for search + open externally  
 
-### Tier 5 — Small UX
+### Tier 5; Small UX
 
 - Ask **Clear conversation**  
 - Documents **sort** (name / date; session `state.docSort`)  
