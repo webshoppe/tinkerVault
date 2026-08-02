@@ -1,6 +1,15 @@
 # Changelog, tinkerVault (monorepo)
 
-The build-out history of the **repo itself**, day by day: structure, conventions, the landing page, licensing, and cross-app housekeeping. Each app also keeps its own feature-level changelog for just that app's version history: [`apps/hermes-console/CHANGELOG.md`](apps/hermes-console/CHANGELOG.md), [`apps/markdown-viewer/CHANGELOG.md`](apps/markdown-viewer/CHANGELOG.md), [`apps/whiteboard/CHANGELOG.md`](apps/whiteboard/CHANGELOG.md).
+The build-out history of the **repo itself**, day by day: structure, conventions, the landing page, licensing, and cross-app housekeeping. Each app also keeps its own feature-level changelog for just that app's version history: [`apps/hermes-console/CHANGELOG.md`](apps/hermes-console/CHANGELOG.md), [`apps/markdown-viewer/CHANGELOG.md`](apps/markdown-viewer/CHANGELOG.md), [`apps/whiteboard/CHANGELOG.md`](apps/whiteboard/CHANGELOG.md), [`apps/dossier/CHANGELOG.md`](apps/dossier/CHANGELOG.md).
+
+## 2026-08-02, Dossier 1.0.3 added
+
+- Added a new app, Dossier (`apps/dossier/`), tag `dossier-v1.0.3`, a portable offline dossier workspace for Windows: documents, notes, sticky notes, paint, kanban, annotate, and a decision timeline, plus full-text search and an optional local agent panel.
+- First app in this repo that isn't a single-file browser app: Dossier is a compiled native Windows `.exe` (Go + WebView2), so it has no GitHub Pages "Open" link; the landing page and root README link to its GitHub Release download instead.
+- Ships the same doc set as Whiteboard/Markdown Viewer (`README.md`, `CHANGELOG.md`, `PROJECT_SUMMARY.md`, `docs/DEV_GUIDE.md`, `docs/USER_GUIDE.md`, `build-process/`, `releases/`), plus a release-scoped badge (`filter=dossier*`).
+- Only the current 1.0.3 build is published as a release folder; three earlier internal versions (1.0.0-1.0.2) were icon-only packaging fixes on the same feature set and aren't kept as separate snapshots, see the app's own `CHANGELOG.md`/`PROJECT_SUMMARY.md`.
+- Added `dossier-v1.0.3` as a GitHub Release with a lean end-user `.zip` asset (`Dossier.exe`, icon, short README, sample files), matching the Whiteboard/Markdown Viewer release pattern.
+- Swept ~110 stray em dashes out of the app's docs, source comments, and UI copy across two follow-up passes (house style is semicolon/comma/parentheses, not em dash); one hand fix was needed for a UI dropdown placeholder that would have looked broken under the mechanical replace.
 
 ## 2026-07-18, Hermes Console 1.1.0
 
