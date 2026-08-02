@@ -32,7 +32,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 /* Simple emoji still use color fonts; national flags use embedded SVG (see FLAG_IMGS).
-   Windows Segoe UI Emoji cannot glyph regional-indicator pairs — always renders as CA/US text. */
+   Windows Segoe UI Emoji cannot glyph regional-indicator pairs; always renders as CA/US text. */
 .emoji, .emoji-label, .emoji-grid button, .flag-glyph {
   font-family: var(--emoji);
   font-variant-emoji: emoji;
@@ -62,7 +62,7 @@ button.ghost { background: transparent; }
 button.danger { color: var(--danger); border-color: rgba(232,93,106,0.4); }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
 button.active-tool { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-/* Explicit text color on all fields — fixes white-on-white title inputs (Paint/Annotate/etc.) */
+/* Explicit text color on all fields; fixes white-on-white title inputs (Paint/Annotate/etc.) */
 input[type="text"], input[type="search"], input[type="number"], input[type="date"], input[type="password"],
 input:not([type]), textarea, select {
   background: var(--bg);
@@ -237,7 +237,7 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
   text-align: left; justify-content: flex-start;
 }
 
-/* Notes — responsive side list (collapses / stacks so it isn't clipped) */
+/* Notes; responsive side list (collapses / stacks so it isn't clipped) */
 #notes-view { flex-direction: row !important; min-width: 0; }
 #notes-list {
   width: min(260px, 34vw); min-width: 140px; max-width: 320px;
@@ -246,7 +246,7 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
 }
 #notes-view.list-collapsed #notes-list { display: none; }
 .panel-collapse-btn { flex-shrink: 0; font-size: 0.72rem; padding: 4px 8px; white-space: nowrap; }
-/* Default window is 1280px — stack at/above that so panels aren't clipped out of the box */
+/* Default window is 1280px; stack at/above that so panels aren't clipped out of the box */
 @media (max-width: 1320px) {
   #notes-view { flex-direction: column !important; }
   #notes-list {
@@ -370,7 +370,7 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
 .emoji-tabs { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
 .emoji-tabs button { font-size: 0.75rem; padding: 4px 8px; }
 .emoji-tabs button.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-/* Wrap emoji onto rows — no horizontal scroll for normal use */
+/* Wrap emoji onto rows; no horizontal scroll for normal use */
 .emoji-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
@@ -577,7 +577,7 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
   box-shadow: var(--shadow); transform: rotate(1.5deg); width: 260px;
 }
 
-/* Decisions timeline — responsive spine so it isn't clipped at default width */
+/* Decisions timeline; responsive spine so it isn't clipped at default width */
 #decisions-view { flex-direction: row !important; min-width: 0; }
 #decision-spine {
   width: min(300px, 36vw); min-width: 160px; max-width: 360px;
@@ -644,7 +644,7 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
 <div id="app">
   <div id="setup">
     <h1>📁 Dossier</h1>
-    <p class="tagline">One folder per workspace. Real documents. Local search.<br/>Stickies, paint, kanban, decisions — all portable.</p>
+    <p class="tagline">One folder per workspace. Real documents. Local search.<br/>Stickies, paint, kanban, decisions; all portable.</p>
     <div class="card">
       <p>Choose a folder to hold this dossier’s documents, notes, boards, and database. Everything lives there.</p>
       <div class="actions">
@@ -734,7 +734,7 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
           <div id="annotate-editor">
             <div class="editor-hdr" id="annotate-tools"></div>
             <div class="editor-stage" id="annotate-stage">
-              <div class="annotate-hint" id="annotate-hint">Paste (Ctrl+V) or drop an image here to annotate.<br/>Then highlight, arrow, label (with font size — drag &amp; resize labels), redact, or crop.</div>
+              <div class="annotate-hint" id="annotate-hint">Paste (Ctrl+V) or drop an image here to annotate.<br/>Then highlight, arrow, label (with font size; drag &amp; resize labels), redact, or crop.</div>
               <div id="annotate-wrap" style="display:none">
                 <canvas id="annotate-canvas" width="800" height="500"></canvas>
               </div>
@@ -831,14 +831,14 @@ const state = {
   popTarget: null,
   paint: null, annotate: null, kanban: null, decisionId: null,
   emojiCat: 'faces',
-  // Documents list sort — in-memory for the session (matches other UI state; no localStorage elsewhere)
+  // Documents list sort; in-memory for the session (matches other UI state; no localStorage elsewhere)
   docSort: 'nameAsc',
   appSettings: { noteAutosaveMs: 500, confirmDeletes: true, showIntros: true, autoOpenLast: false, dismissedIntros: [] },
 };
 
 // Auto-generated Twemoji flag SVGs (CC-BY 4.0 Twitter/Twemoji). Offline display for Windows which cannot glyph flags.
 /*__FLAG_DATA__*/
-// Fallback only if inject failed — assign, do not redeclare
+// Fallback only if inject failed; assign, do not redeclare
 if (typeof FLAG_IMGS === 'undefined') { FLAG_IMGS = {}; }
 
 /** Build regional-indicator flag string from ISO 3166-1 alpha-2 (stored value). */
@@ -883,7 +883,7 @@ function appendEmojiDisplay(parent, emoji) {
 
 const FLAG_ISOS = Object.keys(FLAG_IMGS).sort();
 const EMOJI_CATS = {
-  // 🚩 triangular priority/milestone flag (U+1F6A9) — was missing since Tier 2
+  // 🚩 triangular priority/milestone flag (U+1F6A9); was missing since Tier 2
   faces: ['😀','😁','😂','🤣','😊','😍','🤩','😎','🤔','😅','😢','😡','👍','👎','👏','🙏','🔥','⭐','💡','✅','❌','⚠️','📌','🚩','📎','📝','💼','🎯','🚀','❤️','💯','🎉','📅','⏰','🔗','💬','🐛','✨','🏆','🗂️','💪'],
   // flags list is ISO codes; rendered as SVG images, stored as RI emoji pairs
   flags: FLAG_ISOS.length ? FLAG_ISOS : ['CA','US','GB','FR','DE','JP','KR','CN','IN','AU','BR','MX','ES','IT','NL','SE','NO','FI','DK','IE','PT','PL','UA','RU','TR','SA','AE','IL','ZA','NG','EG','KE','AR','CL','CO','PE','NZ','SG','TH','VN','PH','ID','MY','HK','TW','CH','AT','BE','GR','CZ'],
@@ -895,7 +895,7 @@ const INTRO_COPY = {
   stickies: { title: 'Sticky Notes', body: 'Add colorful stickies on a free board. Drag the header to move, resize from the corner, and pick emoji (including country flags as real flag images).' },
   paint: { title: 'Paint', body: 'Freehand canvas for quick sketches. Choose pen or eraser, colors, brush size, undo/redo. Each canvas is saved inside this dossier.' },
   annotate: { title: 'Annotate', body: 'Paste, drop, or open an image, then highlight, arrow, label, redact, or crop. Text labels can be dragged and resized after placing. Drop an image on this tab to start a new board.' },
-  kanban: { title: 'Kanban', body: 'Track work across columns. Set a WIP limit per column (count/limit badge). Drag cards by the ⋮⋮ grip. Card text auto-grows — no broken resize handle.' },
+  kanban: { title: 'Kanban', body: 'Track work across columns. Set a WIP limit per column (count/limit badge). Drag cards by the ⋮⋮ grip. Card text auto-grows; no broken resize handle.' },
   decisions: { title: 'Decisions', body: 'Pin decisions on a chronological spine. Optionally attach a frozen document snapshot (Attach version) under decision-versions/ so the exact file at decision time is preserved.' },
 };
 const SIZE_LABELS = {
@@ -1092,7 +1092,7 @@ document.getElementById('btn-close-ws').onclick = async () => {
 document.getElementById('btn-switch-ws').onclick = async () => {
   try {
     const list = await call('ListRecentDossiers') || [];
-    if (!list.length) { toast('No other recent dossiers — use + Folder'); return; }
+    if (!list.length) { toast('No other recent dossiers; use + Folder'); return; }
     showSwitcher(list);
   } catch (e) { toast(String(e)); }
 };
@@ -1271,7 +1271,7 @@ function renderSettings() {
   const autoOpenLast = s.autoOpenLast === true;
   const ms = s.noteAutosaveMs || 500;
   // Host is the enable/hide gate. Prefill 127.0.0.1 only when never configured so first enable is “type a port”.
-  // Once configured (or explicitly cleared), show the real saved host — empty means panel off.
+  // Once configured (or explicitly cleared), show the real saved host; empty means panel off.
   const neverAgent = !(s.agentHost && String(s.agentHost).trim()) && !(s.agentPort > 0);
   const aHost = (s.agentHost && String(s.agentHost).trim())
     ? s.agentHost
@@ -1281,7 +1281,7 @@ function renderSettings() {
   const aPath = s.agentPath || '/v1/chat/completions';
   panel.innerHTML = `
     <h3>Settings</h3>
-    <p class="settings-desc">App-wide preferences (stored in %APPDATA%\\Dossier, not inside a dossier folder). Visual style stays a solid dark shell — glass-morphism was considered and rejected for readability in a productivity tool.</p>
+    <p class="settings-desc">App-wide preferences (stored in %APPDATA%\\Dossier, not inside a dossier folder). Visual style stays a solid dark shell; glass-morphism was considered and rejected for readability in a productivity tool.</p>
     <div class="settings-row">
       <div><label>Confirm before deletes</label><div class="hint">Ask before removing documents, notes, stickies, boards</div></div>
       <input type="checkbox" id="set-confirm" ${confirm ? 'checked' : ''} />
@@ -1358,7 +1358,7 @@ function renderSettings() {
     try {
       const portVal = panel.querySelector('#set-agent-port').value;
       const portNum = portVal === '' ? 0 : (+portVal || 0);
-      // Live DOM only — empty host stays empty (do not re-inject 127.0.0.1).
+      // Live DOM only; empty host stays empty (do not re-inject 127.0.0.1).
       const hostVal = String(panel.querySelector('#set-agent-host').value || '').trim();
       state.appSettings = await call('SaveAppSettings', {
         noteAutosaveMs: +panel.querySelector('#set-autosave').value || 500,
@@ -1377,12 +1377,12 @@ function renderSettings() {
   panel.querySelector('#set-reset-intros').onclick = async () => {
     try {
       state.appSettings = await call('ResetIntros');
-      toast('Intros reset — reopen a surface to see them');
+      toast('Intros reset; reopen a surface to see them');
     } catch (e) { toast(String(e.message || e)); }
   };
 }
 
-/** Clear Ask panel Q/A history only — does not touch Settings/host config. */
+/** Clear Ask panel Q/A history only; does not touch Settings/host config. */
 function clearAgentConversation() {
   const log = document.getElementById('agent-log');
   const ctx = document.getElementById('agent-ctx');
@@ -1531,7 +1531,7 @@ async function openDoc(id) {
     } else if (d.officeFlags && d.officeFlags.extractionNote) {
       warn.style.display = 'block';
       warn.textContent = '⚠ Office extraction (' + (d.officeFlags.format || d.kind) + '): ' + d.officeFlags.extractionNote +
-        ' Dossier does not replace Word/Excel — use Open externally for the full file.';
+        ' Dossier does not replace Word/Excel; use Open externally for the full file.';
     } else warn.style.display = 'none';
     const bodyEl = document.getElementById('doc-body');
     const office = d.kind === 'docx' || d.kind === 'xlsx' || d.kind === 'odt' || d.kind === 'ods';
@@ -1540,10 +1540,10 @@ async function openDoc(id) {
         <div>${fmtSize(d.sizeBytes)} · ${esc(d.mimeType || 'unknown type')}</div>
         <p style="margin-top:16px">Not previewed inside Dossier. Use <strong>Open externally</strong>.</p></div>`;
     } else if (!body && d.kind === 'pdf') {
-      bodyEl.innerHTML = `<div class="binary-info"><div>📕 PDF — no extractable text</div>
+      bodyEl.innerHTML = `<div class="binary-info"><div>📕 PDF; no extractable text</div>
         <p style="margin-top:12px">Image-only/scanned. Use <strong>Open externally</strong>.</p></div>`;
     } else if (!body && office) {
-      bodyEl.innerHTML = `<div class="binary-info"><div>📄 ${esc(d.kind.toUpperCase())} — no extractable text</div>
+      bodyEl.innerHTML = `<div class="binary-info"><div>📄 ${esc(d.kind.toUpperCase())}; no extractable text</div>
         <p style="margin-top:12px">Search index has no text for this file. Use <strong>Open externally</strong> for the full Office/OpenDocument file.</p></div>`;
     } else {
       bodyEl.textContent = body;
@@ -1857,7 +1857,7 @@ function renderEmojiGrid() {
     const btn = document.createElement('button');
     btn.type = 'button';
     if (state.emojiCat === 'flags') {
-      // item is ISO code — show Twemoji SVG, store RI pair
+      // item is ISO code; show Twemoji SVG, store RI pair
       const iso = String(item).toUpperCase();
       btn.className = 'flag-btn';
       btn.title = iso;
@@ -2050,7 +2050,7 @@ function renderPaintList() {
   if (state.paint && state.paint.id) { list.style.display = 'none'; return; }
   list.style.display = 'flex';
   if (!state.paints.length) {
-    list.innerHTML = `<div class="empty"><strong>No paint canvases yet</strong><br/>Freehand drawing with colors, brush sizes, undo — improved from the whiteboard reference.</div>`;
+    list.innerHTML = `<div class="empty"><strong>No paint canvases yet</strong><br/>Freehand drawing with colors, brush sizes, undo; improved from the whiteboard reference.</div>`;
     return;
   }
   list.innerHTML = state.paints.map(c => `
@@ -2371,7 +2371,7 @@ function buildAnnotateTools() {
       '<input type="number" id="ann-font-num" class="compact" min="10" max="96" value="' + a.fontSize + '" />' +
       '<span class="label">px</span>';
   } else if (a.tool === 'blur') {
-    extra = '<span class="label" style="opacity:0.85">Drag a box — soft-blurs pixels underneath</span>';
+    extra = '<span class="label" style="opacity:0.85">Drag a box; soft-blurs pixels underneath</span>';
   }
   el.innerHTML =
     '<button type="button" class="ghost" id="ann-back">← Back</button>' +
@@ -2883,7 +2883,7 @@ function renderKanbanList() {
   if (state.kanban && state.kanban.id) { list.style.display = 'none'; return; }
   list.style.display = 'flex';
   if (!state.kanbans.length) {
-    list.innerHTML = `<div class="empty"><strong>No kanban boards yet</strong><br/>Columns with WIP counts, grip-handle card drag, colors — improved from the whiteboard reference.</div>`;
+    list.innerHTML = `<div class="empty"><strong>No kanban boards yet</strong><br/>Columns with WIP counts, grip-handle card drag, colors; improved from the whiteboard reference.</div>`;
     return;
   }
   list.innerHTML = state.kanbans.map(b => `
@@ -3169,7 +3169,7 @@ function renderDecisionDetail(d) {
            </div>`
         : `<div id="dec-no-snap" style="color:var(--text-muted);font-size:0.85rem;margin:6px 0">No version snapshot yet. Pick a document below and click <strong>Attach version</strong> to freeze a copy under decision-versions/.</div>`}
       <div class="row">
-        <select id="dec-doc" style="flex:1;color:var(--text);background:var(--bg)"><option value="">— document —</option>${docsOpts}</select>
+        <select id="dec-doc" style="flex:1;color:var(--text);background:var(--bg)"><option value="">(none)</option>${docsOpts}</select>
         <button type="button" class="primary" id="dec-attach">Attach version</button>
       </div>
       <div id="dec-attach-status" style="font-size:0.8rem;color:var(--text-muted);margin-top:8px;min-height:1.2em"></div>
@@ -3216,7 +3216,7 @@ function renderDecisionDetail(d) {
     try {
       const updated = await call('AttachDocumentVersion', d.id, docId, '');
       if (!updated || !updated.docVersionRel) {
-        status.textContent = 'Attach returned no path — check dossier.log';
+        status.textContent = 'Attach returned no path; check dossier.log';
         status.style.color = 'var(--danger)';
         toast('Attach version failed: no snapshot path returned');
         return;
