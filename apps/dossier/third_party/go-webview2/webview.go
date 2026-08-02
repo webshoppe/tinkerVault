@@ -116,7 +116,7 @@ func NewWithOptions(options WebViewOptions) WebView {
 	}
 	// Context menus (Cut/Copy/Paste/Select all) stay on for normal editing UX.
 	// DevTools stay off unless Debug is true (F12 / Inspect). These are separate
-	// WebView2 settings — do not couple them both to Debug.
+	// WebView2 settings; do not couple them both to Debug.
 	err = settings.PutAreDefaultContextMenusEnabled(true)
 	if err != nil {
 		log.Fatal(err)

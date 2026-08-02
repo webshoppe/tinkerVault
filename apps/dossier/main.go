@@ -109,8 +109,8 @@ document.addEventListener('drop', function(e){ e.preventDefault(); e.stopPropaga
 `)
 
 	// Boot auto-open (before UI so GetStatus().open is true when successful):
-	//  1) DOSSIER_AUTO_OPEN=1 — force-on for debug/automation (unchanged, separate concept).
-	//  2) Else Settings.autoOpenLast — opt-in user preference (default off).
+	//  1) DOSSIER_AUTO_OPEN=1; force-on for debug/automation (unchanged, separate concept).
+	//  2) Else Settings.autoOpenLast; opt-in user preference (default off).
 	// Invalid/missing last path never hangs: log and fall through to launcher.
 	if os.Getenv("DOSSIER_AUTO_OPEN") == "1" {
 		if _, err := api.OpenLastDossier(); err != nil {
@@ -146,7 +146,7 @@ func loadUI() (string, error) {
 		return "", err
 	}
 	html := string(b)
-	// Inject offline Twemoji flag SVGs — Windows Segoe UI Emoji cannot glyph regional-indicator flags
+	// Inject offline Twemoji flag SVGs; Windows Segoe UI Emoji cannot glyph regional-indicator flags
 	// (renders as CA/US letter pairs). Visual flag display uses embedded SVG images.
 	if flags, err := fs.ReadFile(uiFS, "ui/flag-data.inc.js"); err == nil {
 		html = strings.Replace(html, "/*__FLAG_DATA__*/", string(flags), 1)
