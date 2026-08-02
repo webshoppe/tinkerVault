@@ -1,4 +1,4 @@
-# build-process — Dossier verify scripts
+# build-process; Dossier verify scripts
 
 Reusable checks for the packaging and regression loop. These are **not** the one-off `build/capture-*.ps1` screenshot helpers.
 
