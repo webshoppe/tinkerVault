@@ -1,4 +1,4 @@
-# Dossier 1.0.3 — Icon paper art-direction — Status
+# Dossier 1.0.3; Icon paper art-direction; Status
 
 **Date:** 2026-07-26  
 **Version:** **1.0.3** (this file is for 1.0.3 only)  
