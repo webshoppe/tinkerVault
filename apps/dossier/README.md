@@ -32,6 +32,20 @@ Dossier is a multi-surface productivity app built around a **dossier folder**:
 
 Requires the **Microsoft Edge WebView2 Runtime** (preinstalled on modern Windows 10/11).
 
+## Getting Started
+
+**1. Download it**
+
+Go to the [Dossier release page](https://github.com/webshoppe/tinkerVault/releases/tag/dossier-v2.0.0) and click `dossier-v2.0.0.zip` under Assets. It downloads like any other file.
+
+**2. Unzip it**
+
+Find the downloaded file (usually in your Downloads folder), right-click it, choose **Extract All**, and pick somewhere easy to find, like your Desktop. You'll end up with a folder called `Dossier` containing `Dossier.exe` and a few other files.
+
+**3. Use it**
+
+Double-click `Dossier.exe`. **Create / open folder…** to start a workspace; everything you add lives right there on your computer, nothing is uploaded anywhere.
+
 ---
 
 ## How to run
@@ -43,7 +57,7 @@ Requires the **Microsoft Edge WebView2 Runtime** (preinstalled on modern Windows
 
 ```powershell
 # Example
-R:\path\to\releases\2.0.0\Dossier.exe
+C:\path\to\releases\2.0.0\Dossier.exe
 ```
 
 - **Dossier.exe** — GUI (no console window).
