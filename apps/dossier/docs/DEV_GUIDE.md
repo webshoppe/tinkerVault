@@ -126,6 +126,7 @@ Documented from the Tier 4.2 gap-fix pass (see PROJECT_SUMMARY.md's Tier history
 | Icon alpha | `assets/dossier-icon.png` and `winres/icon_*.png` must be **RGBA** (color type 6); packaging briefly shipped RGB-only; fixed in 1.0.1 |
 | Cross-compile | Build from Linux/WSL with `CGO_ENABLED=0`; needs Go + go-winres |
 | `ui/index.html` edits | Single ~3k+ line file; a bulk find-replace once truncated it mid-pass (lost the annotate/kanban sections), the actual cause of the Tier 3 blank-window regression (see PROJECT_SUMMARY.md's Tier 3 / 3.1 history). Use surgical, scoped patches, never a bulk rewrite of the whole file |
+| Source vs. docs drift (fixed) | `main.go`/`internal/app/`/`internal/dossier/`/`internal/dialog/` briefly contained early v2 Tier 1 work (opt-in auto-resume-last-dossier, best-effort `.odt`/`.ods` import, SQLite schema bumped to v3) merged into this repo ahead of a version bump, while `VERSION`/`version.go`/`winres.json` and these docs still described 1.0.3 only. Confirmed non-breaking (auto-resume defaults off, schema v3 migration verified against a real v1 dossier with no data loss), but a real docs/source mismatch while it lasted. `VERSION`/`version.go`/`winres.json` restored to `1.0.3` to stop the mismatch; the v2 code itself is still present in this tree pending the actual v2 release. See PROJECT_SUMMARY.md for the full incident note. |
 
 ---
 

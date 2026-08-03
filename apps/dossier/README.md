@@ -1,5 +1,7 @@
 # Dossier
 
+![Release](https://img.shields.io/github/v/release/webshoppe/tinkerVault?filter=dossier*&label=release)
+
 <img src="assets/dossier-icon.png" width="48" height="48" alt="Dossier icon" />
 
 **Version 1.0.3**; a portable, offline **dossier workspace** for Windows.

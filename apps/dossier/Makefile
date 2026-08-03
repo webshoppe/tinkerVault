@@ -1,4 +1,4 @@
-# Dossier — Windows desktop app (built from WSL/Linux)
+# Dossier; Windows desktop app (built from WSL/Linux)
 GO      ?= $(HOME)/.local/go/bin/go
 WINRES  ?= $(HOME)/go/bin/go-winres
 export PATH := $(HOME)/.local/go/bin:$(HOME)/go/bin:$(PATH)

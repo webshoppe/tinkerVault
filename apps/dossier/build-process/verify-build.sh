@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Dossier packaging verify — run from WSL/Linux project root.
+# Dossier packaging verify; run from WSL/Linux project root.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

@@ -105,6 +105,16 @@ _Follow-up, same day: the doc drift and verify-build.sh findings above were conf
 
 ---
 
+## Monorepo-upload incident: root source briefly drifted ahead of docs (found + fixed 2026-08-02)
+
+While staging Dossier's first upload into `tinkerVault`, the packaged doc set (`README.md`, `CHANGELOG.md`, `docs/`) always described 1.0.3 correctly. But somewhere during the manual, 100+-file GitHub upload, the source batch (`main.go`, `internal/app/`, `internal/dossier/`, `internal/dialog/`) got pulled from the live WSL2 working copy after v2 Tier 1 work had already started there, instead of from the pre-v2-tagged staging copy. Confirmed directly: `VERSION` read `2.0.0-t1`, `internal/app/version.go` matched, `winres/winres.json` said `2.0.0`, `internal/dossier/store.go`'s `SchemaVersion` was `"3"` (v1.0.3 shipped schema `"2"`), and `main.go` already had the v2 `AutoOpenLastFromSettings` logic, while every doc at the same root still described 1.0.3-only features. `releases/1.0.3/Dossier.exe` itself was unaffected throughout, verified by checksum against the original 1.0.3 build; this was a checked-in-source/docs mismatch, not a broken release.
+
+A true byte-exact 1.0.3-only source snapshot turned out not to be recoverable (no git history at any point in this project, and the local staging copy used to prep the GitHub upload had itself been re-synced from the same already-drifted live repo during a later cleanup pass). Given the v2 additions are additive and confirmed non-breaking, this side quest of finding a "better" fix landed on: restore `VERSION`/`version.go`/`winres.json` to `1.0.3` so nothing actively lies, leave the (harmless, opt-in, migration-safe) v2 code in place rather than trying to hand-strip it back out, and document the real state here plus in DEV_GUIDE.md's Known Limitations rather than pretend it didn't happen.
+
+One likely side effect, not yet independently confirmed on a real Windows box: `build-process/verify-windows.ps1` reads `$ExpectVer` from the `VERSION` file and throws if it doesn't match the compiled `.exe`'s PE version info. A `2.0.0-t1` `VERSION` file next to whatever locally-built `.exe` was being tested at the time would produce exactly the "script is broken" symptom reported, unrelated to a separate em-dash cleanup pass done the same week (that pass touched only prose spacing, and this file had zero em dashes in it to begin with, checked directly). Worth a real re-run once this fix is live, rather than assumed fixed.
+
+---
+
 ## Related status files
 
 | File | Scope |
