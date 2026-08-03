@@ -7,6 +7,8 @@ Reusable checks for the packaging and regression loop. These are **not** the one
 | `verify-build.sh` | WSL/Linux | unit tests, resources, cross-compile, PE icon/version string presence |
 | `verify-windows.ps1` | Windows | smoke.exe, launch GUI with auto-open, report version resource + process |
 
+[`test-fixtures/`](./test-fixtures/README.md) holds manual regression packs for import/extraction/search behavior (not covered by the two scripts above); useful when hand-verifying a change that touches those paths.
+
 ## Typical flow
 
 ```bash
@@ -17,4 +19,4 @@ bash build-process/verify-build.sh
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File build-process/verify-windows.ps1
 ```
 
-Exit code `0` means the automated checks passed. Hand-check still required for right-click menus and visual taskbar icon (see [releases/1.0.3/STATUS.md](../releases/1.0.3/STATUS.md)).
+Exit code `0` means the automated checks passed. Hand-check still required for right-click menus and visual taskbar icon (see [releases/2.0.0/STATUS.md](../releases/2.0.0/STATUS.md)).

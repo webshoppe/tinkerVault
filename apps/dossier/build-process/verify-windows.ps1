@@ -26,7 +26,8 @@ if ([string]::IsNullOrWhiteSpace($vi.FileVersion) -and [string]::IsNullOrWhiteSp
 }
 $pv = "$($vi.ProductVersion)"
 $fv = "$($vi.FileVersion)"
-if (-not ($pv.StartsWith("1.0.0") -or $fv.StartsWith("1.0.0") -or $pv.StartsWith($ExpectVer) -or $fv.StartsWith($ExpectVer))) {
+# Accept exact product string or PE fixed prefix (e.g. 2.0.0 / 2.0.0.23)
+if (-not ($pv -eq $ExpectVer -or $fv -eq $ExpectVer -or $pv.StartsWith($ExpectVer) -or $fv.StartsWith($ExpectVer))) {
   throw "version mismatch: PE=$pv/$fv expect=$ExpectVer"
 }
 

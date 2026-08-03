@@ -1,0 +1,7 @@
+Dossier Tier 1 - plain text import test.
+
+FTS5 search keyword for this file: ZEPHYRQUILL204
+
+This is an ordinary .txt file with no markdown formatting, meant to sit alongside the .md and .pdf fixtures so all three "first-class" import types (markdown, plain text, PDF) get exercised in one pass, each with its own unique search keyword so results in the Search tab are unambiguous about which file matched.
+
+Second paragraph, just to give the file more than one block of text to index and search across.

@@ -1,6 +1,7 @@
 package dossier
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -65,6 +66,12 @@ type Note struct {
 	UpdatedAt string `json:"updatedAt"`
 }
 
+// StickyLinkKanban is a denormalized pointer from a sticky to a kanban card (schedule link).
+type StickyLinkKanban struct {
+	BoardID string `json:"boardId"`
+	CardID  string `json:"cardId"`
+}
+
 type Sticky struct {
 	ID        string  `json:"id"`
 	Text      string  `json:"text"`
@@ -76,8 +83,24 @@ type Sticky struct {
 	H         float64 `json:"h"`
 	Emoji     string  `json:"emoji"`
 	ZIndex    int     `json:"zIndex"`
-	CreatedAt string  `json:"createdAt"`
-	UpdatedAt string  `json:"updatedAt"`
+	// DueAt is optional ISO date or datetime; empty = not scheduled.
+	DueAt string `json:"dueAt,omitempty"`
+	// LinkedKanban is optional non-destructive schedule link to a kanban card.
+	LinkedKanban *StickyLinkKanban `json:"linkedKanban,omitempty"`
+	CreatedAt    string           `json:"createdAt"`
+	UpdatedAt    string           `json:"updatedAt"`
+}
+
+// CalendarItem is a read-only agenda entry for the Calendar surface.
+type CalendarItem struct {
+	ID      string `json:"id"`
+	Kind    string `json:"kind"` // sticky | kanban | decision
+	Title   string `json:"title"`
+	Date    string `json:"date"` // YYYY-MM-DD for grouping
+	DueAt   string `json:"dueAt,omitempty"`
+	BoardID string `json:"boardId,omitempty"`
+	CardID  string `json:"cardId,omitempty"`
+	Color   string `json:"color,omitempty"`
 }
 
 type SearchHit struct {
@@ -90,9 +113,23 @@ type SearchHit struct {
 	Emoji    string `json:"emoji,omitempty"`
 }
 
+// Collection is an app-wide named set of dossier folder paths (switcher-only).
+type Collection struct {
+	ID    string   `json:"id"`
+	Name  string   `json:"name"`
+	Paths []string `json:"paths"`
+}
+
 type AppConfig struct {
 	LastDossierPath string   `json:"lastDossierPath"`
 	RecentPaths     []string `json:"recentPaths,omitempty"`
+	// WorkspaceNames maps cleaned dossier folder paths to optional display names
+	// (app-wide; not inside the dossier folder). Empty/missing → use folder base name.
+	WorkspaceNames map[string]string `json:"workspaceNames,omitempty"`
+	// PathLastOpened maps cleaned dossier path → RFC3339 last-open time (for collection portfolio).
+	PathLastOpened map[string]string `json:"pathLastOpened,omitempty"`
+	// Collections are named multi-dossier workspaces (one open at a time).
+	Collections []Collection `json:"collections,omitempty"`
 	// DismissedIntros: view keys the user has dismissed (documents, notes, …).
 	DismissedIntros []string `json:"dismissedIntros,omitempty"`
 	// Settings is small app-wide prefs (not per-dossier).
@@ -125,6 +162,9 @@ type AppSettings struct {
 	// valid dossier folder. Default false (launcher shown). Separate from the
 	// DOSSIER_AUTO_OPEN=1 env force-on used for debug/automation.
 	AutoOpenLast *bool `json:"autoOpenLast,omitempty"`
+
+	// NotesEditorMode is "edit" | "split" | "preview" (default "split" for v2 Notes workbench).
+	NotesEditorMode string `json:"notesEditorMode,omitempty"`
 }
 
 // ExtKey normalizes a filename or extension to ".ext" lowercase for OpenWith keys.
@@ -184,10 +224,76 @@ func (s AppSettings) AutoOpenLastOrDefault() bool {
 	return *s.AutoOpenLast
 }
 
+// NotesEditorModeOrDefault returns edit|split|preview; default split (v2 workbench).
+func (s AppSettings) NotesEditorModeOrDefault() string {
+	m := strings.ToLower(strings.TrimSpace(s.NotesEditorMode))
+	switch m {
+	case "edit", "preview", "split":
+		return m
+	default:
+		return "split"
+	}
+}
+
+// WorkspaceKey normalizes a dossier path for WorkspaceNames map keys.
+func WorkspaceKey(path string) string {
+	return filepath.Clean(strings.TrimSpace(path))
+}
+
+// DisplayNameFor returns the optional workspace display name, or folder base name.
+func (c *AppConfig) DisplayNameFor(path string) string {
+	path = WorkspaceKey(path)
+	if path == "" || path == "." {
+		return ""
+	}
+	if c != nil && c.WorkspaceNames != nil {
+		if n := strings.TrimSpace(c.WorkspaceNames[path]); n != "" {
+			return n
+		}
+		for k, v := range c.WorkspaceNames {
+			if strings.EqualFold(WorkspaceKey(k), path) {
+				if n := strings.TrimSpace(v); n != "" {
+					return n
+				}
+			}
+		}
+	}
+	return filepath.Base(path)
+}
+
+// SetWorkspaceDisplayName sets or clears (empty name) a display name for path.
+// Does not rename or move anything on disk.
+func (c *AppConfig) SetWorkspaceDisplayName(path, name string) {
+	path = WorkspaceKey(path)
+	if path == "" || path == "." {
+		return
+	}
+	name = strings.TrimSpace(name)
+	if c.WorkspaceNames == nil {
+		c.WorkspaceNames = map[string]string{}
+	}
+	for k := range c.WorkspaceNames {
+		if strings.EqualFold(WorkspaceKey(k), path) {
+			delete(c.WorkspaceNames, k)
+		}
+	}
+	if name == "" {
+		if len(c.WorkspaceNames) == 0 {
+			c.WorkspaceNames = nil
+		}
+		return
+	}
+	c.WorkspaceNames[path] = name
+}
+
 // TouchRecent records path as last-opened and keeps a short recents list.
 func (c *AppConfig) TouchRecent(path string) {
 	path = filepath.Clean(path)
 	c.LastDossierPath = path
+	if c.PathLastOpened == nil {
+		c.PathLastOpened = map[string]string{}
+	}
+	c.PathLastOpened[path] = nowISO()
 	out := []string{path}
 	for _, p := range c.RecentPaths {
 		p = filepath.Clean(p)
@@ -200,6 +306,23 @@ func (c *AppConfig) TouchRecent(path string) {
 		}
 	}
 	c.RecentPaths = out
+}
+
+// LastOpenedFor returns RFC3339 last-open time for path, or empty.
+func (c *AppConfig) LastOpenedFor(path string) string {
+	if c == nil || c.PathLastOpened == nil {
+		return ""
+	}
+	path = WorkspaceKey(path)
+	if t, ok := c.PathLastOpened[path]; ok {
+		return t
+	}
+	for k, v := range c.PathLastOpened {
+		if strings.EqualFold(WorkspaceKey(k), path) {
+			return v
+		}
+	}
+	return ""
 }
 
 // Canvas is a Paint or Annotate board (state JSON + optional PNG under boards/).
@@ -266,6 +389,8 @@ func LoadConfig() (*AppConfig, error) {
 		}
 		return &AppConfig{}, err
 	}
+	// Strip UTF-8 BOM if a Windows editor/PowerShell wrote one (common with Set-Content -Encoding UTF8).
+	b = bytes.TrimPrefix(b, []byte{0xEF, 0xBB, 0xBF})
 	var c AppConfig
 	if err := json.Unmarshal(b, &c); err != nil {
 		return &AppConfig{}, err
@@ -400,6 +525,8 @@ CREATE TABLE IF NOT EXISTS stickies (
   emoji TEXT NOT NULL DEFAULT '',
   z_index INTEGER NOT NULL DEFAULT 1,
   due_at TEXT,
+  linked_board_id TEXT,
+  linked_card_id TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -442,9 +569,11 @@ CREATE VIRTUAL TABLE IF NOT EXISTS docs_fts USING fts5(
 	}
 	// Tier-1 DBs may lack preview column
 	_, _ = s.db.Exec(`ALTER TABLE documents ADD COLUMN preview TEXT NOT NULL DEFAULT ''`)
-	// Schema v3: sticky due_at for a later Calendar tier (unused in UI this release).
+	// Schema v3+: sticky due_at + optional kanban schedule-link columns.
 	// ALTER is ignored when the column already exists (SQLite returns error; we drop it).
 	_, _ = s.db.Exec(`ALTER TABLE stickies ADD COLUMN due_at TEXT`)
+	_, _ = s.db.Exec(`ALTER TABLE stickies ADD COLUMN linked_board_id TEXT`)
+	_, _ = s.db.Exec(`ALTER TABLE stickies ADD COLUMN linked_card_id TEXT`)
 	_ = s.setMeta("schema_version", SchemaVersion)
 	return nil
 }
@@ -721,7 +850,9 @@ func (s *Store) DeleteNote(id string) error {
 func (s *Store) ListStickies() ([]Sticky, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	rows, err := s.db.Query(`SELECT id, text, color, size, x, y, w, h, emoji, z_index, created_at, updated_at
+	rows, err := s.db.Query(`SELECT id, text, color, size, x, y, w, h, emoji, z_index,
+		COALESCE(due_at,''), COALESCE(linked_board_id,''), COALESCE(linked_card_id,''),
+		created_at, updated_at
 		FROM stickies ORDER BY z_index ASC, updated_at ASC`)
 	if err != nil {
 		return nil, err
@@ -730,9 +861,14 @@ func (s *Store) ListStickies() ([]Sticky, error) {
 	var out []Sticky
 	for rows.Next() {
 		var st Sticky
+		var due, boardID, cardID string
 		if err := rows.Scan(&st.ID, &st.Text, &st.Color, &st.Size, &st.X, &st.Y, &st.W, &st.H,
-			&st.Emoji, &st.ZIndex, &st.CreatedAt, &st.UpdatedAt); err != nil {
+			&st.Emoji, &st.ZIndex, &due, &boardID, &cardID, &st.CreatedAt, &st.UpdatedAt); err != nil {
 			return nil, err
+		}
+		st.DueAt = strings.TrimSpace(due)
+		if boardID != "" && cardID != "" {
+			st.LinkedKanban = &StickyLinkKanban{BoardID: boardID, CardID: cardID}
 		}
 		out = append(out, st)
 	}
@@ -742,20 +878,47 @@ func (s *Store) ListStickies() ([]Sticky, error) {
 	return out, rows.Err()
 }
 
+func (s *Store) GetSticky(id string) (*Sticky, error) {
+	list, err := s.ListStickies()
+	if err != nil {
+		return nil, err
+	}
+	for i := range list {
+		if list[i].ID == id {
+			return &list[i], nil
+		}
+	}
+	return nil, errNotFound("sticky")
+}
+
 func (s *Store) UpsertSticky(st *Sticky) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	due := strings.TrimSpace(st.DueAt)
+	boardID, cardID := "", ""
+	if st.LinkedKanban != nil {
+		boardID = strings.TrimSpace(st.LinkedKanban.BoardID)
+		cardID = strings.TrimSpace(st.LinkedKanban.CardID)
+		if boardID == "" || cardID == "" {
+			boardID, cardID = "", ""
+			st.LinkedKanban = nil
+		}
+	}
 	_, err := s.db.Exec(`
-INSERT INTO stickies(id, text, color, size, x, y, w, h, emoji, z_index, created_at, updated_at)
-VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
+INSERT INTO stickies(id, text, color, size, x, y, w, h, emoji, z_index, due_at, linked_board_id, linked_card_id, created_at, updated_at)
+VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
 ON CONFLICT(id) DO UPDATE SET
   text=excluded.text, color=excluded.color, size=excluded.size,
   x=excluded.x, y=excluded.y, w=excluded.w, h=excluded.h,
-  emoji=excluded.emoji, z_index=excluded.z_index, updated_at=excluded.updated_at
-`, st.ID, st.Text, st.Color, st.Size, st.X, st.Y, st.W, st.H, st.Emoji, st.ZIndex, st.CreatedAt, st.UpdatedAt)
+  emoji=excluded.emoji, z_index=excluded.z_index,
+  due_at=excluded.due_at, linked_board_id=excluded.linked_board_id, linked_card_id=excluded.linked_card_id,
+  updated_at=excluded.updated_at
+`, st.ID, st.Text, st.Color, st.Size, st.X, st.Y, st.W, st.H, st.Emoji, st.ZIndex,
+		nullIfEmpty(due), nullIfEmpty(boardID), nullIfEmpty(cardID), st.CreatedAt, st.UpdatedAt)
 	if err != nil {
 		return err
 	}
+	st.DueAt = due
 	title := st.Emoji
 	if title != "" {
 		title += " "

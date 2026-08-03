@@ -116,7 +116,7 @@ func NewWithOptions(options WebViewOptions) WebView {
 	}
 	// Context menus (Cut/Copy/Paste/Select all) stay on for normal editing UX.
 	// DevTools stay off unless Debug is true (F12 / Inspect). These are separate
-	// WebView2 settings; do not couple them both to Debug.
+	// WebView2 settings — do not couple them both to Debug.
 	err = settings.PutAreDefaultContextMenusEnabled(true)
 	if err != nil {
 		log.Fatal(err)
@@ -124,6 +124,30 @@ func NewWithOptions(options WebViewOptions) WebView {
 	err = settings.PutAreDevToolsEnabled(options.Debug)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	// Desktop app: disable browser-specific accelerators (Ctrl+P/F5/F12 find/print/reload
+	// chrome). Does not by itself fix Escape (Escape is always an accelerator event),
+	// but stops browser chrome shortcuts from stealing keys from the page.
+	if err := settings.PutAreBrowserAcceleratorKeysEnabled(false); err != nil {
+		log.Printf("webview2: PutAreBrowserAcceleratorKeysEnabled: %v", err)
+	}
+
+	// Escape is always an AcceleratorKeyPressed key in WebView2. Page JS also has
+	// keydown handlers for sticky pickers; this host path Eval-closes open popovers
+	// as a backup. Return false so the key still reaches page JS (double-close is fine).
+	// Escape is delivered as KEY_UP on this host (see Chromium.AcceleratorKeyPressed).
+	const vkEscape = 0x1B
+	chromium.AcceleratorKeyCallback = func(virtualKey uint) bool {
+		if virtualKey != vkEscape {
+			return false
+		}
+		w.Eval(`(function(){try{
+  if (typeof closePopovers === 'function' && document.querySelector('.popover.open')) {
+    closePopovers({ returnFocus: true });
+  }
+}catch(e){}})();`)
+		return false
 	}
 
 	return w

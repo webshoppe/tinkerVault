@@ -76,6 +76,24 @@ func OpenExternally(path string) error {
 	return cmd.Start()
 }
 
+// OpenURL opens an http(s) or other URL in the default browser/handler.
+// Does not Stat the path (unlike OpenExternally).
+func OpenURL(raw string) error {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return fmt.Errorf("empty url")
+	}
+	// Basic safety: only allow common external schemes
+	lower := strings.ToLower(raw)
+	if !strings.HasPrefix(lower, "http://") && !strings.HasPrefix(lower, "https://") &&
+		!strings.HasPrefix(lower, "mailto:") {
+		return fmt.Errorf("unsupported url scheme")
+	}
+	cmd := exec.Command("cmd", "/c", "start", "", raw)
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+	return cmd.Start()
+}
+
 // OpenWithApp opens path using a specific executable (Dossier preferred opener).
 // appExe must be an absolute path to an .exe (or other launcher Windows accepts).
 func OpenWithApp(path, appExe string) error {

@@ -32,6 +32,17 @@ func OpenExternally(path string) error {
 	return fmt.Errorf("open externally only fully supported on Windows")
 }
 
+func OpenURL(raw string) error {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return fmt.Errorf("empty url")
+	}
+	if runtime.GOOS == "linux" {
+		return exec.Command("xdg-open", raw).Start()
+	}
+	return fmt.Errorf("open url only fully supported on Windows")
+}
+
 func OpenWithApp(path, appExe string) error {
 	if strings.TrimSpace(appExe) == "" {
 		return OpenExternally(path)

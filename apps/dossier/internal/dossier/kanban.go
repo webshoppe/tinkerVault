@@ -3,6 +3,8 @@ package dossier
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -80,7 +82,38 @@ func (s *Store) GetKanbanBoard(id string) (*KanbanBoard, error) {
 }
 
 // SaveKanbanBoard updates title + full state JSON.
+// After save, syncs dueAt from cards that have linkedStickyId onto those stickies.
 func (s *Store) SaveKanbanBoard(id, title, stateJSON string) (*KanbanBoard, error) {
+	b, err := s.saveKanbanStateOnly(id, title, stateJSON)
+	if err != nil {
+		return nil, err
+	}
+	// Sync schedule links: card dueAt → sticky dueAt when linked.
+	var stt struct {
+		Cards []struct {
+			ID             string `json:"id"`
+			DueAt          string `json:"dueAt"`
+			LinkedStickyID string `json:"linkedStickyId"`
+		} `json:"cards"`
+	}
+	_ = json.Unmarshal([]byte(b.StateJSON), &stt)
+	for _, c := range stt.Cards {
+		sid := strings.TrimSpace(c.LinkedStickyID)
+		if sid == "" {
+			continue
+		}
+		// Card dueAt (including empty clear) is source of truth for this write path.
+		if err := s.SyncDueFromKanbanCard(sid, c.DueAt); err != nil {
+			// Non-fatal for the board save; sticky may have been deleted.
+			fmt.Fprintf(os.Stderr, "sync card→sticky due %s: %v\n", sid, err)
+		}
+	}
+	return b, nil
+}
+
+// saveKanbanStateOnly persists board JSON without sticky due-date side effects
+// (used when sticky is the source of truth for a due-date write).
+func (s *Store) saveKanbanStateOnly(id, title, stateJSON string) (*KanbanBoard, error) {
 	b, err := s.GetKanbanBoard(id)
 	if err != nil {
 		return nil, err
@@ -99,7 +132,6 @@ func (s *Store) SaveKanbanBoard(id, title, stateJSON string) (*KanbanBoard, erro
 	if err := s.upsertKanban(b); err != nil {
 		return nil, err
 	}
-	// Index card text for search
 	_ = s.indexKanbanFTS(b)
 	return b, nil
 }

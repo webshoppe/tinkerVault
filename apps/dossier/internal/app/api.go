@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -40,25 +41,34 @@ func (a *API) Close() {
 type Status struct {
 	Open         bool     `json:"open"`
 	Root         string   `json:"root"`
-	Name         string   `json:"name"`
+	Name         string   `json:"name"`         // folder base name (always)
+	DisplayName  string   `json:"displayName"`  // optional rename, or same as Name
 	Version      string   `json:"version"`
 	HasLastPath  bool     `json:"hasLastPath"`
 	LastPath     string   `json:"lastPath"`
+	LastName     string   `json:"lastName"` // display name for last path
 	RecentPaths  []string `json:"recentPaths"`
-	RecentNames  []string `json:"recentNames"`
+	RecentNames  []string `json:"recentNames"` // display names (folder base if unset)
+	// ActiveCollectionID is set when the open dossier path is a member of a collection.
+	ActiveCollectionID   string `json:"activeCollectionId,omitempty"`
+	ActiveCollectionName string `json:"activeCollectionName,omitempty"`
 }
 
 func (a *API) GetStatus() Status {
 	cfg, _ := dossier.LoadConfig()
+	if cfg == nil {
+		cfg = &dossier.AppConfig{}
+	}
 	recents := dossier.ListRecentDossiers()
 	names := make([]string, len(recents))
 	for i, p := range recents {
-		names[i] = filepath.Base(p)
+		names[i] = cfg.DisplayNameFor(p)
 	}
 	st := Status{
 		Version:     Version,
 		HasLastPath: cfg.LastDossierPath != "" && dossier.IsDossierFolder(cfg.LastDossierPath),
 		LastPath:    cfg.LastDossierPath,
+		LastName:    cfg.DisplayNameFor(cfg.LastDossierPath),
 		RecentPaths: recents,
 		RecentNames: names,
 	}
@@ -74,6 +84,11 @@ func (a *API) GetStatus() Status {
 		st.Open = true
 		st.Root = a.store.Root
 		st.Name = filepath.Base(a.store.Root)
+		st.DisplayName = cfg.DisplayNameFor(a.store.Root)
+		if col := dossier.CollectionContaining(a.store.Root); col != nil {
+			st.ActiveCollectionID = col.ID
+			st.ActiveCollectionName = col.Name
+		}
 	}
 	return st
 }
@@ -117,12 +132,39 @@ func (a *API) CreateDossier() (Status, error) {
 
 // ListRecentDossiers returns recents for the switcher UI.
 func (a *API) ListRecentDossiers() []map[string]string {
+	cfg, _ := dossier.LoadConfig()
+	if cfg == nil {
+		cfg = &dossier.AppConfig{}
+	}
 	paths := dossier.ListRecentDossiers()
 	out := make([]map[string]string, 0, len(paths))
 	for _, p := range paths {
-		out = append(out, map[string]string{"path": p, "name": filepath.Base(p)})
+		out = append(out, map[string]string{
+			"path":        p,
+			"name":        cfg.DisplayNameFor(p),
+			"folderName":  filepath.Base(p),
+			"displayName": cfg.DisplayNameFor(p),
+		})
 	}
 	return out
+}
+
+// SetWorkspaceDisplayName sets or clears an optional display name for a dossier path.
+// Empty name clears the override. Never renames the folder on disk.
+func (a *API) SetWorkspaceDisplayName(path, name string) (Status, error) {
+	path = strings.TrimSpace(path)
+	if path == "" {
+		return a.GetStatus(), fmt.Errorf("path required")
+	}
+	cfg, err := dossier.LoadConfig()
+	if err != nil || cfg == nil {
+		cfg = &dossier.AppConfig{}
+	}
+	cfg.SetWorkspaceDisplayName(path, name)
+	if err := dossier.SaveConfig(cfg); err != nil {
+		return a.GetStatus(), err
+	}
+	return a.GetStatus(), nil
 }
 
 // SwitchDossier opens another workspace (closes current).
@@ -211,19 +253,188 @@ func (a *API) ImportFiles() ([]dossier.Document, error) {
 	if err != nil {
 		return nil, err
 	}
-	var imported []dossier.Document
-	for _, p := range paths {
-		d, err := s.ImportFile(p)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "import %s: %v\n", p, err)
-			continue
+	return s.ImportAbsolutePaths(paths)
+}
+
+// ImportPaths imports files by absolute path (bookmark multi-select).
+func (a *API) ImportPaths(paths []string) ([]dossier.Document, error) {
+	s, err := a.requireStore()
+	if err != nil {
+		return nil, err
+	}
+	return s.ImportAbsolutePaths(paths)
+}
+
+// --- Collections (app-wide) ---
+
+func (a *API) ListCollections() []map[string]interface{} {
+	cfg, _ := dossier.LoadConfig()
+	if cfg == nil {
+		cfg = &dossier.AppConfig{}
+	}
+	cols := dossier.ListCollections()
+	out := make([]map[string]interface{}, 0, len(cols))
+	openRoot := ""
+	a.mu.Lock()
+	if a.store != nil {
+		openRoot = a.store.Root
+	}
+	a.mu.Unlock()
+	for _, c := range cols {
+		members := dossier.CollectionMemberViews(c)
+		// Mark which member is currently open
+		for i := range members {
+			if openRoot != "" && strings.EqualFold(filepath.Clean(members[i]["path"]), filepath.Clean(openRoot)) {
+				members[i]["open"] = "true"
+			} else {
+				members[i]["open"] = "false"
+			}
 		}
-		imported = append(imported, *d)
+		out = append(out, map[string]interface{}{
+			"id":      c.ID,
+			"name":    c.Name,
+			"paths":   c.Paths,
+			"members": members,
+		})
 	}
-	if imported == nil {
-		imported = []dossier.Document{}
+	return out
+}
+
+func (a *API) CreateCollection(name string) (map[string]interface{}, error) {
+	col, err := dossier.CreateCollection(name)
+	if err != nil {
+		return nil, err
 	}
-	return imported, nil
+	return map[string]interface{}{
+		"id": col.ID, "name": col.Name, "paths": col.Paths,
+		"members": dossier.CollectionMemberViews(*col),
+	}, nil
+}
+
+func (a *API) DeleteCollection(id string) error {
+	return dossier.DeleteCollection(id)
+}
+
+func (a *API) RenameCollection(id, name string) (map[string]interface{}, error) {
+	col, err := dossier.RenameCollection(id, name)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]interface{}{
+		"id": col.ID, "name": col.Name, "paths": col.Paths,
+		"members": dossier.CollectionMemberViews(*col),
+	}, nil
+}
+
+// AddDossierToCollection picks a folder (or uses path) and adds it to the collection.
+// If path is empty, opens a folder picker.
+func (a *API) AddDossierToCollection(collectionID, path string) (map[string]interface{}, error) {
+	path = strings.TrimSpace(path)
+	if path == "" {
+		p, err := dialog.PickFolder("Add dossier folder to collection")
+		if err != nil {
+			return nil, err
+		}
+		if p == "" {
+			return nil, fmt.Errorf("cancelled")
+		}
+		path = p
+	}
+	// Initialize as dossier if needed
+	if !dossier.IsDossierFolder(path) {
+		st, err := dossier.OpenOrCreate(path)
+		if err != nil {
+			return nil, err
+		}
+		_ = st.Close()
+	}
+	col, err := dossier.AddPathToCollection(collectionID, path)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]interface{}{
+		"id": col.ID, "name": col.Name, "paths": col.Paths,
+		"members": dossier.CollectionMemberViews(*col),
+	}, nil
+}
+
+func (a *API) RemoveDossierFromCollection(collectionID, path string) (map[string]interface{}, error) {
+	col, err := dossier.RemovePathFromCollection(collectionID, path)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]interface{}{
+		"id": col.ID, "name": col.Name, "paths": col.Paths,
+		"members": dossier.CollectionMemberViews(*col),
+	}, nil
+}
+
+// --- Import bookmarks (per-dossier portable file) ---
+
+func (a *API) ListBookmarks() ([]map[string]interface{}, error) {
+	s, err := a.requireStore()
+	if err != nil {
+		return nil, err
+	}
+	return s.ListBookmarks()
+}
+
+func (a *API) AddBookmarkFolder() (map[string]interface{}, error) {
+	s, err := a.requireStore()
+	if err != nil {
+		return nil, err
+	}
+	path, err := dialog.PickFolder("Bookmark external folder for import")
+	if err != nil {
+		return nil, err
+	}
+	if path == "" {
+		return nil, fmt.Errorf("cancelled")
+	}
+	fb, err := s.AddBookmarkFolder(path, "")
+	if err != nil {
+		return nil, err
+	}
+	return map[string]interface{}{
+		"id": fb.ID, "path": fb.Path, "label": fb.Label, "broken": false,
+	}, nil
+}
+
+func (a *API) RemoveBookmark(id string) error {
+	s, err := a.requireStore()
+	if err != nil {
+		return err
+	}
+	return s.RemoveBookmark(id)
+}
+
+func (a *API) RepickBookmark(id string) (map[string]interface{}, error) {
+	s, err := a.requireStore()
+	if err != nil {
+		return nil, err
+	}
+	path, err := dialog.PickFolder("Re-pick bookmarked folder")
+	if err != nil {
+		return nil, err
+	}
+	if path == "" {
+		return nil, fmt.Errorf("cancelled")
+	}
+	fb, err := s.UpdateBookmarkPath(id, path)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]interface{}{
+		"id": fb.ID, "path": fb.Path, "label": fb.Label, "broken": false,
+	}, nil
+}
+
+func (a *API) ListBookmarkFiles(bookmarkID string) ([]dossier.ExternalFileEntry, error) {
+	s, err := a.requireStore()
+	if err != nil {
+		return nil, err
+	}
+	return s.ListBookmarkFiles(bookmarkID)
 }
 
 // DroppedFile is one file from HTML5 drag-and-drop (content as base64).
@@ -426,6 +637,81 @@ func (a *API) DeleteNote(id string) error {
 	return s.DeleteNote(id)
 }
 
+// OpenURL opens http(s)/mailto links in the system browser (never navigates the WebView).
+func (a *API) OpenURL(raw string) error {
+	return dialog.OpenURL(raw)
+}
+
+// ResolveNoteAsset resolves a relative or absolute image path for a note preview.
+// Returns a data: URL on success, or empty string if unreadable (no network fetch).
+// Paths must resolve under the dossier root (or absolute under root after clean).
+func (a *API) ResolveNoteAsset(noteID, href string) (string, error) {
+	s, err := a.requireStore()
+	if err != nil {
+		return "", err
+	}
+	href = strings.TrimSpace(href)
+	if href == "" {
+		return "", nil
+	}
+	// Reject network and exotic schemes
+	lower := strings.ToLower(href)
+	if strings.HasPrefix(lower, "http://") || strings.HasPrefix(lower, "https://") ||
+		strings.HasPrefix(lower, "data:") || strings.HasPrefix(lower, "//") {
+		return "", nil
+	}
+	var abs string
+	if filepath.IsAbs(href) {
+		abs = filepath.Clean(href)
+	} else {
+		// Prefer note directory, then dossier root
+		n, nerr := s.GetNote(noteID)
+		baseDir := s.Root
+		if nerr == nil && n != nil && n.RelPath != "" {
+			baseDir = filepath.Dir(s.AbsPath(n.RelPath))
+		}
+		abs = filepath.Clean(filepath.Join(baseDir, filepath.FromSlash(href)))
+		// If missing under note dir, try dossier root
+		if _, err := os.Stat(abs); err != nil {
+			abs = filepath.Clean(filepath.Join(s.Root, filepath.FromSlash(href)))
+		}
+	}
+	// Must stay inside dossier root
+	rootClean := filepath.Clean(s.Root) + string(filepath.Separator)
+	absClean := filepath.Clean(abs)
+	if absClean != filepath.Clean(s.Root) && !strings.HasPrefix(strings.ToLower(absClean+string(filepath.Separator)), strings.ToLower(rootClean)) {
+		// Windows case-insensitive: also try EqualFold prefix
+		if !strings.HasPrefix(strings.ToLower(absClean), strings.ToLower(filepath.Clean(s.Root))) {
+			return "", nil
+		}
+	}
+	raw, err := os.ReadFile(abs)
+	if err != nil {
+		return "", nil
+	}
+	// Cap image size for data URLs (~8 MiB)
+	if len(raw) > 8<<20 {
+		return "", nil
+	}
+	mime := "application/octet-stream"
+	switch strings.ToLower(filepath.Ext(abs)) {
+	case ".png":
+		mime = "image/png"
+	case ".jpg", ".jpeg":
+		mime = "image/jpeg"
+	case ".gif":
+		mime = "image/gif"
+	case ".webp":
+		mime = "image/webp"
+	case ".svg":
+		mime = "image/svg+xml"
+	case ".bmp":
+		mime = "image/bmp"
+	}
+	enc := base64.StdEncoding.EncodeToString(raw)
+	return "data:" + mime + ";base64," + enc, nil
+}
+
 // --- Stickies ---
 
 func (a *API) ListStickies() ([]dossier.Sticky, error) {
@@ -465,6 +751,37 @@ func (a *API) StickyMeta() map[string]interface{} {
 		"colors": dossier.StickyColors,
 		"sizes":  dossier.StickySizes,
 	}
+}
+
+// LinkStickyToKanban promotes sticky text into a new card (non-destructive).
+func (a *API) LinkStickyToKanban(stickyID, boardID, columnID string) (map[string]interface{}, error) {
+	s, err := a.requireStore()
+	if err != nil {
+		return nil, err
+	}
+	st, board, err := s.LinkStickyToKanban(stickyID, boardID, columnID)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]interface{}{"sticky": st, "board": board}, nil
+}
+
+// UnlinkSticky clears the sticky↔kanban schedule link on both ends.
+func (a *API) UnlinkSticky(stickyID string) (*dossier.Sticky, error) {
+	s, err := a.requireStore()
+	if err != nil {
+		return nil, err
+	}
+	return s.UnlinkSticky(stickyID)
+}
+
+// ListCalendarItems returns agenda items (sticky/kanban/decision dates only).
+func (a *API) ListCalendarItems() ([]dossier.CalendarItem, error) {
+	s, err := a.requireStore()
+	if err != nil {
+		return nil, err
+	}
+	return s.ListCalendarItems()
 }
 
 // --- Paint / Annotate canvases ---
@@ -655,18 +972,19 @@ func (a *API) GetAppSettings() map[string]interface{} {
 		openWith = map[string]string{}
 	}
 	return map[string]interface{}{
-		"noteAutosaveMs":  cfg.Settings.NoteAutosaveMsOrDefault(),
-		"confirmDeletes":  confirm,
-		"showIntros":      showIntros,
-		"theme":           cfg.Settings.Theme,
-		"dismissedIntros": dismissed,
-		"agentHost":       cfg.Settings.AgentHost,
-		"agentPort":       cfg.Settings.AgentPort,
-		"agentToken":      cfg.Settings.AgentToken,
-		"agentPath":       path,
-		"agentConfigured": agentOn,
-		"openWith":        openWith,
-		"autoOpenLast":    cfg.Settings.AutoOpenLastOrDefault(),
+		"noteAutosaveMs":   cfg.Settings.NoteAutosaveMsOrDefault(),
+		"confirmDeletes":   confirm,
+		"showIntros":       showIntros,
+		"theme":            cfg.Settings.Theme,
+		"dismissedIntros":  dismissed,
+		"agentHost":        cfg.Settings.AgentHost,
+		"agentPort":        cfg.Settings.AgentPort,
+		"agentToken":       cfg.Settings.AgentToken,
+		"agentPath":        path,
+		"agentConfigured":  agentOn,
+		"openWith":         openWith,
+		"autoOpenLast":     cfg.Settings.AutoOpenLastOrDefault(),
+		"notesEditorMode":  cfg.Settings.NotesEditorModeOrDefault(),
 	}
 }
 
@@ -682,6 +1000,7 @@ type SettingsPatch struct {
 	AgentPath       *string           `json:"agentPath"`
 	OpenWith        map[string]string `json:"openWith"`
 	AutoOpenLast    *bool             `json:"autoOpenLast"`
+	NotesEditorMode *string           `json:"notesEditorMode"`
 }
 
 func (a *API) SaveAppSettings(p SettingsPatch) (map[string]interface{}, error) {
@@ -700,6 +1019,13 @@ func (a *API) SaveAppSettings(p SettingsPatch) (map[string]interface{}, error) {
 	}
 	if p.AutoOpenLast != nil {
 		cfg.Settings.AutoOpenLast = p.AutoOpenLast
+	}
+	if p.NotesEditorMode != nil {
+		m := strings.ToLower(strings.TrimSpace(*p.NotesEditorMode))
+		switch m {
+		case "edit", "split", "preview":
+			cfg.Settings.NotesEditorMode = m
+		}
 	}
 	if p.Theme != nil {
 		cfg.Settings.Theme = *p.Theme

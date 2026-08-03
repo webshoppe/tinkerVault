@@ -303,19 +303,36 @@ func (e *Chromium) Environment() *ICoreWebView2Environment {
 // AcceleratorKeyPressed is called when an accelerator key is pressed.
 // If the AcceleratorKeyCallback method has been set, it will defer handling of the keypress
 // to the callback. That callback returns a bool indicating if the event was handled.
+//
+// Ordinary accelerators arrive as KEY_DOWN (0) / SYSTEM_KEY_DOWN (2). Escape (vk=27)
+// is delivered by WebView2 as KEY_UP (1) on this host (hand-verified a11y 3.6); a
+// KEY_DOWN-only gate silently drops it. Also invoke the callback for Escape on
+// KEY_UP / SYSTEM_KEY_UP. WasKeyDown is Windows BOOL (int32); zero means first down.
 func (e *Chromium) AcceleratorKeyPressed(sender *ICoreWebView2Controller, args *ICoreWebView2AcceleratorKeyPressedEventArgs) uintptr {
 	if e.AcceleratorKeyCallback == nil {
 		return 0
 	}
 	eventKind, _ := args.GetKeyEventKind()
-	if eventKind == COREWEBVIEW2_KEY_EVENT_KIND_KEY_DOWN ||
-		eventKind == COREWEBVIEW2_KEY_EVENT_KIND_SYSTEM_KEY_DOWN {
-		virtualKey, _ := args.GetVirtualKey()
-		status, _ := args.GetPhysicalKeyStatus()
-		if !status.WasKeyDown {
+	virtualKey, _ := args.GetVirtualKey()
+	status, _ := args.GetPhysicalKeyStatus()
+
+	const vkEscape = 0x1B
+	isKeyDown := eventKind == COREWEBVIEW2_KEY_EVENT_KIND_KEY_DOWN ||
+		eventKind == COREWEBVIEW2_KEY_EVENT_KIND_SYSTEM_KEY_DOWN
+	isKeyUp := eventKind == COREWEBVIEW2_KEY_EVENT_KIND_KEY_UP ||
+		eventKind == COREWEBVIEW2_KEY_EVENT_KIND_SYSTEM_KEY_UP
+
+	if isKeyDown {
+		if status.WasKeyDown == 0 {
 			_ = args.PutHandled(e.AcceleratorKeyCallback(virtualKey))
 			return 0
 		}
+		_ = args.PutHandled(false)
+		return 0
+	}
+	if isKeyUp && virtualKey == vkEscape {
+		_ = args.PutHandled(e.AcceleratorKeyCallback(virtualKey))
+		return 0
 	}
 	_ = args.PutHandled(false)
 	return 0

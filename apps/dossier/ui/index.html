@@ -24,6 +24,10 @@
   --emoji: "Segoe UI Emoji", "Segoe UI Symbol", "Apple Color Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif;
   --mono: "Cascadia Code", "Consolas", ui-monospace, monospace;
   --sidebar-w: 248px;
+  /* Focus ring: passes 3:1 against dark panels (UI component min). */
+  --focus-ring: #7eb0ff;
+  /* Primary button fill: white text needs ≥4.5:1 (default --accent does not). */
+  --accent-btn: #3d6fd4;
 }
 * { box-sizing: border-box; }
 html, body {
@@ -31,8 +35,30 @@ html, body {
   font-family: var(--font); color: var(--text); background: var(--bg);
   -webkit-font-smoothing: antialiased;
 }
+/* Screen-reader-only text (accessible names without visual change). */
+.sr-only {
+  position: absolute !important; width: 1px !important; height: 1px !important;
+  padding: 0 !important; margin: -1px !important; overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important;
+}
+/* Keyboard focus: visible app-wide. Mouse click uses :focus without :focus-visible (no ring). */
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
 /* Simple emoji still use color fonts; national flags use embedded SVG (see FLAG_IMGS).
-   Windows Segoe UI Emoji cannot glyph regional-indicator pairs; always renders as CA/US text. */
+   Windows Segoe UI Emoji cannot glyph regional-indicator pairs — always renders as CA/US text. */
 .emoji, .emoji-label, .emoji-grid button, .flag-glyph {
   font-family: var(--emoji);
   font-variant-emoji: emoji;
@@ -56,13 +82,17 @@ button {
   transition: background .12s, border-color .12s;
 }
 button:hover { background: var(--bg-hover); border-color: #3a4660; }
-button.primary { background: var(--accent); border-color: transparent; color: #fff; font-weight: 600; }
+button.primary {
+  background: var(--accent-btn); border-color: transparent;
+  color: #fff; -webkit-text-fill-color: #fff; font-weight: 600;
+}
 button.primary:hover { filter: brightness(1.08); }
 button.ghost { background: transparent; }
 button.danger { color: var(--danger); border-color: rgba(232,93,106,0.4); }
-button:disabled { opacity: 0.45; cursor: not-allowed; }
+/* 0.6 keeps disabled text ≥4.5:1 on panel bg (0.45 was ~3.85:1). */
+button:disabled { opacity: 0.6; cursor: not-allowed; }
 button.active-tool { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-/* Explicit text color on all fields; fixes white-on-white title inputs (Paint/Annotate/etc.) */
+/* Explicit text color on all fields — fixes white-on-white title inputs (Paint/Annotate/etc.) */
 input[type="text"], input[type="search"], input[type="number"], input[type="date"], input[type="password"],
 input:not([type]), textarea, select {
   background: var(--bg);
@@ -70,13 +100,17 @@ input:not([type]), textarea, select {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px 12px;
-  outline: none;
   width: 100%;
   caret-color: var(--accent);
   -webkit-text-fill-color: var(--text);
 }
-input::placeholder, textarea::placeholder { color: var(--text-muted); opacity: 0.85; -webkit-text-fill-color: var(--text-muted); }
-input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+/* Placeholder: full-opacity muted (~6:1 on elevated) rather than 0.85 blend. */
+input::placeholder, textarea::placeholder {
+  color: #9aa5b8; opacity: 1; -webkit-text-fill-color: #9aa5b8;
+}
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);
+}
 textarea { resize: none; line-height: 1.5; }
 select { width: auto; color: var(--text); background: var(--bg); }
 /* number inputs in toolbars should not stretch full width */
@@ -85,17 +119,81 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
 #app { display: flex; height: 100vh; }
 #setup {
   display: none; flex-direction: column; align-items: center; justify-content: center;
-  width: 100%; height: 100%; gap: 16px; padding: 32px;
+  width: 100%; height: 100%; gap: 12px; padding: 24px 32px;
+  /* Scroll stays inside .card so title/tagline never leave the viewport. */
+  overflow: hidden;
+  box-sizing: border-box;
   background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(91,141,239,0.25), transparent), var(--bg);
 }
-#setup h1 { font-size: 2.2rem; margin: 0 0 4px; letter-spacing: -0.03em; }
-#setup .tagline { color: var(--text-muted); margin: 0 0 24px; max-width: 440px; text-align: center; line-height: 1.5; }
+#setup h1 {
+  font-size: 2.2rem; margin: 0 0 4px; letter-spacing: -0.03em;
+  flex-shrink: 0;
+}
+#setup .app-ver {
+  margin: 0 0 10px; font-size: 0.85rem; font-weight: 500; color: var(--text-muted);
+  letter-spacing: 0.02em; flex-shrink: 0;
+}
+#setup .tagline {
+  color: var(--text-muted); margin: 0 0 8px; max-width: 440px; text-align: center; line-height: 1.5;
+  flex-shrink: 0;
+}
 #setup .card {
   background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px;
   padding: 28px; width: min(460px, 100%); box-shadow: var(--shadow);
   display: flex; flex-direction: column; gap: 12px;
+  /* Bound card height to remaining space under title/tagline; scroll only here. */
+  max-height: calc(100% - 148px);
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  flex: 0 1 auto;
 }
 #setup .card p { margin: 0 0 8px; color: var(--text-muted); font-size: 0.92rem; line-height: 1.45; }
+
+/*
+ * Dark-shell scrollbars (WebView2 / Chromium).
+ * Applied app-wide: every overflow:auto panel previously used the default light OS
+ * chrome, which clashed with the dark UI. Same tokens as borders/panels (not accent).
+ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #4a5568 transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 999px;
+  margin: 4px 0;
+}
+*::-webkit-scrollbar-thumb {
+  background: #3d4658;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  min-height: 32px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #556178;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:active {
+  background: #6a768c;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
 #setup .actions { display: flex; flex-direction: column; gap: 8px; }
 #setup .err { color: var(--danger); font-size: 0.85rem; min-height: 1.2em; }
 #setup .recent { margin-top: 4px; }
@@ -113,12 +211,30 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
 #sidebar .brand { padding: 14px 14px 10px; border-bottom: 1px solid var(--border); }
 #sidebar .brand h1 {
   margin: 0; font-size: 1.05rem; letter-spacing: -0.02em;
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+}
+#sidebar .brand h1 .app-ver {
+  font-size: 0.72rem; font-weight: 500; color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+#view-title:focus {
+  outline: none;
+}
+#view-title:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+#sidebar .brand .ws-display {
+  margin-top: 6px; font-size: 0.82rem; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 #sidebar .brand .path {
   margin-top: 6px; font-size: 0.72rem; color: var(--text-muted);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
 }
+/* When a custom display name is shown above, path sits as the smaller second line */
+#sidebar .brand .ws-display + .path { margin-top: 2px; }
 #sidebar .brand .path:hover { color: var(--accent); }
 #sidebar .ws-switch { margin-top: 8px; display: flex; gap: 4px; flex-wrap: wrap; }
 #sidebar .ws-switch button { font-size: 0.72rem; padding: 4px 8px; }
@@ -169,6 +285,49 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
 #drop-overlay .box span { color: var(--text-muted); font-size: 0.9rem; }
 
 /* Documents */
+#documents-view { flex-direction: column !important; position: relative; min-width: 0; }
+.docs-layout { flex: 1; min-height: 0; display: flex; flex-direction: row; min-width: 0; }
+.doc-sources {
+  width: 220px; flex: 0 0 220px; border-right: 1px solid var(--border);
+  background: var(--bg-elevated); display: flex; flex-direction: column; min-height: 0;
+}
+.doc-sources.collapsed { width: 36px; flex-basis: 36px; }
+.doc-sources.collapsed .doc-sources-body { display: none; }
+.doc-sources-hdr {
+  display: flex; align-items: center; gap: 6px; padding: 10px 10px 8px;
+  border-bottom: 1px solid var(--border); font-size: 0.78rem; font-weight: 700;
+}
+.doc-sources-hdr button { font-size: 0.72rem; padding: 3px 7px; }
+.doc-sources-body { flex: 1; min-height: 0; overflow: auto; padding: 8px; }
+.doc-sources .hint {
+  font-size: 0.7rem; color: var(--text-muted); line-height: 1.35; margin: 0 0 8px;
+}
+.bm-item {
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px; margin-bottom: 6px;
+  background: var(--bg); cursor: pointer; font-size: 0.82rem;
+}
+.bm-item:hover { border-color: var(--accent); }
+.bm-item.active { border-color: var(--accent); background: var(--accent-soft); }
+.bm-item .bm-label { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bm-item .bm-path { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; word-break: break-all; }
+.bm-item.broken { border-color: rgba(232,93,106,0.5); }
+.bm-item .bm-badge {
+  display: inline-block; font-size: 0.65rem; font-weight: 700; color: var(--danger);
+  background: rgba(232,93,106,0.15); padding: 1px 5px; border-radius: 999px; margin-top: 4px;
+}
+.bm-item .bm-actions { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+.bm-item .bm-actions button { font-size: 0.68rem; padding: 2px 6px; }
+.bm-files {
+  border-top: 1px solid var(--border); margin-top: 8px; padding-top: 8px;
+  max-height: 40vh; overflow: auto;
+}
+.bm-files .bm-file {
+  display: flex; gap: 6px; align-items: center; font-size: 0.78rem;
+  padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.bm-files .bm-file input { flex-shrink: 0; }
+.bm-files .bm-file .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.docs-main { flex: 1; min-width: 0; min-height: 0; overflow: auto; display: flex; flex-direction: column; }
 .doc-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
 .doc-row {
   display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: start;
@@ -237,7 +396,7 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
   text-align: left; justify-content: flex-start;
 }
 
-/* Notes; responsive side list (collapses / stacks so it isn't clipped) */
+/* Notes — responsive side list (collapses / stacks so it isn't clipped) */
 #notes-view { flex-direction: row !important; min-width: 0; }
 #notes-list {
   width: min(260px, 34vw); min-width: 140px; max-width: 320px;
@@ -246,7 +405,7 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
 }
 #notes-view.list-collapsed #notes-list { display: none; }
 .panel-collapse-btn { flex-shrink: 0; font-size: 0.72rem; padding: 4px 8px; white-space: nowrap; }
-/* Default window is 1280px; stack at/above that so panels aren't clipped out of the box */
+/* Default window is 1280px — stack at/above that so panels aren't clipped out of the box */
 @media (max-width: 1320px) {
   #notes-view { flex-direction: column !important; }
   #notes-list {
@@ -266,14 +425,87 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
   padding: 10px 14px; border-bottom: 1px solid var(--border);
 }
 #note-title { flex: 1; font-weight: 600; }
+.note-mode-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 14px; border-bottom: 1px solid var(--border); background: var(--bg-elevated); flex-shrink: 0;
+}
+.note-mode-seg { display: inline-flex; gap: 2px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 2px; }
+.note-mode-seg button {
+  font-size: 0.78rem; padding: 4px 10px; border: none; background: transparent; border-radius: 6px;
+}
+.note-mode-seg button.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+#note-panes {
+  flex: 1; min-height: 0; display: flex; flex-direction: row; position: relative;
+}
 #note-body {
-  flex: 1; border: none; border-radius: 0; padding: 16px 20px;
+  flex: 1; min-width: 0; border: none; border-radius: 0; padding: 16px 20px;
   font-family: var(--mono); font-size: 0.9rem; line-height: 1.55; background: var(--bg);
+  resize: none;
 }
 #note-body:focus { box-shadow: none; border: none; }
+#note-split {
+  flex: 0 0 6px; width: 6px; cursor: col-resize; background: var(--border);
+  position: relative; z-index: 2;
+}
+#note-split:hover, #note-split.dragging { background: var(--accent); }
+#note-preview {
+  flex: 1; min-width: 0; overflow: auto; padding: 16px 20px;
+  background: var(--bg-elevated); font-size: 0.92rem; line-height: 1.55;
+}
+#note-editor.mode-edit #note-split,
+#note-editor.mode-edit #note-preview { display: none; }
+#note-editor.mode-edit #note-body { display: block; flex: 1; }
+#note-editor.mode-preview #note-body,
+#note-editor.mode-preview #note-split { display: none; }
+#note-editor.mode-preview #note-preview { display: block; flex: 1; }
+#note-editor.mode-split #note-body,
+#note-editor.mode-split #note-split,
+#note-editor.mode-split #note-preview { display: block; }
+/* Markdown preview typography */
+#note-preview h1, #note-preview h2, #note-preview h3 { margin: 0.9em 0 0.4em; line-height: 1.25; }
+#note-preview h1 { font-size: 1.45rem; }
+#note-preview h2 { font-size: 1.2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25em; }
+#note-preview h3 { font-size: 1.05rem; }
+#note-preview p { margin: 0.55em 0; }
+#note-preview ul, #note-preview ol { margin: 0.5em 0; padding-left: 1.4em; }
+#note-preview blockquote {
+  margin: 0.6em 0; padding: 0.2em 0.9em; border-left: 3px solid var(--accent);
+  color: var(--text-muted); background: rgba(91,141,239,0.06);
+}
+#note-preview table { border-collapse: collapse; margin: 0.7em 0; width: 100%; font-size: 0.88rem; }
+#note-preview th, #note-preview td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+#note-preview th { background: var(--bg-hover); }
+#note-preview code {
+  font-family: var(--mono); font-size: 0.85em; background: var(--bg); padding: 1px 5px; border-radius: 4px;
+}
+#note-preview pre {
+  background: #0c0e14; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px;
+  overflow: auto; margin: 0.7em 0;
+}
+#note-preview pre code { background: transparent; padding: 0; font-size: 0.82rem; }
+#note-preview a { color: var(--accent); text-decoration: underline; cursor: pointer; }
+#note-preview img { max-width: 100%; height: auto; border-radius: 4px; }
+#note-preview img.broken-img {
+  display: inline-block; min-width: 120px; min-height: 48px; padding: 12px;
+  background: var(--bg); border: 1px dashed var(--danger); color: var(--danger); font-size: 0.8rem;
+}
+#note-preview input[type="checkbox"] { margin-right: 6px; pointer-events: none; }
+#note-preview .hljs { background: transparent; color: #e6edf3; }
 #note-status { font-size: 0.75rem; color: var(--text-muted); min-width: 80px; text-align: right; }
 #note-placeholder {
   flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-muted);
+}
+#setup .recent .recent-row {
+  position: relative; margin-bottom: 6px;
+}
+#setup .recent .recent-open {
+  width: 100%; text-align: left; padding-right: 78px; margin-bottom: 0;
+}
+#setup .recent .recent-rename {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  width: auto; max-width: none; margin: 0;
+  font-size: 0.72rem; padding: 4px 8px;
+  white-space: nowrap; z-index: 1;
 }
 
 /* Stickies */
@@ -301,7 +533,7 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
 }
 .sticky.dragging .sh { cursor: grabbing; }
 .sticky .sh .grip {
-  flex: 1 1 auto; min-width: 0; font-size: 11px; opacity: 0.45; letter-spacing: 0.04em;
+  flex: 1 1 auto; min-width: 0; font-size: 11px; opacity: 0.62; letter-spacing: 0.04em;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .sticky .sh .emoji-label { font-size: 14px; margin-right: 1px; min-width: 1em; flex-shrink: 0; }
@@ -334,11 +566,15 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
 .sticky .sb,
 .sticky textarea.sb {
   flex: 1; min-height: 0; padding: 8px 10px; border: none; resize: none;
-  background: transparent !important; outline: none; width: 100%;
+  background: transparent !important; width: 100%;
   font-size: 13px; line-height: 1.45; font-family: var(--font);
   color: #1a1a1a !important;
   -webkit-text-fill-color: #1a1a1a !important;
   caret-color: #1a1a1a !important;
+}
+.sticky textarea.sb:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
 }
 .sticky .resize {
   position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; cursor: nwse-resize;
@@ -361,16 +597,18 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
 }
 .popover.open { display: block; }
 #pop-emoji { width: min(360px, calc(100vw - 24px)); }
-.color-grid { display: grid; grid-template-columns: repeat(6, 28px); gap: 6px; }
+.color-grid { display: grid; grid-template-columns: repeat(6, 32px); gap: 7px; }
 .color-swatch {
-  width: 28px; height: 28px; border-radius: 6px; border: 2px solid transparent; cursor: pointer;
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15);
+  width: 32px; height: 32px; padding: 0; border-radius: 6px;
+  border: 2px solid rgba(255,255,255,0.12); cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.25);
 }
-.color-swatch:hover, .color-swatch.active { border-color: var(--accent); }
+button.color-swatch:hover { filter: none; background: inherit; }
+.color-swatch:hover, .color-swatch.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
 .emoji-tabs { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
 .emoji-tabs button { font-size: 0.75rem; padding: 4px 8px; }
 .emoji-tabs button.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-/* Wrap emoji onto rows; no horizontal scroll for normal use */
+/* Wrap emoji onto rows — no horizontal scroll for normal use */
 .emoji-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
@@ -429,7 +667,7 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
   -webkit-text-fill-color: var(--text) !important;
   background: var(--bg) !important;
 }
-.editor-hdr input[type="color"] { width: 36px; height: 28px; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: transparent; cursor: pointer; }
+/* color inputs styled with .editor-hdr / .color-pick-btn rules above */
 .editor-hdr input[type="range"] { width: 100px; }
 .editor-stage {
   flex: 1; min-height: 0; overflow: auto; display: flex; align-items: flex-start; justify-content: center;
@@ -453,8 +691,8 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
 }
 .ann-text:hover, .ann-text.selected { border-color: var(--accent); background: rgba(91,141,239,0.08); }
 .ann-text .ann-resize {
-  position: absolute; right: -4px; bottom: -4px; width: 12px; height: 12px;
-  background: var(--accent); border-radius: 2px; cursor: nwse-resize;
+  position: absolute; right: -3px; bottom: -3px; width: 7px; height: 7px;
+  background: var(--accent); border-radius: 1px; cursor: nwse-resize;
   box-shadow: 0 0 0 1px #fff;
 }
 .annotate-hint {
@@ -498,11 +736,50 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
 .agent-compose { display: flex; gap: 8px; align-items: flex-end; }
 .agent-compose textarea { flex: 1; min-height: 52px; max-height: 140px; resize: vertical; }
 .agent-ctx { font-size: 0.75rem; color: var(--text-muted); min-height: 1.2em; }
-.swatch-row { display: flex; gap: 4px; align-items: center; }
+.swatch-row { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
 .swatch-btn {
-  width: 22px; height: 22px; border-radius: 4px; border: 2px solid transparent; cursor: pointer; padding: 0;
+  width: 26px; height: 26px; border-radius: 5px; border: 2px solid rgba(255,255,255,0.18); cursor: pointer; padding: 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
-.swatch-btn.on { border-color: #fff; box-shadow: 0 0 0 1px var(--accent); }
+.swatch-btn.on { border-color: #fff; box-shadow: 0 0 0 2px var(--accent); }
+.editor-hdr input[type="color"] {
+  width: 40px; height: 30px; padding: 1px; border: 2px solid var(--border); border-radius: 6px;
+  background: transparent; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+}
+.color-pick-btn {
+  width: 36px; height: 30px; border-radius: 6px; border: 2px solid var(--border); cursor: pointer; padding: 0;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.25);
+}
+.color-pick-btn:hover { border-color: var(--accent); }
+/* Shared advanced color popover (custom + presets) */
+#pop-color-adv {
+  width: 260px; padding: 10px; z-index: 260; position: fixed;
+}
+#pop-color-adv .cp-tabs { display: flex; gap: 4px; margin-bottom: 10px; flex-wrap: wrap; }
+#pop-color-adv .cp-tabs button {
+  flex: 1; min-width: 0; font-size: 0.75rem; padding: 5px 6px;
+}
+#pop-color-adv .cp-tabs button.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+#pop-color-adv .cp-panel { display: none; }
+#pop-color-adv .cp-panel.on { display: block; }
+#pop-color-adv .cp-custom-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+#pop-color-adv .cp-custom-row input[type="color"] { width: 48px; height: 36px; }
+#pop-color-adv .cp-hex {
+  flex: 1; font-family: var(--mono); font-size: 0.85rem; text-transform: uppercase;
+}
+#pop-color-adv .cp-presets {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
+}
+#pop-color-adv .cp-presets button {
+  width: 100%; aspect-ratio: 1; border-radius: 5px; border: 2px solid rgba(255,255,255,0.15);
+  padding: 0; cursor: pointer; min-height: 28px;
+}
+#pop-color-adv .cp-presets button:hover { border-color: var(--accent); }
+#pop-color-adv .cp-section-label {
+  font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;
+  margin: 8px 0 6px;
+}
+#pop-color-adv .cp-section-label:first-child { margin-top: 0; }
 
 /* Kanban */
 #kanban-view { flex-direction: column !important; }
@@ -528,7 +805,8 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
   background: transparent; padding: 4px 6px; border-radius: 5px;
   color: var(--text) !important; -webkit-text-fill-color: var(--text) !important;
 }
-.kanban-col-title:focus { background: var(--bg); outline: none; }
+.kanban-col-title:focus { background: var(--bg); }
+.kanban-col-title:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
 .kanban-col-count {
   display: inline-flex; align-items: center; gap: 2px;
   font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 999px;
@@ -551,19 +829,29 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
   display: flex; align-items: center; gap: 2px; padding: 4px 6px 0; cursor: grab;
 }
 .kanban-card .kc-toolbar .grip {
-  flex: 1; font-size: 11px; color: rgba(0,0,0,0.45); user-select: none; padding: 6px 4px; min-height: 28px;
-  display: flex; align-items: center;
+  flex: 1; font-size: 11px; color: rgba(0,0,0,0.58); user-select: none; padding: 6px 4px; min-height: 28px;
+  display: flex; align-items: center; justify-content: flex-start;
+  border: none; background: transparent; cursor: grab; text-align: left;
 }
 .kanban-card .kc-toolbar button {
   padding: 2px 5px; font-size: 11px; border: none; background: transparent; color: #1a1a1a; border-radius: 4px;
+  flex-shrink: 0;
+}
+.kanban-card .kc-toolbar button[data-cmove] {
+  font-size: 10px; font-weight: 600; padding: 2px 6px;
+  border: 1px solid rgba(0,0,0,0.15); background: rgba(255,255,255,0.5);
 }
 .kanban-card .kc-toolbar button:hover { background: rgba(0,0,0,0.08); }
 .kanban-card textarea {
   flex: 1; min-height: 48px; border: none; resize: none; /* no fake resize grip */
-  overflow: hidden; background: transparent; outline: none;
+  overflow: hidden; background: transparent;
   width: 100%; padding: 4px 8px 8px; font-size: 13px; line-height: 1.4;
   color: #1a1a1a !important; -webkit-text-fill-color: #1a1a1a !important;
   font-family: inherit;
+}
+.kanban-card textarea:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
 }
 .kanban-card.c-yellow{background:#fff59d}.kanban-card.c-pink{background:#f8bbd0}.kanban-card.c-blue{background:#90caf9}
 .kanban-card.c-green{background:#a5d6a7}.kanban-card.c-orange{background:#ffcc80}.kanban-card.c-red{background:#ef9a9a}
@@ -576,8 +864,96 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
   position: fixed; z-index: 500; pointer-events: none; opacity: 0.92;
   box-shadow: var(--shadow); transform: rotate(1.5deg); width: 260px;
 }
+.kanban-card .kc-due {
+  display: flex; align-items: center; gap: 4px; padding: 0 8px 6px;
+}
+.kanban-card .kc-due input[type="date"] {
+  flex: 1; min-width: 0; font-size: 11px; padding: 2px 4px;
+  border: 1px solid rgba(0,0,0,0.15); border-radius: 4px; background: rgba(255,255,255,0.55);
+  color: #1a1a1a !important; -webkit-text-fill-color: #1a1a1a !important;
+}
+.kanban-card .kc-due button {
+  font-size: 10px; padding: 2px 5px; border: none; background: rgba(0,0,0,0.08);
+  color: #1a1a1a; border-radius: 4px; cursor: pointer;
+}
+.sticky .due-chip {
+  display: flex; align-items: center; gap: 3px; padding: 2px 6px 0;
+  flex-shrink: 0;
+}
+.sticky .due-chip input[type="date"] {
+  flex: 1; min-width: 0; font-size: 10px; padding: 1px 3px; max-width: 118px;
+  border: 1px solid rgba(0,0,0,0.15); border-radius: 4px; background: rgba(255,255,255,0.5);
+  color: #1a1a1a !important; -webkit-text-fill-color: #1a1a1a !important;
+}
+.sticky .due-chip button, .sticky .link-chip button {
+  font-size: 10px; padding: 1px 5px; border: 1px solid rgba(0,0,0,0.12);
+  background: rgba(255,255,255,0.4); color: #1a1a1a; border-radius: 4px; cursor: pointer;
+}
+.sticky .link-chip {
+  font-size: 10px; padding: 0 6px 4px; color: #333; opacity: 0.9;
+}
+/* Calendar */
+#calendar-view { flex-direction: column !important; min-width: 0; }
+.cal-layout { flex: 1; min-height: 0; display: flex; flex-direction: row; }
+.cal-mini {
+  width: min(260px, 32vw); flex: 0 0 auto; border-right: 1px solid var(--border);
+  padding: 14px 12px; background: var(--bg-elevated); overflow: auto;
+}
+.cal-mini .cal-nav { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.cal-mini .cal-nav strong { flex: 1; text-align: center; font-size: 0.88rem; }
+.cal-mini .cal-nav button { font-size: 0.78rem; padding: 4px 8px; }
+.cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; font-size: 0.72rem;
+}
+.cal-grid .dow { text-align: center; color: var(--text-muted); padding: 4px 0; font-weight: 600; }
+.cal-grid .day {
+  aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+  border-radius: 6px; cursor: pointer; position: relative; color: var(--text);
+}
+.cal-grid .day:hover { background: var(--bg-hover); }
+.cal-grid .day.out { opacity: 0.35; }
+.cal-grid .day.today { outline: 1px solid var(--accent); }
+.cal-grid .day.has-items::after {
+  content: ''; position: absolute; bottom: 3px; width: 4px; height: 4px;
+  border-radius: 50%; background: var(--accent);
+}
+.cal-grid .day.sel { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+.cal-agenda { flex: 1; min-width: 0; overflow: auto; padding: 16px 20px; }
+.cal-day-group { margin-bottom: 18px; }
+.cal-day-group h3 {
+  margin: 0 0 8px; font-size: 0.85rem; color: var(--accent);
+  border-bottom: 1px solid var(--border); padding-bottom: 4px;
+}
+.cal-item {
+  display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px;
+  background: var(--bg-elevated); cursor: pointer;
+}
+.cal-item:hover { border-color: var(--accent); }
+.cal-item.overdue {
+  border-color: rgba(232,93,106,0.55); background: rgba(232,93,106,0.08);
+}
+.cal-item .ck {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--text-muted); min-width: 58px; padding-top: 2px;
+}
+.cal-item .ct { font-weight: 600; font-size: 0.9rem; flex: 1; min-width: 0; }
+.cal-item .overdue-tag {
+  font-size: 0.68rem; font-weight: 700; color: var(--danger);
+  background: rgba(232,93,106,0.18); padding: 2px 6px; border-radius: 999px;
+  white-space: nowrap;
+}
+.cal-day-group.overdue-group h3 { color: var(--danger); }
+.cal-filter-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 12px; padding: 8px 10px; border-radius: 8px;
+  background: var(--accent-soft); border: 1px solid rgba(91,141,239,0.35);
+  font-size: 0.85rem;
+}
+.cal-filter-bar button { font-size: 0.78rem; padding: 4px 10px; }
+.cal-empty { color: var(--text-muted); padding: 32px 12px; text-align: center; line-height: 1.5; }
 
-/* Decisions timeline; responsive spine so it isn't clipped at default width */
+/* Decisions timeline — responsive spine so it isn't clipped at default width */
 #decisions-view { flex-direction: row !important; min-width: 0; }
 #decision-spine {
   width: min(300px, 36vw); min-width: 160px; max-width: 360px;
@@ -638,153 +1014,254 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
 .modal h3 { margin: 0 0 12px; }
 .modal .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
 .modal select, .modal input { margin-bottom: 8px; }
+/* Collections + Recent on launcher (collapsible accordions).
+   Recent sits above the COLLECTIONS group (own block, not a collection peer). */
+#setup-recent { margin-top: 10px; }
+#setup-collections { margin-top: 12px; }
+#setup-collections .recent-label { margin-bottom: 6px; }
+.setup-acc {
+  border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px;
+  background: var(--bg); text-align: left; overflow: hidden;
+}
+.setup-acc-hdr {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  text-align: left; margin: 0; padding: 8px 10px;
+  background: transparent; border: none; border-radius: 0;
+  font-size: 0.82rem; font-weight: 600; color: var(--text);
+}
+.setup-acc-hdr:hover { background: var(--bg-hover); border-color: transparent; }
+.setup-acc-hdr .chev {
+  flex-shrink: 0; width: 1em; color: var(--text-muted); font-size: 0.68rem;
+  line-height: 1; text-align: center;
+}
+.setup-acc-hdr .acc-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.setup-acc-hdr .acc-meta { flex-shrink: 0; font-size: 0.68rem; font-weight: 500; color: var(--text-muted); }
+.setup-acc-body { padding: 0 10px 10px; border-top: 1px solid transparent; }
+.setup-acc:not(.collapsed) .setup-acc-body { border-top-color: var(--border); padding-top: 8px; }
+.setup-acc.collapsed .setup-acc-body { display: none; }
+.col-card { /* each collection is a setup-acc; keep class for existing selectors */ }
+.col-card .col-member {
+  display: flex; gap: 8px; align-items: center; width: 100%; text-align: left;
+  margin-bottom: 4px; padding: 6px 8px; font-size: 0.82rem;
+}
+.col-card .col-member.open { border-color: var(--accent); background: var(--accent-soft); }
+.col-card .col-member .meta { font-size: 0.68rem; color: var(--text-muted); font-weight: 400; }
+.col-card .col-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.col-card .col-actions button { font-size: 0.72rem; padding: 3px 8px; }
 </style>
 </head>
 <body>
 <div id="app">
-  <div id="setup">
+  <div id="setup" role="main" aria-label="Workspace launcher">
     <h1>📁 Dossier</h1>
-    <p class="tagline">One folder per workspace. Real documents. Local search.<br/>Stickies, paint, kanban, decisions; all portable.</p>
+    <p class="app-ver" id="setup-ver">v2.0.0</p>
+    <p class="tagline">One folder per workspace. Real documents. Local search.<br/>Stickies, paint, kanban, decisions → all portable.</p>
     <div class="card">
       <p>Choose a folder to hold this dossier’s documents, notes, boards, and database. Everything lives there.</p>
       <div class="actions">
-        <button class="primary" id="btn-create">Create / open folder…</button>
-        <button id="btn-open-last" style="display:none">Open last dossier</button>
+        <button type="button" class="primary" id="btn-create">Create / open folder…</button>
+        <button type="button" id="btn-open-last" style="display:none">Open last dossier</button>
+        <button type="button" id="btn-new-collection">+ New collection…</button>
       </div>
       <div class="recent" id="setup-recent" style="display:none"></div>
-      <div class="err" id="setup-err"></div>
+      <div class="recent" id="setup-collections" style="display:none" aria-label="Collections"></div>
+      <div class="err" id="setup-err" role="alert"></div>
     </div>
   </div>
 
   <div id="shell">
-    <aside id="sidebar">
-      <div class="brand">
-        <h1>📁 Dossier</h1>
-        <div class="path" id="dossier-path" title="Open folder in Explorer"></div>
+    <aside id="sidebar" aria-label="Workspace">
+      <header class="brand">
+        <h1>📁 Dossier <span class="app-ver" id="brand-ver">v2.0.0</span></h1>
+        <div class="ws-display" id="dossier-display" style="display:none" title="Workspace display name"></div>
+        <div class="path" id="dossier-path" role="button" tabindex="0" title="Open folder in Explorer" aria-label="Open workspace folder in Explorer"></div>
         <div class="ws-switch">
-          <button type="button" id="btn-switch-ws" title="Switch workspace">Switch…</button>
-          <button type="button" id="btn-new-ws" title="Open another folder">+ Folder</button>
-          <button type="button" id="btn-close-ws" title="Close workspace">Close</button>
+          <button type="button" id="btn-switch-ws" title="Switch workspace" aria-label="Switch workspace">Switch…</button>
+          <button type="button" id="btn-switch-collection" title="Switch within collection" aria-label="Switch within collection" style="display:none">Collection…</button>
+          <button type="button" id="btn-new-ws" title="Open another folder" aria-label="Open another folder">+ Folder</button>
+          <button type="button" id="btn-close-ws" title="Close workspace" aria-label="Close workspace">Close</button>
         </div>
-      </div>
-      <nav id="nav">
-        <button data-view="documents" class="active"><span class="icon">📄</span> Documents</button>
-        <button data-view="notes"><span class="icon">📝</span> Notes</button>
-        <button data-view="stickies"><span class="icon">📌</span> Sticky Notes</button>
-        <button data-view="paint"><span class="icon">🎨</span> Paint</button>
-        <button data-view="annotate"><span class="icon">✂️</span> Annotate</button>
-        <button data-view="kanban"><span class="icon">📋</span> Kanban</button>
-        <button data-view="decisions"><span class="icon">⚖️</span> Decisions</button>
-        <button data-view="search"><span class="icon">🔍</span> Search</button>
-        <button data-view="agent" id="nav-agent" style="display:none"><span class="icon">🤖</span> Ask dossier</button>
-        <button data-view="settings"><span class="icon">⚙️</span> Settings</button>
+      </header>
+      <nav id="nav" aria-label="Main">
+        <button type="button" data-view="documents" class="active" aria-current="page"><span class="icon" aria-hidden="true">📄</span> Documents</button>
+        <button type="button" data-view="notes"><span class="icon" aria-hidden="true">📝</span> Notes</button>
+        <button type="button" data-view="stickies"><span class="icon" aria-hidden="true">📌</span> Sticky Notes</button>
+        <button type="button" data-view="paint"><span class="icon" aria-hidden="true">🎨</span> Paint</button>
+        <button type="button" data-view="annotate"><span class="icon" aria-hidden="true">✂️</span> Annotate</button>
+        <button type="button" data-view="kanban"><span class="icon" aria-hidden="true">📋</span> Kanban</button>
+        <button type="button" data-view="decisions"><span class="icon" aria-hidden="true">⚖️</span> Decisions</button>
+        <button type="button" data-view="calendar"><span class="icon" aria-hidden="true">📅</span> Agenda</button>
+        <button type="button" data-view="search"><span class="icon" aria-hidden="true">🔍</span> Search</button>
+        <button type="button" data-view="agent" id="nav-agent" style="display:none"><span class="icon" aria-hidden="true">🤖</span> Ask dossier</button>
+        <button type="button" data-view="settings"><span class="icon" aria-hidden="true">⚙️</span> Settings</button>
       </nav>
-      <div class="foot">
-        <div>v<span id="ver">2.0.0-t1</span></div>
+      <footer class="foot">
+        <div>v<span id="ver">2.0.0</span></div>
         <div style="margin-top:4px">All data in the folder above</div>
-      </div>
+      </footer>
     </aside>
-    <section id="main">
-      <div id="topbar">
+    <main id="main">
+      <header id="topbar">
         <h2 id="view-title">Documents</h2>
         <div class="tools" id="view-tools"></div>
-      </div>
+      </header>
       <div id="content">
-        <div class="view active" id="documents-view">
-          <div class="doc-list" id="doc-list"></div>
+        <div class="view active" id="documents-view" role="region" aria-labelledby="view-title">
+          <div class="docs-layout">
+            <aside class="doc-sources" id="doc-sources" aria-label="Import sources">
+              <div class="doc-sources-hdr">
+                <button type="button" id="btn-sources-toggle" title="Collapse sources" aria-label="Collapse sources panel" aria-expanded="true" aria-controls="doc-sources-body">«</button>
+                <span id="doc-sources-title">Sources</span>
+              </div>
+              <div class="doc-sources-body" id="doc-sources-body">
+                <p class="hint">Import shortcuts for this workspace only (stored in bookmarks.json inside the dossier). Collections are different: they group whole workspaces.</p>
+                <button type="button" id="btn-bookmark-folder" style="width:100%;margin-bottom:8px">+ Bookmark folder…</button>
+                <div id="bm-list"></div>
+                <div class="bm-files" id="bm-files" style="display:none"></div>
+              </div>
+            </aside>
+            <div class="docs-main">
+              <div class="doc-list" id="doc-list"></div>
+            </div>
+          </div>
           <div id="doc-detail">
             <div class="hdr">
-              <button class="ghost" id="doc-back">← Back</button>
+              <button type="button" class="ghost" id="doc-back">← Back</button>
               <h3 id="doc-title"></h3>
-              <button id="doc-open-ext" title="Open with Dossier’s preferred app if set, otherwise Windows default">Open externally</button>
+              <button type="button" id="doc-open-ext" title="Open with Dossier’s preferred app if set, otherwise Windows default">Open externally</button>
               <button type="button" id="doc-open-with" title="Choose app / set preferred">Open with…</button>
-              <button class="danger" id="doc-delete">Delete</button>
+              <button type="button" class="danger" id="doc-delete">Delete</button>
             </div>
             <div id="doc-open-menu" class="open-with-menu" style="display:none" hidden></div>
             <div class="warn-banner" id="doc-warn" style="display:none"></div>
             <div class="body" id="doc-body"></div>
           </div>
         </div>
-        <div class="view" id="notes-view">
-          <div id="notes-list"></div>
-          <div id="note-editor" style="display:none">
+        <div class="view" id="notes-view" role="region" aria-label="Notes">
+          <div id="notes-list" aria-label="Notes list"></div>
+          <div id="note-editor" class="mode-split" style="display:none">
             <div class="bar">
-              <input type="text" id="note-title" placeholder="Note title" />
-              <span id="note-status"></span>
+              <label class="sr-only" for="note-title">Note title</label>
+              <input type="text" id="note-title" placeholder="Note title" aria-label="Note title" />
+              <span id="note-status" role="status"></span>
               <button type="button" id="note-revert" title="Restore title and body to when you opened this note (before this session’s edits)" style="display:none">Revert edits</button>
               <button type="button" id="note-copy" title="Copy note body to clipboard">Copy</button>
-              <button class="danger" id="note-delete">Delete</button>
+              <button type="button" class="danger" id="note-delete">Delete</button>
             </div>
-            <textarea id="note-body" placeholder="Write in Markdown…" spellcheck="true"></textarea>
+            <div class="note-mode-bar">
+              <div class="note-mode-seg" id="note-mode-seg" role="group" aria-label="Editor mode">
+                <button type="button" data-mode="edit">Edit</button>
+                <button type="button" data-mode="split" class="on" aria-pressed="true">Split</button>
+                <button type="button" data-mode="preview">Preview</button>
+              </div>
+              <span style="font-size:0.72rem;color:var(--text-muted)">Live Markdown preview · raw .md on disk</span>
+            </div>
+            <div id="note-panes">
+              <label class="sr-only" for="note-body">Note body</label>
+              <textarea id="note-body" placeholder="Write in Markdown…" spellcheck="true" aria-label="Note body"></textarea>
+              <div id="note-split" title="Drag to resize panes" role="separator" aria-orientation="vertical" aria-label="Resize note panes"></div>
+              <div id="note-preview" class="note-preview" aria-live="polite" aria-label="Markdown preview"></div>
+            </div>
           </div>
           <div id="note-placeholder">Select a note or create a new one</div>
         </div>
-        <div class="view" id="stickies-view">
-          <div id="sticky-board"></div>
+        <div class="view" id="stickies-view" role="region" aria-label="Sticky notes board">
+          <div id="sticky-board" aria-label="Sticky notes"></div>
         </div>
-        <div class="view" id="paint-view">
+        <div class="view" id="paint-view" role="region" aria-label="Paint">
           <div class="canvas-list" id="paint-list"></div>
           <div id="paint-editor">
-            <div class="editor-hdr" id="paint-tools"></div>
-            <div class="editor-stage"><canvas id="paint-canvas" width="960" height="640"></canvas></div>
+            <div class="editor-hdr" id="paint-tools" role="toolbar" aria-label="Paint tools"></div>
+            <div class="editor-stage"><canvas id="paint-canvas" width="960" height="640" aria-label="Paint canvas"></canvas></div>
           </div>
         </div>
-        <div class="view" id="annotate-view">
+        <div class="view" id="annotate-view" role="region" aria-label="Annotate">
           <div class="canvas-list" id="annotate-list"></div>
           <div id="annotate-editor">
-            <div class="editor-hdr" id="annotate-tools"></div>
+            <div class="editor-hdr" id="annotate-tools" role="toolbar" aria-label="Annotate tools"></div>
             <div class="editor-stage" id="annotate-stage">
               <div class="annotate-hint" id="annotate-hint">Paste (Ctrl+V) or drop an image here to annotate.<br/>Then highlight, arrow, label (with font size; drag &amp; resize labels), redact, or crop.</div>
               <div id="annotate-wrap" style="display:none">
-                <canvas id="annotate-canvas" width="800" height="500"></canvas>
+                <canvas id="annotate-canvas" width="800" height="500" aria-label="Annotation canvas"></canvas>
               </div>
             </div>
           </div>
         </div>
-        <div class="view" id="kanban-view">
+        <div class="view" id="kanban-view" role="region" aria-label="Kanban">
           <div class="kanban-list" id="kanban-list"></div>
           <div id="kanban-board-ui">
             <div class="kanban-cols" id="kanban-cols"></div>
           </div>
         </div>
-        <div class="view" id="decisions-view">
-          <div id="decision-spine"></div>
+        <div class="view" id="decisions-view" role="region" aria-label="Decisions">
+          <div id="decision-spine" aria-label="Decision spine"></div>
           <div id="decision-detail" style="display:none"></div>
           <div id="decision-placeholder">Pin a decision to build the chronological spine</div>
         </div>
-        <div class="view" id="search-view">
+        <div class="view" id="calendar-view" role="region" aria-label="Agenda">
+          <div class="cal-layout">
+            <aside class="cal-mini" id="cal-mini" aria-label="Month calendar"></aside>
+            <div class="cal-agenda" id="cal-agenda" aria-label="Agenda"></div>
+          </div>
+        </div>
+        <div class="view" id="search-view" role="region" aria-label="Search results">
           <div class="results" id="search-results"></div>
         </div>
-        <div class="view" id="agent-view">
+        <div class="view" id="agent-view" role="region" aria-label="Ask your dossier">
           <div class="agent-panel" id="agent-panel">
             <div class="agent-hint" id="agent-hint">
               Ask questions about this dossier. Relevant documents/notes are selected via full-text search and sent as context (capped). Configure host/port/token under Settings.
             </div>
-            <div class="agent-log" id="agent-log"></div>
+            <div class="agent-log" id="agent-log" aria-live="polite" aria-label="Conversation"></div>
             <div class="agent-compose">
-              <textarea id="agent-q" placeholder="Ask your dossier…" rows="2"></textarea>
+              <label class="sr-only" for="agent-q">Question</label>
+              <textarea id="agent-q" placeholder="Ask your dossier…" rows="2" aria-label="Ask your dossier"></textarea>
               <button type="button" class="primary" id="agent-send">Ask</button>
             </div>
             <div class="agent-ctx" id="agent-ctx"></div>
           </div>
         </div>
-        <div class="view" id="settings-view">
+        <div class="view" id="settings-view" role="region" aria-label="Settings">
           <div class="settings-panel" id="settings-panel"></div>
         </div>
       </div>
-    </section>
+    </main>
   </div>
 </div>
 
 <div id="drop-overlay"><div class="box"><strong>Drop to import</strong><span>Files will be added to this dossier’s documents folder</span></div></div>
-<div id="toast"></div>
-<div class="popover" id="pop-color"><div class="color-grid" id="color-grid"></div></div>
-<div class="popover" id="pop-emoji">
+<div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+<div class="popover" id="pop-color" role="dialog" aria-label="Sticky color"><div class="color-grid" id="color-grid"></div></div>
+<div class="popover" id="pop-emoji" role="dialog" aria-label="Sticky emoji">
   <div class="emoji-tabs" id="emoji-tabs"></div>
   <div class="emoji-grid" id="emoji-grid"></div>
 </div>
-<div class="popover" id="pop-size"><div class="size-row" id="size-row"></div></div>
+<div class="popover" id="pop-size" role="dialog" aria-label="Sticky size"><div class="size-row" id="size-row"></div></div>
+<div class="popover" id="pop-color-adv" hidden>
+  <div class="cp-tabs">
+    <button type="button" data-cp-tab="basic" class="on">Basic</button>
+    <button type="button" data-cp-tab="neon">Neon</button>
+    <button type="button" data-cp-tab="custom">Custom</button>
+  </div>
+  <div class="cp-panel on" data-cp-panel="basic">
+    <div class="cp-section-label">Basic</div>
+    <div class="cp-presets" id="cp-basic-grid"></div>
+  </div>
+  <div class="cp-panel" data-cp-panel="neon">
+    <div class="cp-section-label">Neon (great for highlight)</div>
+    <div class="cp-presets" id="cp-neon-grid"></div>
+  </div>
+  <div class="cp-panel" data-cp-panel="custom">
+    <div class="cp-custom-row">
+      <input type="color" id="cp-adv-color" value="#e03131" />
+      <input type="text" class="cp-hex" id="cp-adv-hex" value="#E03131" maxlength="7" spellcheck="false" />
+    </div>
+    <div class="hint" style="font-size:0.72rem;color:var(--text-muted)">Hex or system color picker. Presets tabs are additive.</div>
+  </div>
+</div>
 
+<script>/*__MARKED__*/</script>
+<script>/*__HIGHLIGHT__*/</script>
 <script>
 /* ========== Bridge ========== */
 function bridge(name) { return typeof window[name] === 'function' ? window[name] : null; }
@@ -795,10 +1272,21 @@ async function call(name, ...args) {
 }
 function toast(msg) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
+  if (!el) return;
+  // Live region: clear then set so repeated identical messages still re-announce.
+  el.textContent = '';
   el.classList.add('show');
+  // Double rAF: ensure the empty text is committed before the new message.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      el.textContent = String(msg ?? '');
+    });
+  });
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => el.classList.remove('show'), 2800);
+  toast._t = setTimeout(() => {
+    el.classList.remove('show');
+    el.textContent = '';
+  }, 2800);
 }
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -819,6 +1307,91 @@ function fmtDate(iso) {
 }
 function uid() { return 'id_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
 
+/* ========== Shared advanced color picker (custom + basic + neon presets) ========== */
+const COLOR_PRESETS_BASIC = [
+  { name: 'Black', hex: '#000000' }, { name: 'White', hex: '#FFFFFF' },
+  { name: 'Dark red', hex: '#990000' }, { name: 'Red', hex: '#FF0000' },
+  { name: 'Dark blue', hex: '#000099' }, { name: 'Blue', hex: '#0000FF' },
+  { name: 'Dark green', hex: '#006600' }, { name: 'Green', hex: '#00FF00' },
+  { name: 'Purple', hex: '#660099' }, { name: 'Orange', hex: '#FF6600' },
+  { name: 'Yellow', hex: '#FFFF00' }, { name: 'Gray', hex: '#808080' },
+];
+const COLOR_PRESETS_NEON = [
+  { name: 'Neon yellow', hex: '#FFFF33' }, { name: 'Neon green', hex: '#33FF33' },
+  { name: 'Neon pink', hex: '#FF00FF' }, { name: 'Neon cyan', hex: '#00FFFF' },
+  { name: 'Neon orange', hex: '#FF6600' }, { name: 'Neon purple', hex: '#CC00FF' },
+  { name: 'Neon lime', hex: '#CCFF00' }, { name: 'Neon red', hex: '#FF3333' },
+];
+function normalizeHex(v) {
+  let s = String(v || '').trim();
+  if (!s) return '#000000';
+  if (s[0] !== '#') s = '#' + s;
+  if (/^#[0-9a-fA-F]{3}$/.test(s)) {
+    s = '#' + s[1] + s[1] + s[2] + s[2] + s[3] + s[3];
+  }
+  if (!/^#[0-9a-fA-F]{6}$/.test(s)) return null;
+  return s.toUpperCase();
+}
+function initColorAdvPicker() {
+  const pop = document.getElementById('pop-color-adv');
+  if (!pop || pop.dataset.ready) return;
+  pop.dataset.ready = '1';
+  const basic = document.getElementById('cp-basic-grid');
+  const neon = document.getElementById('cp-neon-grid');
+  basic.innerHTML = COLOR_PRESETS_BASIC.map(c =>
+    `<button type="button" title="${esc(c.name)}" aria-label="${esc(c.name)}" data-hex="${c.hex}" style="background:${c.hex}"></button>`
+  ).join('');
+  neon.innerHTML = COLOR_PRESETS_NEON.map(c =>
+    `<button type="button" title="${esc(c.name)}" aria-label="${esc(c.name)}" data-hex="${c.hex}" style="background:${c.hex}"></button>`
+  ).join('');
+  pop.querySelectorAll('.cp-tabs [data-cp-tab]').forEach(btn => {
+    btn.onclick = () => {
+      pop.querySelectorAll('.cp-tabs button').forEach(b => b.classList.toggle('on', b === btn));
+      pop.querySelectorAll('.cp-panel').forEach(p => p.classList.toggle('on', p.dataset.cpPanel === btn.dataset.cpTab));
+    };
+  });
+  const apply = (hex) => {
+    const n = normalizeHex(hex);
+    if (!n) return;
+    document.getElementById('cp-adv-color').value = n;
+    document.getElementById('cp-adv-hex').value = n;
+    if (typeof state.colorPickCb === 'function') state.colorPickCb(n);
+  };
+  document.getElementById('cp-adv-color').oninput = (e) => apply(e.target.value);
+  document.getElementById('cp-adv-hex').onchange = (e) => {
+    const n = normalizeHex(e.target.value);
+    if (n) apply(n); else e.target.value = document.getElementById('cp-adv-color').value;
+  };
+  document.getElementById('cp-adv-hex').onkeydown = (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+  };
+  basic.querySelectorAll('button').forEach(b => { b.onclick = () => apply(b.dataset.hex); });
+  neon.querySelectorAll('button').forEach(b => { b.onclick = () => apply(b.dataset.hex); });
+}
+function openColorAdvPicker(anchor, currentHex, onPick) {
+  initColorAdvPicker();
+  const pop = document.getElementById('pop-color-adv');
+  state.colorPickCb = onPick;
+  const n = normalizeHex(currentHex) || '#E03131';
+  document.getElementById('cp-adv-color').value = n;
+  document.getElementById('cp-adv-hex').value = n;
+  // Default to Basic (leftmost / most-used tab)
+  pop.querySelectorAll('.cp-tabs button').forEach(b => b.classList.toggle('on', b.dataset.cpTab === 'basic'));
+  pop.querySelectorAll('.cp-panel').forEach(p => p.classList.toggle('on', p.dataset.cpPanel === 'basic'));
+  const r = anchor.getBoundingClientRect();
+  pop.style.left = Math.min(window.innerWidth - 280, Math.max(8, r.left)) + 'px';
+  pop.style.top = Math.min(window.innerHeight - 220, r.bottom + 6) + 'px';
+  pop.hidden = false;
+  pop.classList.add('open');
+  const close = (ev) => {
+    if (pop.contains(ev.target) || (anchor && anchor.contains && anchor.contains(ev.target))) return;
+    pop.classList.remove('open');
+    pop.hidden = true;
+    document.removeEventListener('mousedown', close, true);
+  };
+  setTimeout(() => document.addEventListener('mousedown', close, true), 0);
+}
+
 /* ========== State ========== */
 const state = {
   view: 'documents',
@@ -831,14 +1404,24 @@ const state = {
   popTarget: null,
   paint: null, annotate: null, kanban: null, decisionId: null,
   emojiCat: 'faces',
-  // Documents list sort; in-memory for the session (matches other UI state; no localStorage elsewhere)
+  // Documents list sort — in-memory for the session (matches other UI state; no localStorage elsewhere)
   docSort: 'nameAsc',
-  appSettings: { noteAutosaveMs: 500, confirmDeletes: true, showIntros: true, autoOpenLast: false, dismissedIntros: [] },
+  appSettings: { noteAutosaveMs: 500, confirmDeletes: true, showIntros: true, autoOpenLast: false, notesEditorMode: 'split', dismissedIntros: [] },
+  notePreviewTimer: null,
+  noteMode: 'split',
+  colorPickCb: null,
+  // Open workspace root path (for collection switcher "current" marker)
+  root: '',
+  activeCollectionId: '',
+  activeCollectionName: '',
+  bookmarks: [],
+  bmActiveId: null,
+  bmFiles: [],
 };
 
 // Auto-generated Twemoji flag SVGs (CC-BY 4.0 Twitter/Twemoji). Offline display for Windows which cannot glyph flags.
 /*__FLAG_DATA__*/
-// Fallback only if inject failed; assign, do not redeclare
+// Fallback only if inject failed — assign, do not redeclare
 if (typeof FLAG_IMGS === 'undefined') { FLAG_IMGS = {}; }
 
 /** Build regional-indicator flag string from ISO 3166-1 alpha-2 (stored value). */
@@ -883,7 +1466,7 @@ function appendEmojiDisplay(parent, emoji) {
 
 const FLAG_ISOS = Object.keys(FLAG_IMGS).sort();
 const EMOJI_CATS = {
-  // 🚩 triangular priority/milestone flag (U+1F6A9); was missing since Tier 2
+  // 🚩 triangular priority/milestone flag (U+1F6A9) — was missing since Tier 2
   faces: ['😀','😁','😂','🤣','😊','😍','🤩','😎','🤔','😅','😢','😡','👍','👎','👏','🙏','🔥','⭐','💡','✅','❌','⚠️','📌','🚩','📎','📝','💼','🎯','🚀','❤️','💯','🎉','📅','⏰','🔗','💬','🐛','✨','🏆','🗂️','💪'],
   // flags list is ISO codes; rendered as SVG images, stored as RI emoji pairs
   flags: FLAG_ISOS.length ? FLAG_ISOS : ['CA','US','GB','FR','DE','JP','KR','CN','IN','AU','BR','MX','ES','IT','NL','SE','NO','FI','DK','IE','PT','PL','UA','RU','TR','SA','AE','IL','ZA','NG','EG','KE','AR','CL','CO','PE','NZ','SG','TH','VN','PH','ID','MY','HK','TW','CH','AT','BE','GR','CZ'],
@@ -897,6 +1480,7 @@ const INTRO_COPY = {
   annotate: { title: 'Annotate', body: 'Paste, drop, or open an image, then highlight, arrow, label, redact, or crop. Text labels can be dragged and resized after placing. Drop an image on this tab to start a new board.' },
   kanban: { title: 'Kanban', body: 'Track work across columns. Set a WIP limit per column (count/limit badge). Drag cards by the ⋮⋮ grip. Card text auto-grows; no broken resize handle.' },
   decisions: { title: 'Decisions', body: 'Pin decisions on a chronological spine. Optionally attach a frozen document snapshot (Attach version) under decision-versions/ so the exact file at decision time is preserved.' },
+  calendar: { title: 'Agenda', body: 'Agenda of sticky due dates, kanban card due dates, and decision dates. Click an item to jump to it. Empty dates stay off the agenda.' },
 };
 const SIZE_LABELS = {
   mini: 'Mini', standard: 'Standard', classic: 'Classic 3×3',
@@ -1000,14 +1584,21 @@ async function importFileList(fileList) {
 async function boot() {
   try {
     const st = await call('GetStatus');
-    document.getElementById('ver').textContent = String(st.version || '2.0.0-t1').replace(/^v/i, '');
+    const verStr = String(st.version || '2.0.0').replace(/^v/i, '');
+    document.getElementById('ver').textContent = verStr;
+    const brandVer = document.getElementById('brand-ver');
+    if (brandVer) brandVer.textContent = 'v' + verStr;
+    const setupVer = document.getElementById('setup-ver');
+    if (setupVer) setupVer.textContent = 'v' + verStr;
     if (st.open) { await enterShell(st); return; }
     document.getElementById('setup').style.display = 'flex';
     renderSetupRecents(st);
+    await renderSetupCollections(st);
     if (st.hasLastPath) {
       const btn = document.getElementById('btn-open-last');
       btn.style.display = 'block';
-      btn.textContent = 'Open last: ' + (st.lastPath || '').split(/[/\\]/).pop();
+      const lastLabel = st.lastName || (st.lastPath || '').split(/[/\\]/).pop();
+      btn.textContent = 'Open last: ' + lastLabel;
       btn.onclick = async () => {
         try { await enterShell(await call('OpenLastDossier')); }
         catch (e) { showSetupErr(e); }
@@ -1022,6 +1613,8 @@ async function boot() {
         showSetupErr(e);
       }
     };
+    const btnCol = document.getElementById('btn-new-collection');
+    if (btnCol) btnCol.onclick = () => createCollectionFromLauncher();
   } catch (e) {
     document.getElementById('setup').style.display = 'flex';
     showSetupErr(e);
@@ -1030,33 +1623,188 @@ async function boot() {
 function showSetupErr(e) {
   document.getElementById('setup-err').textContent = String(e.message || e);
 }
+function folderBase(p) {
+  return String(p || '').split(/[/\\]/).pop() || p;
+}
+/** Normalize filesystem paths for equality (Windows case + slash style). */
+function pathKey(p) {
+  return String(p || '').replace(/\//g, '\\').replace(/\\+$/, '').toLowerCase();
+}
+/** WebView2 may surface map bools as real booleans or the strings "true"/"false". */
+function flagTrue(v) {
+  return v === true || v === 'true' || v === 1 || v === '1';
+}
+/** Launcher accordion open state (session). Keys: "recent" or "col:<id>". Default closed. */
+function setupAccOpen(key) {
+  if (!state.setupAcc) state.setupAcc = {};
+  return !!state.setupAcc[key];
+}
+function setupAccToggle(key) {
+  if (!state.setupAcc) state.setupAcc = {};
+  state.setupAcc[key] = !state.setupAcc[key];
+  return state.setupAcc[key];
+}
+function wireSetupAccHeaders(root, onToggle) {
+  if (!root) return;
+  // Enter fires click on keydown; Space fires click on keyup and can scroll a
+  // scrollable ancestor if the button is destroyed mid-keystroke by re-render.
+  // Handle both keys on keydown, preventDefault (no scroll), await re-render, re-focus.
+  root.querySelectorAll('[data-acc]').forEach(hdr => {
+    const activate = async () => {
+      const key = hdr.dataset.acc;
+      const hdrId = hdr.id || '';
+      setupAccToggle(key);
+      if (typeof onToggle === 'function') {
+        await onToggle(key);
+      }
+      if (!hdrId) return;
+      // Swallow residual Space keyup (would scroll #setup or re-click a new button).
+      const swallowSpaceUp = (ev) => {
+        if (ev.key === ' ' || ev.key === 'Spacebar') {
+          ev.preventDefault();
+          ev.stopPropagation();
+        }
+        document.removeEventListener('keyup', swallowSpaceUp, true);
+      };
+      document.addEventListener('keyup', swallowSpaceUp, true);
+      requestAnimationFrame(() => {
+        const next = document.getElementById(hdrId);
+        if (next) next.focus();
+      });
+    };
+    hdr.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      activate();
+    };
+    hdr.onkeydown = (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+      e.preventDefault();
+      e.stopPropagation();
+      activate();
+    };
+    // Block native Space keyup click / scroll if the node still exists (no re-render yet).
+    hdr.onkeyup = (e) => {
+      if (e.key !== ' ' && e.key !== 'Spacebar') return;
+      e.preventDefault();
+      e.stopPropagation();
+    };
+  });
+}
 function renderSetupRecents(st) {
   const box = document.getElementById('setup-recent');
   const paths = st.recentPaths || [];
   const names = st.recentNames || [];
   if (!paths.length) { box.style.display = 'none'; return; }
   box.style.display = 'block';
-  box.innerHTML = `<div class="recent-label">Recent workspaces</div>` +
-    paths.map((p, i) => `<button type="button" data-path="${esc(p)}">${esc(names[i] || p.split(/[/\\]/).pop())}<div style="font-size:0.7rem;color:var(--text-muted);font-weight:400">${esc(p)}</div></button>`).join('');
-  box.querySelectorAll('button').forEach(btn => {
+  const open = setupAccOpen('recent');
+  const rows = paths.map((p, i) => {
+    const disp = names[i] || folderBase(p);
+    const base = folderBase(p);
+    const sub = (disp !== base) ? (base + ' · ' + p) : p;
+    return `<div class="recent-row" data-path="${esc(p)}">
+        <button type="button" class="recent-open" data-path="${esc(p)}">
+          <span>${esc(disp)}</span>
+          <div style="font-size:0.7rem;color:var(--text-muted);font-weight:400">${esc(sub)}</div>
+        </button>
+        <button type="button" class="recent-rename" data-rename="${esc(p)}" title="Set display name (does not rename the folder)">Rename…</button>
+      </div>`;
+  }).join('');
+  const panelId = 'setup-acc-panel-recent';
+  box.innerHTML = `<div class="setup-acc ${open ? '' : 'collapsed'}" data-acc-section="recent">
+    <button type="button" class="setup-acc-hdr" data-acc="recent" id="setup-acc-hdr-recent"
+      aria-expanded="${open ? 'true' : 'false'}" aria-controls="${panelId}"
+      aria-label="Recent workspaces, ${paths.length} items, ${open ? 'expanded' : 'collapsed'}. Press Enter or Space to toggle.">
+      <span class="chev" aria-hidden="true">${open ? '▼' : '▶'}</span>
+      <span class="acc-title">Recent workspaces</span>
+      <span class="acc-meta">${paths.length}</span>
+    </button>
+    <div class="setup-acc-body" id="${panelId}" role="region" aria-labelledby="setup-acc-hdr-recent">${rows}</div>
+  </div>`;
+  wireSetupAccHeaders(box, () => renderSetupRecents(st));
+  box.querySelectorAll('.recent-open').forEach(btn => {
     btn.onclick = async () => {
       try { await enterShell(await call('OpenDossierPath', btn.dataset.path)); }
-      catch (e) { showSetupErr(e); }
+      catch (err) { showSetupErr(err); }
+    };
+  });
+  box.querySelectorAll('[data-rename]').forEach(btn => {
+    btn.onclick = async (e) => {
+      e.stopPropagation();
+      const path = btn.dataset.rename;
+      const idx = (st.recentPaths || []).indexOf(path);
+      const cur = (idx >= 0 && st.recentNames && st.recentNames[idx]) ? st.recentNames[idx] : folderBase(path);
+      const name = prompt('Display name for this workspace (leave empty to clear).\nDoes not rename the folder on disk.', cur === folderBase(path) ? '' : cur);
+      if (name === null) return;
+      try {
+        const next = await call('SetWorkspaceDisplayName', path, String(name || '').trim());
+        renderSetupRecents(next);
+        if (next.hasLastPath) {
+          const ob = document.getElementById('btn-open-last');
+          ob.style.display = 'block';
+          ob.textContent = 'Open last: ' + (next.lastName || folderBase(next.lastPath));
+        }
+        toast(String(name || '').trim() ? 'Display name saved' : 'Display name cleared');
+      } catch (err) { toast(String(err.message || err)); }
     };
   });
 }
 
+function updateSidebarWorkspaceLabel(st) {
+  const pathEl = document.getElementById('dossier-path');
+  const dispEl = document.getElementById('dossier-display');
+  const root = st.root || '';
+  state.root = root;
+  const folderName = st.name || folderBase(root);
+  const disp = (st.displayName && String(st.displayName).trim()) ? String(st.displayName).trim() : '';
+  // Custom display name only when it differs from the folder base (unset → DisplayNameFor returns base)
+  const hasCustom = !!(disp && folderName && disp !== folderName);
+  if (hasCustom && dispEl) {
+    dispEl.style.display = '';
+    dispEl.textContent = disp;
+  } else if (dispEl) {
+    dispEl.style.display = 'none';
+    dispEl.textContent = '';
+  }
+  // Real path always visible as the .path line (pre-Tier-2 single-line when no custom name)
+  pathEl.textContent = root || folderName || '';
+  pathEl.title = root ? (root + ' (click to open in Explorer)') : 'Open folder in Explorer';
+  pathEl.setAttribute('aria-label', root ? ('Open workspace folder in Explorer: ' + root) : 'Open workspace folder in Explorer');
+  pathEl.onclick = () => call('OpenDossierFolder').catch(() => {});
+  pathEl.onkeydown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pathEl.click(); }
+  };
+  state.activeCollectionId = st.activeCollectionId || '';
+  state.activeCollectionName = st.activeCollectionName || '';
+  updateCollectionSwitchBtn();
+}
+function updateCollectionSwitchBtn() {
+  const btn = document.getElementById('btn-switch-collection');
+  if (!btn) return;
+  if (state.activeCollectionId) {
+    btn.style.display = '';
+    btn.title = 'Switch within collection: ' + (state.activeCollectionName || '');
+    btn.textContent = 'Collection…';
+  } else {
+    btn.style.display = 'none';
+  }
+}
 async function enterShell(st) {
   document.getElementById('setup').style.display = 'none';
   document.getElementById('shell').classList.add('open');
-  document.getElementById('dossier-path').textContent = st.root || st.name || '';
-  document.getElementById('dossier-path').onclick = () => call('OpenDossierFolder').catch(() => {});
+  updateSidebarWorkspaceLabel(st);
   try { state.stickyMeta = await call('StickyMeta'); } catch (_) {}
   try { state.appSettings = await call('GetAppSettings'); } catch (_) {}
+  if (state.appSettings && state.appSettings.notesEditorMode) {
+    state.noteMode = state.appSettings.notesEditorMode;
+  }
   updateAgentNav();
   buildPopovers();
+  initColorAdvPicker();
+  wireNoteModeAndSplitter();
   setView('documents');
   await refreshAll();
+  loadBookmarksPanel();
 }
 function updateAgentNav() {
   const btn = document.getElementById('nav-agent');
@@ -1070,7 +1818,7 @@ document.getElementById('btn-new-ws').onclick = async () => {
   try {
     const s = await call('CreateDossier');
     await enterShell(s);
-    toast('Opened workspace: ' + (s.name || s.root));
+    toast('Opened workspace: ' + (s.displayName || s.name || s.root));
   } catch (e) {
     if (String(e).includes('cancelled')) return;
     toast(String(e.message || e));
@@ -1082,10 +1830,11 @@ document.getElementById('btn-close-ws').onclick = async () => {
     document.getElementById('shell').classList.remove('open');
     document.getElementById('setup').style.display = 'flex';
     renderSetupRecents(st);
+    await renderSetupCollections(st);
     if (st.hasLastPath) {
       const btn = document.getElementById('btn-open-last');
       btn.style.display = 'block';
-      btn.textContent = 'Open last: ' + (st.lastPath || '').split(/[/\\]/).pop();
+      btn.textContent = 'Open last: ' + (st.lastName || folderBase(st.lastPath));
     }
   } catch (e) { toast(String(e)); }
 };
@@ -1093,51 +1842,338 @@ document.getElementById('btn-switch-ws').onclick = async () => {
   try {
     const list = await call('ListRecentDossiers') || [];
     if (!list.length) { toast('No other recent dossiers; use + Folder'); return; }
-    showSwitcher(list);
+    showSwitcher(list, null);
   } catch (e) { toast(String(e)); }
 };
-function showSwitcher(list) {
+document.getElementById('btn-switch-collection').onclick = async () => {
+  try {
+    if (!state.activeCollectionId) { toast('Not in a collection'); return; }
+    const cols = await call('ListCollections') || [];
+    const col = cols.find(c => c.id === state.activeCollectionId);
+    if (!col || !col.members || !col.members.length) {
+      toast('Collection has no members'); return;
+    }
+    const list = col.members.filter(m => m.isDossier === 'true' || m.isDossier === true).map(m => ({
+      path: m.path, name: m.name || folderBase(m.path),
+    }));
+    if (!list.length) { toast('No valid dossiers in this collection'); return; }
+    showSwitcher(list, col.name || 'Collection');
+  } catch (e) { toast(String(e)); }
+};
+function showSwitcher(list, title) {
   const bd = document.createElement('div');
   bd.className = 'modal-backdrop';
   const modal = document.createElement('div');
   modal.className = 'modal';
-  modal.innerHTML = `<h3>Switch workspace</h3>
+  const heading = title ? ('Switch within ' + title) : 'Switch workspace';
+  modal.innerHTML = `<h3>${esc(heading)}</h3>
     <div id="sw-list"></div>
     <div class="actions"><button type="button" id="sw-cancel">Cancel</button>
-    <button type="button" class="primary" id="sw-browse">Browse…</button></div>`;
+    ${title ? '' : '<button type="button" class="primary" id="sw-browse">Browse…</button>'}</div>`;
   bd.appendChild(modal);
   document.body.appendChild(bd);
   const box = modal.querySelector('#sw-list');
-  box.innerHTML = list.map(r =>
-    `<button type="button" style="width:100%;text-align:left;margin-bottom:6px" data-path="${esc(r.path)}">
-      <strong>${esc(r.name)}</strong><div style="font-size:0.72rem;color:var(--text-muted)">${esc(r.path)}</div>
-    </button>`).join('');
+  const curKey = pathKey(state.root);
+  box.innerHTML = list.map(r => {
+    const isCurrent = !!(curKey && pathKey(r.path) === curKey);
+    const style = isCurrent
+      ? 'width:100%;text-align:left;margin-bottom:6px;border-color:var(--accent);background:var(--accent-soft);font-weight:600'
+      : 'width:100%;text-align:left;margin-bottom:6px';
+    const mark = isCurrent
+      ? '<span style="color:var(--accent);margin-right:6px" aria-hidden="true">✓</span>'
+      : '';
+    const tag = isCurrent
+      ? ' <span style="font-size:0.68rem;font-weight:700;color:var(--accent);margin-left:6px">(current)</span>'
+      : '';
+    return `<button type="button" class="sw-item${isCurrent ? ' current' : ''}" style="${style}" data-path="${esc(r.path)}" data-current="${isCurrent ? '1' : '0'}">
+      ${mark}<strong>${esc(r.name)}</strong>${tag}
+      <div style="font-size:0.72rem;color:var(--text-muted);font-weight:400">${esc(r.path)}</div>
+    </button>`;
+  }).join('');
   box.querySelectorAll('button').forEach(btn => {
     btn.onclick = async () => {
       try {
         const s = await call('SwitchDossier', btn.dataset.path);
         document.body.removeChild(bd);
         await enterShell(s);
-        toast('Switched to ' + (s.name || ''));
+        toast('Switched to ' + (s.displayName || s.name || ''));
       } catch (e) { toast(String(e.message || e)); }
     };
   });
   modal.querySelector('#sw-cancel').onclick = () => document.body.removeChild(bd);
-  modal.querySelector('#sw-browse').onclick = async () => {
-    document.body.removeChild(bd);
-    try {
-      const s = await call('PickAndOpenDossier');
-      await enterShell(s);
-    } catch (e) {
-      if (String(e).includes('cancelled')) return;
-      toast(String(e.message || e));
-    }
-  };
+  const browse = modal.querySelector('#sw-browse');
+  if (browse) {
+    browse.onclick = async () => {
+      document.body.removeChild(bd);
+      try {
+        const s = await call('PickAndOpenDossier');
+        await enterShell(s);
+      } catch (e) {
+        if (String(e).includes('cancelled')) return;
+        toast(String(e.message || e));
+      }
+    };
+  }
   bd.onclick = (e) => { if (e.target === bd) document.body.removeChild(bd); };
-};
+}
 
 async function refreshAll() {
   await Promise.all([loadDocs(), loadNotes(), loadStickies(), loadPaints(), loadAnnotates(), loadKanbans(), loadDecisions()]);
+}
+
+/* ========== Collections (launcher) ========== */
+async function renderSetupCollections(st) {
+  const box = document.getElementById('setup-collections');
+  if (!box) return;
+  let cols = [];
+  try { cols = await call('ListCollections') || []; } catch (_) { cols = []; }
+  if (!cols.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  box.style.display = 'block';
+  const openPath = (st && st.open) ? (st.root || '') : '';
+  // Section label stays; each collection is its own accordion (independent collapse).
+  box.innerHTML = `<div class="recent-label">Collections</div>` +
+    cols.map(c => {
+      const members = c.members || [];
+      const accKey = 'col:' + c.id;
+      const open = setupAccOpen(accKey);
+      const rows = members.map(m => {
+        const isOpen = openPath && m.path && m.path.toLowerCase() === openPath.toLowerCase();
+        const last = m.lastOpened ? (' · last ' + fmtDate(m.lastOpened)) : '';
+        const broken = m.isDossier !== 'true' && m.isDossier !== true;
+        return `<button type="button" class="col-member ${isOpen ? 'open' : ''}" data-path="${esc(m.path)}" ${broken ? 'disabled' : ''}>
+          <span style="flex:1;min-width:0">
+            <strong>${esc(m.name || folderBase(m.path))}</strong>
+            <div class="meta">${esc(m.path)}${esc(last)}${broken ? ' · missing' : ''}${isOpen ? ' · open' : ''}</div>
+          </span>
+        </button>`;
+      }).join('') || '<div class="meta" style="color:var(--text-muted);font-size:0.78rem">No members yet</div>';
+      const nMem = members.length;
+      const panelId = 'setup-acc-panel-col-' + c.id;
+      const hdrId = 'setup-acc-hdr-col-' + c.id;
+      return `<div class="col-card setup-acc ${open ? '' : 'collapsed'}" data-col="${esc(c.id)}">
+        <button type="button" class="setup-acc-hdr" data-acc="${esc(accKey)}" id="${esc(hdrId)}"
+          aria-expanded="${open ? 'true' : 'false'}" aria-controls="${esc(panelId)}"
+          aria-label="Collection ${esc(c.name)}, ${nMem} member${nMem === 1 ? '' : 's'}, ${open ? 'expanded' : 'collapsed'}. Press Enter or Space to toggle.">
+          <span class="chev" aria-hidden="true">${open ? '▼' : '▶'}</span>
+          <span class="acc-title">${esc(c.name)}</span>
+          <span class="acc-meta">${nMem} member${nMem === 1 ? '' : 's'}</span>
+        </button>
+        <div class="setup-acc-body" id="${esc(panelId)}" role="region" aria-labelledby="${esc(hdrId)}">
+          ${rows}
+          <div class="col-actions">
+            <button type="button" data-add-member="${esc(c.id)}">+ Add folder…</button>
+            <button type="button" data-del-col="${esc(c.id)}">Delete collection</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  wireSetupAccHeaders(box, async () => {
+    await renderSetupCollections(st);
+  });
+  box.querySelectorAll('.col-member[data-path]').forEach(btn => {
+    btn.onclick = async () => {
+      try { await enterShell(await call('OpenDossierPath', btn.dataset.path)); }
+      catch (e) { showSetupErr(e); }
+    };
+  });
+  box.querySelectorAll('[data-add-member]').forEach(btn => {
+    btn.onclick = async () => {
+      try {
+        await call('AddDossierToCollection', btn.dataset.addMember, '');
+        toast('Folder added to collection');
+        await renderSetupCollections(await call('GetStatus'));
+      } catch (e) {
+        if (String(e).includes('cancelled')) return;
+        toast(String(e.message || e));
+      }
+    };
+  });
+  box.querySelectorAll('[data-del-col]').forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm('Delete this collection? (Does not delete dossier folders.)')) return;
+      try {
+        await call('DeleteCollection', btn.dataset.delCol);
+        toast('Collection deleted');
+        await renderSetupCollections(await call('GetStatus'));
+      } catch (e) { toast(String(e.message || e)); }
+    };
+  });
+}
+async function createCollectionFromLauncher() {
+  const name = prompt('Collection name (related workspaces):');
+  if (name === null) return;
+  const n = String(name || '').trim();
+  if (!n) { toast('Name required'); return; }
+  try {
+    await call('CreateCollection', n);
+    toast('Collection created; add folders with “+ Add folder…”');
+    await renderSetupCollections(await call('GetStatus'));
+  } catch (e) { toast(String(e.message || e)); }
+}
+
+/* ========== Import bookmarks (Documents Sources panel) ========== */
+state.bookmarks = [];
+state.bmActiveId = null;
+state.bmFiles = [];
+function wireDocSourcesChrome() {
+  const tog = document.getElementById('btn-sources-toggle');
+  const panel = document.getElementById('doc-sources');
+  if (tog && panel && !tog.dataset.wired) {
+    tog.dataset.wired = '1';
+    tog.onclick = () => {
+      panel.classList.toggle('collapsed');
+      const collapsed = panel.classList.contains('collapsed');
+      tog.textContent = collapsed ? '»' : '«';
+      tog.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      tog.setAttribute('aria-label', collapsed ? 'Expand sources panel' : 'Collapse sources panel');
+    };
+  }
+  const add = document.getElementById('btn-bookmark-folder');
+  if (add && !add.dataset.wired) {
+    add.dataset.wired = '1';
+    add.onclick = async () => {
+      try {
+        await call('AddBookmarkFolder');
+        toast('Folder bookmarked');
+        await loadBookmarksPanel();
+      } catch (e) {
+        if (String(e).includes('cancelled')) return;
+        toast(String(e.message || e));
+      }
+    };
+  }
+}
+async function loadBookmarksPanel() {
+  wireDocSourcesChrome();
+  const list = document.getElementById('bm-list');
+  const filesBox = document.getElementById('bm-files');
+  if (!list) return;
+  try {
+    // Always re-list from backend (fresh os.Stat per bookmark; no UI cache of broken flags).
+    state.bookmarks = await call('ListBookmarks') || [];
+  } catch (_) {
+    state.bookmarks = [];
+  }
+  if (!state.bookmarks.length) {
+    list.innerHTML = `<div style="font-size:0.78rem;color:var(--text-muted);padding:4px 0">No bookmarked folders yet.</div>`;
+    state.bmActiveId = null;
+    state.bmFiles = [];
+    if (filesBox) { filesBox.style.display = 'none'; filesBox.innerHTML = ''; }
+    return;
+  }
+  // If the active browse target went stale, drop any leftover file listing immediately.
+  if (state.bmActiveId) {
+    const active = state.bookmarks.find(b => b.id === state.bmActiveId);
+    if (!active || flagTrue(active.broken)) {
+      state.bmActiveId = null;
+      state.bmFiles = [];
+      if (filesBox) { filesBox.style.display = 'none'; filesBox.innerHTML = ''; }
+    }
+  }
+  list.innerHTML = state.bookmarks.map(b => {
+    const broken = flagTrue(b.broken);
+    return `
+    <div class="bm-item ${broken ? 'broken' : ''} ${state.bmActiveId === b.id ? 'active' : ''}" data-id="${esc(b.id)}" data-broken="${broken ? '1' : '0'}">
+      <div class="bm-label">${esc(b.label || folderBase(b.path))}</div>
+      <div class="bm-path">${esc(b.path)}</div>
+      ${broken ? '<span class="bm-badge">Broken path</span>' : ''}
+      <div class="bm-actions">
+        ${broken
+          ? `<button type="button" data-repick="${esc(b.id)}">Re-pick…</button>`
+          : `<button type="button" data-open="${esc(b.id)}">Browse</button>
+             <button type="button" data-repick="${esc(b.id)}">Re-pick…</button>`}
+        <button type="button" data-rm="${esc(b.id)}">Remove</button>
+      </div>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('[data-open]').forEach(btn => {
+    btn.onclick = (e) => { e.stopPropagation(); openBookmarkFiles(btn.dataset.open); };
+  });
+  list.querySelectorAll('.bm-item').forEach(el => {
+    el.onclick = (e) => {
+      if (e.target.closest('button')) return;
+      if (el.dataset.broken === '1') return;
+      openBookmarkFiles(el.dataset.id);
+    };
+  });
+  list.querySelectorAll('[data-rm]').forEach(btn => {
+    btn.onclick = async (e) => {
+      e.stopPropagation();
+      try {
+        await call('RemoveBookmark', btn.dataset.rm);
+        if (state.bmActiveId === btn.dataset.rm) {
+          state.bmActiveId = null;
+          state.bmFiles = [];
+          if (filesBox) { filesBox.style.display = 'none'; filesBox.innerHTML = ''; }
+        }
+        await loadBookmarksPanel();
+      } catch (err) { toast(String(err.message || err)); }
+    };
+  });
+  list.querySelectorAll('[data-repick]').forEach(btn => {
+    btn.onclick = async (e) => {
+      e.stopPropagation();
+      try {
+        await call('RepickBookmark', btn.dataset.repick);
+        toast('Bookmark path updated');
+        if (state.bmActiveId === btn.dataset.repick) {
+          state.bmActiveId = null;
+          state.bmFiles = [];
+          if (filesBox) { filesBox.style.display = 'none'; filesBox.innerHTML = ''; }
+        }
+        await loadBookmarksPanel();
+      } catch (err) {
+        if (String(err).includes('cancelled')) return;
+        toast(String(err.message || err));
+      }
+    };
+  });
+}
+async function openBookmarkFiles(id) {
+  state.bmActiveId = id;
+  state.bmFiles = [];
+  const box = document.getElementById('bm-files');
+  box.style.display = 'block';
+  // Always wipe previous listing first so a failed re-read cannot leave stale rows.
+  box.innerHTML = `<div style="font-size:0.78rem;color:var(--text-muted)">Loading…</div>`;
+  try {
+    // Fresh ReadDir every Browse click (backend ListBookmarkFiles → ListExternalFolder).
+    const files = await call('ListBookmarkFiles', id) || [];
+    state.bmFiles = files.filter(f => !(flagTrue(f.isDir) || f.isDir === true));
+    if (!state.bmFiles.length) {
+      box.innerHTML = `<div style="font-size:0.78rem;color:var(--text-muted)">No importable files in this folder.</div>`;
+      await loadBookmarksPanel();
+      return;
+    }
+    box.innerHTML = `
+      <div style="font-size:0.75rem;font-weight:700;margin-bottom:6px">Files to import</div>
+      ${state.bmFiles.map((f, i) => `
+        <label class="bm-file">
+          <input type="checkbox" data-i="${i}" aria-label="Select ${esc(f.name)}" />
+          <span class="nm" title="${esc(f.path)}">${esc(f.name)}</span>
+          <span style="color:var(--text-muted);font-size:0.68rem">${fmtSize(f.size)}</span>
+        </label>`).join('')}
+      <button type="button" class="primary" id="bm-import-sel" style="width:100%;margin-top:8px">Import selected</button>`;
+    box.querySelector('#bm-import-sel').onclick = async () => {
+      const paths = [];
+      box.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+        const f = state.bmFiles[+cb.dataset.i];
+        if (f && f.path) paths.push(f.path);
+      });
+      if (!paths.length) { toast('Select at least one file'); return; }
+      try {
+        const imported = await call('ImportPaths', paths);
+        toast(`Imported ${imported.length} file(s)`);
+        await loadDocs();
+      } catch (e) { toast(String(e.message || e)); }
+    };
+    await loadBookmarksPanel();
+  } catch (e) {
+    state.bmFiles = [];
+    box.innerHTML = `<div style="font-size:0.78rem;color:var(--danger)">${esc(e.message || e)}</div>`;
+    // Re-stat list so Broken path badge appears after a failed Browse.
+    await loadBookmarksPanel();
+  }
 }
 
 /* ========== Navigation ========== */
@@ -1152,27 +2188,41 @@ function setView(name) {
   if (name !== 'kanban') closeKanbanBoard(false);
 
   state.view = name;
-  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  document.querySelectorAll('#nav button').forEach(b => {
+    const on = b.dataset.view === name;
+    b.classList.toggle('active', on);
+    if (on) b.setAttribute('aria-current', 'page');
+    else b.removeAttribute('aria-current');
+  });
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === name + '-view'));
   const titles = {
     documents: 'Documents', notes: 'Notes', stickies: 'Sticky Notes',
     paint: 'Paint', annotate: 'Annotate', kanban: 'Kanban', decisions: 'Decisions',
-    search: 'Search', agent: 'Ask your dossier', settings: 'Settings'
+    calendar: 'Agenda', search: 'Search', agent: 'Ask your dossier', settings: 'Settings'
   };
-  document.getElementById('view-title').textContent = titles[name] || name;
+  const titleEl = document.getElementById('view-title');
+  titleEl.textContent = titles[name] || name;
+  // a11y: move focus to the main heading so AT reflects the new view immediately
+  // (avoids stale heading/landmark context after left-nav route changes).
+  requestAnimationFrame(() => {
+    titleEl.setAttribute('tabindex', '-1');
+    try { titleEl.focus({ preventScroll: true }); } catch (_) {
+      try { titleEl.focus(); } catch (_) {}
+    }
+  });
   const tools = document.getElementById('view-tools');
   tools.innerHTML = '';
   if (name === 'documents') {
     tools.innerHTML = `
       <label class="tools-label" for="doc-sort" style="font-size:0.8rem;color:var(--text-muted);margin:0">Sort</label>
-      <select id="doc-sort" title="Sort documents">
+      <select id="doc-sort" title="Sort documents" aria-label="Sort documents">
         <option value="nameAsc">Name A–Z</option>
         <option value="nameDesc">Name Z–A</option>
         <option value="dateNew">Date added (newest)</option>
         <option value="dateOld">Date added (oldest)</option>
       </select>
-      <button class="primary" id="btn-import">+ Import files…</button>
-      <button id="btn-rescan">Rescan</button>`;
+      <button type="button" class="primary" id="btn-import">+ Import files…</button>
+      <button type="button" id="btn-rescan">Rescan</button>`;
     const sortSel = tools.querySelector('#doc-sort');
     sortSel.value = state.docSort || 'nameAsc';
     sortSel.onchange = () => {
@@ -1181,43 +2231,52 @@ function setView(name) {
     };
     tools.querySelector('#btn-import').onclick = doImport;
     tools.querySelector('#btn-rescan').onclick = doRescan;
+    loadBookmarksPanel();
   } else if (name === 'notes') {
     tools.innerHTML = `
-      <button type="button" class="panel-collapse-btn" id="btn-toggle-notes-list" title="Show or hide the notes list">☰ List</button>
-      <button class="primary" id="btn-new-note">+ New note</button>`;
+      <button type="button" class="panel-collapse-btn" id="btn-toggle-notes-list" title="Show or hide the notes list" aria-label="Show or hide the notes list">☰ List</button>
+      <button type="button" class="primary" id="btn-new-note">+ New note</button>`;
     tools.querySelector('#btn-new-note').onclick = newNote;
     tools.querySelector('#btn-toggle-notes-list').onclick = () => {
       document.getElementById('notes-view').classList.toggle('list-collapsed');
     };
   } else if (name === 'stickies') {
     tools.innerHTML = `
-      <button class="primary" id="btn-new-sticky">+ Add sticky</button>
-      <select id="new-sticky-color">${(state.stickyMeta.colors || []).map(c => `<option value="${c}">${c}</option>`).join('')}</select>
-      <select id="new-sticky-size">${Object.keys(SIZE_LABELS).map(s => `<option value="${s}">${SIZE_LABELS[s]}</option>`).join('')}</select>`;
+      <button type="button" class="primary" id="btn-new-sticky">+ Add sticky</button>
+      <label class="sr-only" for="new-sticky-color">Sticky color</label>
+      <select id="new-sticky-color" aria-label="Sticky color">${(state.stickyMeta.colors || []).map(c => `<option value="${c}">${c}</option>`).join('')}</select>
+      <label class="sr-only" for="new-sticky-size">Sticky size</label>
+      <select id="new-sticky-size" aria-label="Sticky size">${Object.keys(SIZE_LABELS).map(s => `<option value="${s}">${SIZE_LABELS[s]}</option>`).join('')}</select>`;
     tools.querySelector('#btn-new-sticky').onclick = newSticky;
+    // Always re-fetch so card→sticky due sync is visible after editing a linked card
+    loadStickies();
   } else if (name === 'paint') {
-    tools.innerHTML = `<button class="primary" id="btn-new-paint">+ New canvas</button>`;
+    tools.innerHTML = `<button type="button" class="primary" id="btn-new-paint">+ New canvas</button>`;
     tools.querySelector('#btn-new-paint').onclick = newPaint;
     loadPaints();
   } else if (name === 'annotate') {
-    tools.innerHTML = `<button class="primary" id="btn-new-ann">+ New annotate</button>`;
+    tools.innerHTML = `<button type="button" class="primary" id="btn-new-ann">+ New annotate</button>`;
     tools.querySelector('#btn-new-ann').onclick = newAnnotate;
     loadAnnotates();
   } else if (name === 'kanban') {
-    tools.innerHTML = `<button class="primary" id="btn-new-kb">+ New board</button>`;
+    tools.innerHTML = `<button type="button" class="primary" id="btn-new-kb">+ New board</button>`;
     tools.querySelector('#btn-new-kb').onclick = newKanban;
     loadKanbans();
   } else if (name === 'decisions') {
     tools.innerHTML = `
-      <button type="button" class="panel-collapse-btn" id="btn-toggle-spine" title="Show or hide the decision spine">☰ Spine</button>
-      <button class="primary" id="btn-new-dec">+ Pin decision</button>`;
+      <button type="button" class="panel-collapse-btn" id="btn-toggle-spine" title="Show or hide the decision spine" aria-label="Show or hide the decision spine">☰ Spine</button>
+      <button type="button" class="primary" id="btn-new-dec">+ Pin decision</button>`;
     tools.querySelector('#btn-new-dec').onclick = newDecision;
     tools.querySelector('#btn-toggle-spine').onclick = () => {
       document.getElementById('decisions-view').classList.toggle('spine-collapsed');
     };
     loadDecisions();
+  } else if (name === 'calendar') {
+    tools.innerHTML = `<button type="button" id="btn-cal-refresh">Refresh</button>`;
+    tools.querySelector('#btn-cal-refresh').onclick = () => loadCalendar();
+    loadCalendar();
   } else if (name === 'search') {
-    tools.innerHTML = `<div id="search-wrap"><input type="search" id="search-box" placeholder="Search everything…" /></div>`;
+    tools.innerHTML = `<div id="search-wrap"><label class="sr-only" for="search-box">Search everything</label><input type="search" id="search-box" placeholder="Search everything…" aria-label="Search everything" /></div>`;
     const box = tools.querySelector('#search-box');
     let t;
     box.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => runSearch(box.value), 200); });
@@ -1225,7 +2284,7 @@ function setView(name) {
   } else if (name === 'agent') {
     tools.innerHTML = `
       <span style="font-size:0.8rem;color:var(--text-muted)">Uses FTS-selected dossier context</span>
-      <button type="button" id="btn-agent-clear" title="Clear conversation history">Clear conversation</button>`;
+      <button type="button" id="btn-agent-clear" title="Clear conversation history" aria-label="Clear conversation history">Clear conversation</button>`;
     tools.querySelector('#btn-agent-clear').onclick = clearAgentConversation;
     ensureAgentUI();
   } else if (name === 'settings') {
@@ -1271,7 +2330,7 @@ function renderSettings() {
   const autoOpenLast = s.autoOpenLast === true;
   const ms = s.noteAutosaveMs || 500;
   // Host is the enable/hide gate. Prefill 127.0.0.1 only when never configured so first enable is “type a port”.
-  // Once configured (or explicitly cleared), show the real saved host; empty means panel off.
+  // Once configured (or explicitly cleared), show the real saved host — empty means panel off.
   const neverAgent = !(s.agentHost && String(s.agentHost).trim()) && !(s.agentPort > 0);
   const aHost = (s.agentHost && String(s.agentHost).trim())
     ? s.agentHost
@@ -1283,42 +2342,42 @@ function renderSettings() {
     <h3>Settings</h3>
     <p class="settings-desc">App-wide preferences (stored in %APPDATA%\\Dossier, not inside a dossier folder). Visual style stays a solid dark shell; glass-morphism was considered and rejected for readability in a productivity tool.</p>
     <div class="settings-row">
-      <div><label>Confirm before deletes</label><div class="hint">Ask before removing documents, notes, stickies, boards</div></div>
+      <div><label for="set-confirm">Confirm before deletes</label><div class="hint">Ask before removing documents, notes, stickies, boards</div></div>
       <input type="checkbox" id="set-confirm" ${confirm ? 'checked' : ''} />
     </div>
     <div class="settings-row">
-      <div><label>Show first-open intros</label><div class="hint">Brief tips the first time you open each surface</div></div>
+      <div><label for="set-intros">Show first-open intros</label><div class="hint">Brief tips the first time you open each surface</div></div>
       <input type="checkbox" id="set-intros" ${showIntros ? 'checked' : ''} />
     </div>
     <div class="settings-row">
-      <div><label>Open last workspace on launch</label><div class="hint">When on, skip the launcher if the last dossier folder still exists (you can still Close to the launcher). Default off.</div></div>
+      <div><label for="set-auto-open-last">Open last workspace on launch</label><div class="hint">When on, skip the launcher if the last dossier folder still exists (you can still Close to the launcher). Default off.</div></div>
       <input type="checkbox" id="set-auto-open-last" ${autoOpenLast ? 'checked' : ''} />
     </div>
     <div class="settings-row">
-      <div><label>Note auto-save delay (ms)</label><div class="hint">How long to wait after typing before saving a note</div></div>
-      <input type="number" id="set-autosave" min="200" max="5000" step="100" value="${ms}" />
+      <div><label for="set-autosave">Note auto-save delay (ms)</label><div class="hint">How long to wait after typing before saving a note</div></div>
+      <input type="number" id="set-autosave" min="200" max="5000" step="100" value="${ms}" aria-label="Note auto-save delay in milliseconds" />
     </div>
     <div class="settings-row">
-      <div><label>Reset all intros</label><div class="hint">Show first-open tips again on every surface</div></div>
-      <button type="button" id="set-reset-intros">Reset intros</button>
+      <div><span id="set-reset-intros-label">Reset all intros</span><div class="hint">Show first-open tips again on every surface</div></div>
+      <button type="button" id="set-reset-intros" aria-labelledby="set-reset-intros-label">Reset intros</button>
     </div>
     <h3 style="margin-top:22px">Optional agent (Ask your dossier)</h3>
     <p class="settings-desc">Client-only. Point at any local HTTP agent endpoint you run yourself. <strong>Clear the host field entirely and save</strong> to hide the Ask panel (port alone does not enable it). Dossier never auto-detects or modifies local AI software.</p>
     <div class="settings-row">
-      <div><label>Agent host</label><div class="hint">Required to show the Ask panel. Clear and save to hide it. First-time default is 127.0.0.1.</div></div>
-      <input type="text" id="set-agent-host" value="${esc(aHost)}" placeholder="127.0.0.1" style="width:min(220px,40vw)" />
+      <div><label for="set-agent-host">Agent host</label><div class="hint">Required to show the Ask panel. Clear and save to hide it. First-time default is 127.0.0.1.</div></div>
+      <input type="text" id="set-agent-host" value="${esc(aHost)}" placeholder="127.0.0.1" style="width:min(220px,40vw)" autocomplete="off" />
     </div>
     <div class="settings-row">
-      <div><label>Agent port</label><div class="hint">Required with a non-empty host to enable the panel</div></div>
+      <div><label for="set-agent-port">Agent port</label><div class="hint">Required with a non-empty host to enable the panel</div></div>
       <input type="number" id="set-agent-port" min="1" max="65535" value="${esc(aPort)}" />
     </div>
     <div class="settings-row">
-      <div><label>Bearer token</label><div class="hint">Optional Authorization: Bearer …</div></div>
+      <div><label for="set-agent-token">Bearer token</label><div class="hint">Optional Authorization: Bearer …</div></div>
       <input type="password" id="set-agent-token" value="${esc(aToken)}" style="width:min(220px,40vw)" autocomplete="off" />
     </div>
     <div class="settings-row">
-      <div><label>HTTP path</label><div class="hint">Default OpenAI-compatible chat path</div></div>
-      <input type="text" id="set-agent-path" value="${esc(aPath)}" style="width:min(260px,45vw)" />
+      <div><label for="set-agent-path">HTTP path</label><div class="hint">Default OpenAI-compatible chat path</div></div>
+      <input type="text" id="set-agent-path" value="${esc(aPath)}" style="width:min(260px,45vw)" autocomplete="off" />
     </div>
     <div class="settings-row">
       <div><label>Sample files</label><div class="hint">Starter content ships next to the app in sample-files/</div></div>
@@ -1358,7 +2417,7 @@ function renderSettings() {
     try {
       const portVal = panel.querySelector('#set-agent-port').value;
       const portNum = portVal === '' ? 0 : (+portVal || 0);
-      // Live DOM only; empty host stays empty (do not re-inject 127.0.0.1).
+      // Live DOM only — empty host stays empty (do not re-inject 127.0.0.1).
       const hostVal = String(panel.querySelector('#set-agent-host').value || '').trim();
       state.appSettings = await call('SaveAppSettings', {
         noteAutosaveMs: +panel.querySelector('#set-autosave').value || 500,
@@ -1382,7 +2441,7 @@ function renderSettings() {
   };
 }
 
-/** Clear Ask panel Q/A history only; does not touch Settings/host config. */
+/** Clear Ask panel Q/A history only — does not touch Settings/host config. */
 function clearAgentConversation() {
   const log = document.getElementById('agent-log');
   const ctx = document.getElementById('agent-ctx');
@@ -1531,7 +2590,7 @@ async function openDoc(id) {
     } else if (d.officeFlags && d.officeFlags.extractionNote) {
       warn.style.display = 'block';
       warn.textContent = '⚠ Office extraction (' + (d.officeFlags.format || d.kind) + '): ' + d.officeFlags.extractionNote +
-        ' Dossier does not replace Word/Excel; use Open externally for the full file.';
+        ' Dossier does not replace Word/Excel/LibreOffice; use Open externally for the full file.';
     } else warn.style.display = 'none';
     const bodyEl = document.getElementById('doc-body');
     const office = d.kind === 'docx' || d.kind === 'xlsx' || d.kind === 'odt' || d.kind === 'ods';
@@ -1540,10 +2599,10 @@ async function openDoc(id) {
         <div>${fmtSize(d.sizeBytes)} · ${esc(d.mimeType || 'unknown type')}</div>
         <p style="margin-top:16px">Not previewed inside Dossier. Use <strong>Open externally</strong>.</p></div>`;
     } else if (!body && d.kind === 'pdf') {
-      bodyEl.innerHTML = `<div class="binary-info"><div>📕 PDF; no extractable text</div>
+      bodyEl.innerHTML = `<div class="binary-info"><div>📕 PDF: no extractable text</div>
         <p style="margin-top:12px">Image-only/scanned. Use <strong>Open externally</strong>.</p></div>`;
     } else if (!body && office) {
-      bodyEl.innerHTML = `<div class="binary-info"><div>📄 ${esc(d.kind.toUpperCase())}; no extractable text</div>
+      bodyEl.innerHTML = `<div class="binary-info"><div>📄 ${esc(d.kind.toUpperCase())}: no extractable text</div>
         <p style="margin-top:12px">Search index has no text for this file. Use <strong>Open externally</strong> for the full Office/OpenDocument file.</p></div>`;
     } else {
       bodyEl.textContent = body;
@@ -1698,6 +2757,8 @@ async function openNote(id) {
     document.getElementById('note-body').value = n.body || '';
     document.getElementById('note-status').textContent = 'Saved';
     updateNoteRevertBtn();
+    applyNotesEditorMode(state.appSettings && state.appSettings.notesEditorMode);
+    scheduleNotePreview(true);
     renderNotesList();
   } catch (e) { toast(String(e)); }
 }
@@ -1721,7 +2782,141 @@ function scheduleSave() {
   clearTimeout(state.saveTimer);
   const ms = (state.appSettings && state.appSettings.noteAutosaveMs) || 500;
   state.saveTimer = setTimeout(saveCurrentNote, ms);
+  scheduleNotePreview(false);
 }
+function scheduleNotePreview(immediate) {
+  clearTimeout(state.notePreviewTimer);
+  const ms = immediate ? 0 : Math.min(250, ((state.appSettings && state.appSettings.noteAutosaveMs) || 500) * 0.5);
+  state.notePreviewTimer = setTimeout(() => { renderNotePreview(); }, ms);
+}
+function applyNotesEditorMode(mode) {
+  mode = String(mode || 'split').toLowerCase();
+  if (mode !== 'edit' && mode !== 'preview' && mode !== 'split') mode = 'split';
+  state.noteMode = mode;
+  const ed = document.getElementById('note-editor');
+  if (ed) {
+    ed.classList.remove('mode-edit', 'mode-split', 'mode-preview');
+    ed.classList.add('mode-' + mode);
+  }
+  const seg = document.getElementById('note-mode-seg');
+  if (seg) {
+    seg.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
+  }
+  if (mode !== 'edit') scheduleNotePreview(true);
+}
+async function setNotesEditorMode(mode) {
+  applyNotesEditorMode(mode);
+  try {
+    state.appSettings = await call('SaveAppSettings', { notesEditorMode: state.noteMode });
+  } catch (_) {}
+}
+function renderNotePreview() {
+  const prev = document.getElementById('note-preview');
+  if (!prev) return;
+  if (state.noteMode === 'edit') return;
+  const body = document.getElementById('note-body').value || '';
+  let html = '';
+  try {
+    if (typeof marked !== 'undefined' && marked.parse) {
+      if (marked.setOptions) {
+        marked.setOptions({ gfm: true, breaks: false, headerIds: false, mangle: false });
+      }
+      html = marked.parse(body);
+    } else {
+      html = '<pre style="white-space:pre-wrap">' + esc(body) + '</pre>';
+    }
+  } catch (e) {
+    html = '<p style="color:var(--danger)">Preview error: ' + esc(e.message || e) + '</p>';
+  }
+  prev.innerHTML = html;
+  // Syntax highlight fenced code (best-effort)
+  if (typeof hljs !== 'undefined') {
+    prev.querySelectorAll('pre code').forEach(block => {
+      try { hljs.highlightElement(block); } catch (_) {}
+    });
+  }
+  // Links: open externally, never navigate WebView
+  prev.querySelectorAll('a[href]').forEach(a => {
+    a.addEventListener('click', async (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const href = a.getAttribute('href') || '';
+      try {
+        if (/^https?:\/\//i.test(href) || /^mailto:/i.test(href)) {
+          await call('OpenURL', href);
+        } else {
+          toast('Only http(s) and mailto links open externally');
+        }
+      } catch (e) { toast(String(e.message || e)); }
+    });
+  });
+  // Images: resolve local paths to data URLs; no network
+  prev.querySelectorAll('img').forEach(async (img) => {
+    const src = img.getAttribute('src') || '';
+    if (!src || src.startsWith('data:')) return;
+    if (/^https?:\/\//i.test(src) || src.startsWith('//')) {
+      img.removeAttribute('src');
+      img.classList.add('broken-img');
+      img.alt = 'Network images blocked';
+      return;
+    }
+    try {
+      const data = await call('ResolveNoteAsset', state.currentNoteId || '', src);
+      if (data) img.src = data;
+      else {
+        img.removeAttribute('src');
+        img.classList.add('broken-img');
+        img.alt = 'Image not found: ' + src;
+      }
+    } catch (_) {
+      img.removeAttribute('src');
+      img.classList.add('broken-img');
+      img.alt = 'Image not found';
+    }
+  });
+}
+function wireNoteModeAndSplitter() {
+  const seg = document.getElementById('note-mode-seg');
+  if (seg && !seg.dataset.wired) {
+    seg.dataset.wired = '1';
+    seg.querySelectorAll('button').forEach(b => {
+      b.onclick = () => setNotesEditorMode(b.dataset.mode);
+    });
+  }
+  const split = document.getElementById('note-split');
+  const panes = document.getElementById('note-panes');
+  const body = document.getElementById('note-body');
+  const prev = document.getElementById('note-preview');
+  if (split && panes && !split.dataset.wired) {
+    split.dataset.wired = '1';
+    let dragging = false;
+    split.addEventListener('mousedown', (e) => {
+      if (state.noteMode !== 'split') return;
+      dragging = true;
+      split.classList.add('dragging');
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      const rect = panes.getBoundingClientRect();
+      let x = e.clientX - rect.left;
+      const min = 120;
+      const max = rect.width - 120;
+      x = Math.max(min, Math.min(max, x));
+      const leftPct = (x / rect.width) * 100;
+      body.style.flex = '0 0 ' + leftPct + '%';
+      prev.style.flex = '1 1 auto';
+    });
+    window.addEventListener('mouseup', () => {
+      if (!dragging) return;
+      dragging = false;
+      split.classList.remove('dragging');
+    });
+  }
+}
+// Wire once at load
+document.addEventListener('DOMContentLoaded', () => { wireNoteModeAndSplitter(); });
+wireNoteModeAndSplitter();
 async function saveCurrentNote() {
   if (!state.currentNoteId) return;
   try {
@@ -1804,7 +2999,7 @@ function buildPopovers() {
   };
   const grid = document.getElementById('color-grid');
   grid.innerHTML = colors.map(c =>
-    `<div class="color-swatch" data-color="${c}" style="background:${colorCss[c]||'#ccc'}" title="${c}"></div>`
+    `<button type="button" class="color-swatch" data-color="${c}" style="background:${colorCss[c]||'#ccc'}" title="${c}" aria-label="Sticky color ${c}"></button>`
   ).join('');
   grid.querySelectorAll('.color-swatch').forEach(el => {
     el.onclick = async () => {
@@ -1812,30 +3007,34 @@ function buildPopovers() {
       const st = state.stickies.find(s => s.id === state.popTarget);
       if (!st) return;
       st.color = el.dataset.color;
-      await persistSticky(st); renderStickies(); closePopovers();
+      await persistSticky(st); renderStickies(); closePopovers({ returnFocus: true });
     };
   });
 
   const tabs = document.getElementById('emoji-tabs');
   tabs.innerHTML = `
-    <button type="button" data-cat="faces" class="${state.emojiCat==='faces'?'on':''}">Faces</button>
-    <button type="button" data-cat="flags" class="${state.emojiCat==='flags'?'on':''}">Flags</button>
-    <button type="button" data-e-clear>Clear</button>`;
+    <button type="button" data-cat="faces" class="${state.emojiCat==='faces'?'on':''}" aria-pressed="${state.emojiCat==='faces'?'true':'false'}">Faces</button>
+    <button type="button" data-cat="flags" class="${state.emojiCat==='flags'?'on':''}" aria-pressed="${state.emojiCat==='flags'?'true':'false'}">Flags</button>
+    <button type="button" data-e-clear aria-label="Clear emoji">Clear</button>`;
   tabs.querySelectorAll('button[data-cat]').forEach(btn => {
-    btn.onclick = () => { state.emojiCat = btn.dataset.cat; buildPopovers(); openPopover('pop-emoji', state._emojiAnchor, state.popTarget); };
+    btn.onclick = () => {
+      state.emojiCat = btn.dataset.cat;
+      buildPopovers();
+      openPopover('pop-emoji', state._emojiAnchor || state._popTrigger, state.popTarget);
+    };
   });
   tabs.querySelector('[data-e-clear]').onclick = async () => {
     if (!state.popTarget) return;
     const st = state.stickies.find(s => s.id === state.popTarget);
     if (!st) return;
     st.emoji = '';
-    await persistSticky(st); renderStickies(); closePopovers();
+    await persistSticky(st); renderStickies(); closePopovers({ returnFocus: true });
   };
   renderEmojiGrid();
 
   const sr = document.getElementById('size-row');
   sr.innerHTML = Object.keys(SIZE_LABELS).map(s =>
-    `<button type="button" data-size="${s}">${SIZE_LABELS[s]}</button>`
+    `<button type="button" data-size="${s}" aria-label="Size ${SIZE_LABELS[s]}">${SIZE_LABELS[s]}</button>`
   ).join('');
   sr.querySelectorAll('button').forEach(btn => {
     btn.onclick = async () => {
@@ -1845,7 +3044,7 @@ function buildPopovers() {
       st.size = btn.dataset.size;
       const dims = (state.stickyMeta.sizes || {})[st.size];
       if (dims) { st.w = dims[0]; st.h = dims[1]; }
-      await persistSticky(st); renderStickies(); closePopovers();
+      await persistSticky(st); renderStickies(); closePopovers({ returnFocus: true });
     };
   });
 }
@@ -1857,51 +3056,143 @@ function renderEmojiGrid() {
     const btn = document.createElement('button');
     btn.type = 'button';
     if (state.emojiCat === 'flags') {
-      // item is ISO code; show Twemoji SVG, store RI pair
+      // item is ISO code — show Twemoji SVG, store RI pair
       const iso = String(item).toUpperCase();
       btn.className = 'flag-btn';
       btn.title = iso;
       if (FLAG_IMGS[iso]) btn.appendChild(flagImgEl(iso));
       else btn.textContent = iso;
+      btn.setAttribute('aria-label', 'Flag ' + iso);
       btn.onclick = async () => {
         if (!state.popTarget) return;
         const st = state.stickies.find(s => s.id === state.popTarget);
         if (!st) return;
         st.emoji = flagEmojiFromIso(iso);
-        await persistSticky(st); renderStickies(); closePopovers();
+        await persistSticky(st); renderStickies(); closePopovers({ returnFocus: true });
       };
     } else {
       btn.className = 'flag-glyph';
-      btn.textContent = item;
+      btn.innerHTML = `<span aria-hidden="true">${esc(item)}</span>`;
       btn.title = item;
+      btn.setAttribute('aria-label', 'Emoji ' + item);
       btn.onclick = async () => {
         if (!state.popTarget) return;
         const st = state.stickies.find(s => s.id === state.popTarget);
         if (!st) return;
         st.emoji = item;
-        await persistSticky(st); renderStickies(); closePopovers();
+        await persistSticky(st); renderStickies(); closePopovers({ returnFocus: true });
       };
     }
     eg.appendChild(btn);
   });
 }
-function closePopovers() {
-  document.querySelectorAll('.popover').forEach(p => p.classList.remove('open'));
+function popoverFocusables(pop) {
+  if (!pop) return [];
+  return Array.from(pop.querySelectorAll(
+    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )).filter(el => el.offsetParent !== null || pop.contains(el));
+}
+function isEscapeKey(e) {
+  // keyCode/which cover WebView2 / injectors that leave key or code empty.
+  return e.key === 'Escape' || e.key === 'Esc' || e.code === 'Escape'
+    || e.keyCode === 27 || e.which === 27;
+}
+function unbindPopoverKeys() {
+  const docH = state._popKeyHandler;
+  const popH = state._popKeyHandlerOnPop;
+  const popEl = state._popKeyPop;
+  if (docH) {
+    document.removeEventListener('keydown', docH, true);
+    window.removeEventListener('keydown', docH, true);
+  }
+  if (popEl && popH) {
+    popEl.removeEventListener('keydown', popH, true);
+  }
+  state._popKeyHandler = null;
+  state._popKeyHandlerOnPop = null;
+  state._popKeyPop = null;
+}
+function closePopovers(opts) {
+  const returnFocus = !opts || opts.returnFocus !== false;
+  const trigger = state._popTrigger;
+  unbindPopoverKeys();
+  document.querySelectorAll('.popover').forEach(p => {
+    p.classList.remove('open');
+    if (p.id === 'pop-color-adv') p.hidden = true;
+  });
   state.popTarget = null;
+  state._popTrigger = null;
+  if (returnFocus && trigger && typeof trigger.focus === 'function') {
+    try { trigger.focus(); } catch (_) {}
+  }
 }
 function openPopover(id, anchor, stickyId) {
-  closePopovers();
+  // Close others without stealing focus back to a previous trigger mid-open.
+  closePopovers({ returnFocus: false });
   state.popTarget = stickyId;
+  state._popTrigger = anchor || null;
   if (id === 'pop-emoji') state._emojiAnchor = anchor;
   const pop = document.getElementById(id);
+  if (!pop) return;
   const r = anchor.getBoundingClientRect();
   pop.style.left = Math.min(r.left, window.innerWidth - 320) + 'px';
   pop.style.top = Math.min(r.bottom + 6, window.innerHeight - 200) + 'px';
   pop.classList.add('open');
+  // Focus first control inside the picker; trap Tab; Escape closes and restores trigger.
+  requestAnimationFrame(() => {
+    const list = popoverFocusables(pop);
+    if (list.length) list[0].focus();
+    else { pop.tabIndex = -1; pop.focus(); }
+  });
+  // Single state-level handler (not a DOM expando): Escape was not closing in WebView2
+  // when only a document-capture handler lived on a property of the pop element.
+  // Listen on document + window (capture) and on the pop itself so Escape works whether
+  // focus is on category tabs or a grid tile.
+  const onKey = (e) => {
+    if (!pop.classList.contains('open')) return;
+    if (isEscapeKey(e)) {
+      e.preventDefault();
+      e.stopPropagation();
+      closePopovers({ returnFocus: true });
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    const list = popoverFocusables(pop);
+    if (!list.length) return;
+    const first = list[0];
+    const last = list[list.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first || !pop.contains(document.activeElement)) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else if (document.activeElement === last || !pop.contains(document.activeElement)) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+  state._popKeyHandler = onKey;
+  state._popKeyHandlerOnPop = onKey;
+  state._popKeyPop = pop;
+  document.addEventListener('keydown', onKey, true);
+  window.addEventListener('keydown', onKey, true);
+  pop.addEventListener('keydown', onKey, true);
 }
 document.addEventListener('mousedown', (e) => {
-  if (!e.target.closest('.popover') && !e.target.closest('.sticky .sh button')) closePopovers();
+  if (!e.target.closest('.popover') && !e.target.closest('.sticky .sh button')) {
+    closePopovers({ returnFocus: false });
+  }
 });
+// Global Escape backup: close any open sticky picker even if openPopover's
+// listeners were lost (re-render/unbind race). Host AcceleratorKeyCallback also
+// Eval's the same close for the WebView2 accelerator path.
+document.addEventListener('keydown', (e) => {
+  if (!isEscapeKey(e)) return;
+  if (!document.querySelector('.popover.open')) return;
+  e.preventDefault();
+  e.stopPropagation();
+  closePopovers({ returnFocus: true });
+}, true);
 
 async function loadStickies() {
   try { state.stickies = await call('ListStickies') || []; renderStickies(); }
@@ -1926,10 +3217,13 @@ function renderStickies() {
     const emojiSpan = document.createElement('span');
     emojiSpan.className = 'emoji-label flag-glyph';
     appendEmojiDisplay(emojiSpan, st.emoji); // flags → SVG img (Windows cannot glyph RI pairs)
-    const grip = document.createElement('span');
+    const grip = document.createElement('button');
+    grip.type = 'button';
     grip.className = 'grip';
-    grip.textContent = '⠿ sticky';
-    grip.title = 'Drag to move';
+    grip.innerHTML = '<span aria-hidden="true">⠿</span>';
+    grip.title = 'Drag to move (mouse), or focus sticky and use arrow keys';
+    grip.setAttribute('aria-label', 'Move sticky. Drag with mouse, or press arrow keys when focused.');
+    grip.tabIndex = 0;
     sh.appendChild(emojiSpan);
     sh.appendChild(grip);
     const actions = document.createElement('div');
@@ -1938,28 +3232,48 @@ function renderStickies() {
       ['emoji', '😀', 'Emoji'],
       ['color', '🎨', 'Color'],
       ['size', '⬚', 'Size'],
+      ['kanban', '📋', 'Add to Kanban…'],
       ['del', '🗑', 'Delete sticky'],
     ].forEach(([act, label, title]) => {
       const b = document.createElement('button');
       b.type = 'button';
       b.dataset.act = act;
-      b.textContent = label;
+      // Visual glyph only; name comes from aria-label (NVDA must not spell the emoji).
+      b.innerHTML = `<span aria-hidden="true">${label}</span>`;
       b.title = title;
       b.setAttribute('aria-label', title);
       if (act === 'del') b.className = 'sticky-del';
       actions.appendChild(b);
     });
     sh.appendChild(actions);
+    const dueRow = document.createElement('div');
+    dueRow.className = 'due-chip';
+    dueRow.innerHTML = `<input type="date" title="Due date (optional)" aria-label="Due date" value="${esc(dateInputValue(st.dueAt))}" />
+      <button type="button" data-clear-due title="Clear due date" aria-label="Clear due date">✕</button>`;
+    const linkRow = document.createElement('div');
+    linkRow.className = 'link-chip';
+    if (st.linkedKanban && st.linkedKanban.boardId && st.linkedKanban.cardId) {
+      linkRow.innerHTML = `Linked to Kanban <button type="button" data-unlink aria-label="Unlink from Kanban">Unlink</button>`;
+    } else {
+      linkRow.style.display = 'none';
+    }
     const ta = document.createElement('textarea');
     ta.className = 'sb';
     ta.spellcheck = true;
     ta.value = st.text || '';
+    ta.setAttribute('aria-label', 'Sticky note text');
     ta.style.color = '#1a1a1a';
     ta.style.webkitTextFillColor = '#1a1a1a';
     ta.style.caretColor = '#1a1a1a';
     const rz = document.createElement('div');
     rz.className = 'resize';
-    el.appendChild(sh); el.appendChild(ta); el.appendChild(rz);
+    rz.setAttribute('role', 'button');
+    rz.setAttribute('aria-label', 'Resize sticky: drag corner with mouse, or focus and use arrow keys (Right/Down grow, Left/Up shrink)');
+    rz.tabIndex = 0;
+    el.tabIndex = 0;
+    el.setAttribute('role', 'group');
+    el.setAttribute('aria-label', 'Sticky note. Arrow keys move when focused (not in text). Resize handle also accepts arrow keys.');
+    el.appendChild(sh); el.appendChild(dueRow); el.appendChild(linkRow); el.appendChild(ta); el.appendChild(rz);
     board.appendChild(el);
 
     let saveT;
@@ -1968,6 +3282,35 @@ function renderStickies() {
       clearTimeout(saveT);
       saveT = setTimeout(() => persistSticky(st), 400);
     });
+    const dueIn = dueRow.querySelector('input[type="date"]');
+    dueIn.addEventListener('mousedown', e => e.stopPropagation());
+    dueIn.addEventListener('change', async () => {
+      st.dueAt = dueIn.value || '';
+      await persistSticky(st);
+      toast(st.dueAt ? 'Due date set' : 'Due date cleared');
+    });
+    dueRow.querySelector('[data-clear-due]').addEventListener('mousedown', e => e.stopPropagation());
+    dueRow.querySelector('[data-clear-due]').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      st.dueAt = '';
+      dueIn.value = '';
+      await persistSticky(st);
+      toast('Due date cleared');
+    });
+    const unlinkBtn = linkRow.querySelector('[data-unlink]');
+    if (unlinkBtn) {
+      unlinkBtn.addEventListener('mousedown', e => e.stopPropagation());
+      unlinkBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        try {
+          const next = await call('UnlinkSticky', st.id);
+          Object.assign(st, next);
+          st.linkedKanban = next.linkedKanban || null;
+          renderStickies();
+          toast('Unlinked from Kanban');
+        } catch (err) { toast(String(err.message || err)); }
+      });
+    }
     sh.querySelectorAll('button').forEach(btn => {
       btn.addEventListener('mousedown', e => e.stopPropagation());
       btn.addEventListener('click', async (e) => {
@@ -1983,10 +3326,12 @@ function renderStickies() {
         if (act === 'color') openPopover('pop-color', btn, st.id);
         if (act === 'emoji') openPopover('pop-emoji', btn, st.id);
         if (act === 'size') openPopover('pop-size', btn, st.id);
+        if (act === 'kanban') stickyAddToKanban(st);
       });
     });
     sh.addEventListener('mousedown', (e) => {
-      if (e.target.closest('button')) return;
+      // Allow drag from grip (now a button); block other toolbar buttons and inputs.
+      if (e.target.closest('.sh-actions button, input, textarea, [data-clear-due], [data-unlink]')) return;
       e.preventDefault();
       el.classList.add('dragging');
       const startX = e.clientX, startY = e.clientY, origX = st.x, origY = st.y;
@@ -2023,11 +3368,157 @@ function renderStickies() {
       document.addEventListener('mousemove', move);
       document.addEventListener('mouseup', up);
     });
+    // Keyboard: arrow keys move sticky when focus is on the note (not inside textarea/inputs).
+    const STEP = 12;
+    const onMoveKeys = (e) => {
+      if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+      if (e.target.closest('textarea, input, .sh-actions button')) return;
+      e.preventDefault();
+      if (e.key === 'ArrowLeft') st.x = Math.max(0, (Number(st.x) || 0) - STEP);
+      if (e.key === 'ArrowRight') st.x = (Number(st.x) || 0) + STEP;
+      if (e.key === 'ArrowUp') st.y = Math.max(0, (Number(st.y) || 0) - STEP);
+      if (e.key === 'ArrowDown') st.y = (Number(st.y) || 0) + STEP;
+      el.style.left = st.x + 'px';
+      el.style.top = st.y + 'px';
+      clearTimeout(el._kbMoveT);
+      el._kbMoveT = setTimeout(() => persistSticky(st), 250);
+    };
+    el.addEventListener('keydown', onMoveKeys);
+    grip.addEventListener('keydown', onMoveKeys);
+    // Keyboard resize on the corner handle (Right/Down grow, Left/Up shrink).
+    rz.addEventListener('keydown', (e) => {
+      if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.key === 'ArrowRight') st.w = (Number(st.w) || 120) + STEP;
+      if (e.key === 'ArrowLeft') st.w = Math.max(120, (Number(st.w) || 120) - STEP);
+      if (e.key === 'ArrowDown') st.h = (Number(st.h) || 100) + STEP;
+      if (e.key === 'ArrowUp') st.h = Math.max(100, (Number(st.h) || 100) - STEP);
+      el.style.width = st.w + 'px';
+      el.style.height = st.h + 'px';
+      el.classList.toggle('sticky-compact', st.size === 'mini' || st.w < 175);
+      clearTimeout(el._kbResizeT);
+      el._kbResizeT = setTimeout(() => persistSticky(st), 250);
+    });
   });
 }
 async function persistSticky(st) {
-  try { Object.assign(st, await call('UpdateSticky', st)); }
-  catch (e) { console.error(e); }
+  try {
+    const payload = {
+      id: st.id, text: st.text || '', color: st.color, size: st.size,
+      x: st.x, y: st.y, w: st.w, h: st.h, emoji: st.emoji || '',
+      zIndex: st.zIndex || 1, dueAt: st.dueAt || '',
+      createdAt: st.createdAt, updatedAt: st.updatedAt,
+    };
+    // Only send linkedKanban when set so drag/resize does not clear the link
+    // (Go keeps previous link when the field is omitted). Unlink uses UnlinkSticky.
+    if (st.linkedKanban && st.linkedKanban.boardId && st.linkedKanban.cardId) {
+      payload.linkedKanban = { boardId: st.linkedKanban.boardId, cardId: st.linkedKanban.cardId };
+    }
+    const next = await call('UpdateSticky', payload);
+    Object.assign(st, next);
+    if (!next.linkedKanban) st.linkedKanban = null;
+    // Sticky→card due sync is server-side; refresh open kanban so the card chip updates live.
+    if (state.kanban && st.linkedKanban && st.linkedKanban.boardId === state.kanban.id) {
+      try {
+        const b = await call('GetKanbanBoard', state.kanban.id);
+        let stt = { columns: state.kanban.columns, cards: state.kanban.cards };
+        try { stt = JSON.parse(b.stateJson || '{}'); } catch (_) {}
+        if (Array.isArray(stt.cards)) state.kanban.cards = stt.cards;
+        if (Array.isArray(stt.columns)) state.kanban.columns = stt.columns;
+        if (state.view === 'kanban') renderKanbanBoard();
+      } catch (_) {}
+    }
+  } catch (e) { console.error(e); }
+}
+function dateInputValue(iso) {
+  if (!iso) return '';
+  const s = String(iso);
+  return s.length >= 10 ? s.slice(0, 10) : '';
+}
+async function stickyAddToKanban(st) {
+  try {
+    let boards = await call('ListKanbanBoards') || [];
+    if (!boards.length) {
+      if (!confirm('No kanban boards yet. Create one named “From stickies”?')) return;
+      const b = await call('CreateKanbanBoard', 'From stickies');
+      boards = [b];
+    }
+    const pick = await showKanbanTargetPicker(boards);
+    if (!pick) return;
+    const res = await call('LinkStickyToKanban', st.id, pick.boardId, pick.columnId);
+    Object.assign(st, res.sticky || {});
+    renderStickies();
+    toast('Added to Kanban (sticky kept)');
+  } catch (e) { toast(String(e.message || e)); }
+}
+/** In-app board/column picker for Add to Kanban (replaces prompt()). */
+function showKanbanTargetPicker(boards) {
+  return new Promise(async (resolve) => {
+    const bd = document.createElement('div');
+    bd.className = 'modal-backdrop';
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `<h3>Add to Kanban</h3>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin:0 0 10px">Pick a board and column. The sticky stays on the board.</p>
+      <label style="font-size:0.75rem;color:var(--text-muted)">Board</label>
+      <select id="atk-board" style="width:100%;margin:4px 0 10px"></select>
+      <label style="font-size:0.75rem;color:var(--text-muted)">Column</label>
+      <select id="atk-col" style="width:100%;margin:4px 0 14px"></select>
+      <div class="actions">
+        <button type="button" id="atk-cancel">Cancel</button>
+        <button type="button" class="primary" id="atk-ok">Add card</button>
+      </div>`;
+    bd.appendChild(modal);
+    document.body.appendChild(bd);
+    const boardSel = modal.querySelector('#atk-board');
+    const colSel = modal.querySelector('#atk-col');
+    const boardCache = {};
+    for (const b of boards) {
+      const shortId = String(b.id || '').slice(0, 8);
+      const opt = document.createElement('option');
+      opt.value = b.id;
+      opt.textContent = (b.title || 'Board') + ' · ' + shortId;
+      boardSel.appendChild(opt);
+    }
+    async function fillColumns(boardId) {
+      colSel.innerHTML = '';
+      let full = boardCache[boardId];
+      if (!full) {
+        full = await call('GetKanbanBoard', boardId);
+        boardCache[boardId] = full;
+      }
+      let stt = { columns: [] };
+      try { stt = JSON.parse(full.stateJson || '{}'); } catch (_) {}
+      const cols = Array.isArray(stt.columns) ? stt.columns : [];
+      if (!cols.length) {
+        const o = document.createElement('option');
+        o.value = ''; o.textContent = '(no columns)';
+        colSel.appendChild(o);
+        return;
+      }
+      cols.forEach(c => {
+        const o = document.createElement('option');
+        o.value = c.id;
+        o.textContent = c.title || c.id;
+        colSel.appendChild(o);
+      });
+    }
+    boardSel.onchange = () => fillColumns(boardSel.value).catch(e => toast(String(e)));
+    await fillColumns(boardSel.value);
+    const done = (val) => {
+      if (bd.parentNode) document.body.removeChild(bd);
+      resolve(val);
+    };
+    modal.querySelector('#atk-cancel').onclick = () => done(null);
+    modal.querySelector('#atk-ok').onclick = () => {
+      const boardId = boardSel.value;
+      const columnId = colSel.value;
+      if (!boardId || !columnId) { toast('Choose a board and column'); return; }
+      done({ boardId, columnId });
+    };
+    bd.onclick = (e) => { if (e.target === bd) done(null); };
+  });
 }
 async function newSticky() {
   const color = document.getElementById('new-sticky-color')?.value || 'yellow';
@@ -2050,7 +3541,7 @@ function renderPaintList() {
   if (state.paint && state.paint.id) { list.style.display = 'none'; return; }
   list.style.display = 'flex';
   if (!state.paints.length) {
-    list.innerHTML = `<div class="empty"><strong>No paint canvases yet</strong><br/>Freehand drawing with colors, brush sizes, undo; improved from the whiteboard reference.</div>`;
+    list.innerHTML = `<div class="empty"><strong>No paint canvases yet</strong><br/>Freehand drawing with colors, brush sizes, undo (improved from the whiteboard reference).</div>`;
     return;
   }
   list.innerHTML = state.paints.map(c => `
@@ -2113,17 +3604,18 @@ function buildPaintTools() {
   const el = document.getElementById('paint-tools');
   el.innerHTML = `
     <button type="button" class="ghost" id="paint-back">← Back</button>
-    <input class="title-in" id="paint-title" value="${esc(p.title)}" />
+    <label class="sr-only" for="paint-title">Canvas title</label>
+    <input class="title-in" id="paint-title" value="${esc(p.title)}" aria-label="Canvas title" />
     <div class="sep"></div>
-    <button type="button" data-tool="pen" class="${p.tool==='pen'?'active-tool':''}">Pen</button>
-    <button type="button" data-tool="eraser" class="${p.tool==='eraser'?'active-tool':''}">Eraser</button>
+    <button type="button" data-tool="pen" class="${p.tool==='pen'?'active-tool':''}" aria-pressed="${p.tool==='pen'?'true':'false'}">Pen</button>
+    <button type="button" data-tool="eraser" class="${p.tool==='eraser'?'active-tool':''}" aria-pressed="${p.tool==='eraser'?'true':'false'}">Eraser</button>
     <div class="sep"></div>
-    <span class="label">Color</span>
-    <div class="swatch-row" id="paint-swatches"></div>
-    <input type="color" id="paint-color" value="${p.color}" />
+    <span class="label" id="paint-color-label">Color</span>
+    <div class="swatch-row" id="paint-swatches" role="group" aria-labelledby="paint-color-label"></div>
+    <button type="button" class="color-pick-btn" id="paint-color-btn" title="Color picker (custom + presets)" aria-label="Open color picker" style="background:${esc(p.color)}"></button>
     <div class="sep"></div>
-    <span class="label">Brush</span>
-    <input type="range" id="paint-brush" min="1" max="48" value="${p.brush}" />
+    <label class="label" for="paint-brush">Brush</label>
+    <input type="range" id="paint-brush" min="1" max="48" value="${p.brush}" aria-valuetext="${p.brush} pixels" />
     <span class="label" id="paint-brush-val">${p.brush}px</span>
     <div class="sep"></div>
     <button type="button" id="paint-undo">Undo</button>
@@ -2135,8 +3627,10 @@ function buildPaintTools() {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'swatch-btn' + (c === p.color ? ' on' : '');
     b.style.background = c;
+    b.setAttribute('aria-label', 'Paint color ' + c);
+    b.title = c;
     if (c === '#ffffff') b.style.boxShadow = 'inset 0 0 0 1px #888';
-    b.onclick = () => { p.color = c; el.querySelector('#paint-color').value = c; buildPaintTools(); };
+    b.onclick = () => { p.color = c; el.querySelector('#paint-color-btn').style.background = c; buildPaintTools(); };
     sw.appendChild(b);
   });
   el.querySelector('#paint-back').onclick = () => closePaintEditor(true);
@@ -2144,7 +3638,12 @@ function buildPaintTools() {
   el.querySelectorAll('[data-tool]').forEach(b => {
     b.onclick = () => { p.tool = b.dataset.tool; buildPaintTools(); };
   });
-  el.querySelector('#paint-color').oninput = (e) => { p.color = e.target.value; };
+  el.querySelector('#paint-color-btn').onclick = (e) => {
+    openColorAdvPicker(e.currentTarget, p.color, (hex) => {
+      p.color = hex;
+      e.currentTarget.style.background = hex;
+    });
+  };
   el.querySelector('#paint-brush').oninput = (e) => {
     p.brush = +e.target.value;
     el.querySelector('#paint-brush-val').textContent = p.brush + 'px';
@@ -2371,17 +3870,18 @@ function buildAnnotateTools() {
       '<input type="number" id="ann-font-num" class="compact" min="10" max="96" value="' + a.fontSize + '" />' +
       '<span class="label">px</span>';
   } else if (a.tool === 'blur') {
-    extra = '<span class="label" style="opacity:0.85">Drag a box; soft-blurs pixels underneath</span>';
+    extra = '<span class="label" style="opacity:0.85">Drag a box → soft-blurs pixels underneath</span>';
   }
   el.innerHTML =
     '<button type="button" class="ghost" id="ann-back">← Back</button>' +
-    '<input class="title-in" id="ann-title" value="' + esc(a.title) + '" />' +
+    '<label class="sr-only" for="ann-title">Annotation title</label>' +
+    '<input class="title-in" id="ann-title" value="' + esc(a.title) + '" aria-label="Annotation title" />' +
     '<div class="sep"></div>' +
     ['highlight', 'arrow', 'text', 'blur', 'crop'].map(function (t) {
-      return '<button type="button" data-tool="' + t + '" class="' + (a.tool === t ? 'active-tool' : '') + '">' + toolLabel[t] + '</button>';
+      return '<button type="button" data-tool="' + t + '" class="' + (a.tool === t ? 'active-tool' : '') + '" aria-pressed="' + (a.tool === t ? 'true' : 'false') + '">' + toolLabel[t] + '</button>';
     }).join('') +
-    '<div class="sep"></div><span class="label">Color</span>' +
-    '<input type="color" id="ann-color" value="' + a.strokeColor + '" />' +
+    '<div class="sep"></div><span class="label" id="ann-color-label">Color</span>' +
+    '<button type="button" class="color-pick-btn" id="ann-color-btn" title="Color picker (custom + presets)" aria-label="Open color picker" style="background:' + esc(a.strokeColor) + '"></button>' +
     extra +
     '<div class="sep"></div>' +
     '<button type="button" id="ann-undo">Undo</button>' +
@@ -2393,7 +3893,13 @@ function buildAnnotateTools() {
   el.querySelectorAll('[data-tool]').forEach(function (b) {
     b.onclick = function () { a.tool = b.dataset.tool; buildAnnotateTools(); };
   });
-  el.querySelector('#ann-color').oninput = function (e) { a.strokeColor = e.target.value; };
+  el.querySelector('#ann-color-btn').onclick = function (e) {
+    openColorAdvPicker(e.currentTarget, a.strokeColor, function (hex) {
+      a.strokeColor = hex;
+      e.currentTarget.style.background = hex;
+      a.dirty = true;
+    });
+  };
   el.querySelectorAll('[data-hl-mode]').forEach(function (b) {
     b.onclick = function () { a.highlightMode = b.dataset.hlMode; a.dirty = true; buildAnnotateTools(); };
   });
@@ -2721,10 +4227,12 @@ function wireAnnotateCanvas() {
     }
   }
   function fillHighlightBox(x, y, w, h) {
+    const a = state.annotate;
+    // Use the shared stroke color (Basic/Neon/Custom picker); multiply + alpha unchanged.
     ctx.save();
     ctx.globalCompositeOperation = 'multiply';
     ctx.globalAlpha = 0.45;
-    ctx.fillStyle = '#ffe032';
+    ctx.fillStyle = (a && a.strokeColor) ? a.strokeColor : '#ffe032';
     ctx.fillRect(x, y, w, h);
     ctx.restore();
   }
@@ -2737,7 +4245,8 @@ function wireAnnotateCanvas() {
       ctx.save();
       ctx.globalCompositeOperation = 'multiply';
       ctx.globalAlpha = 0.35;
-      ctx.strokeStyle = '#ffe032';
+      // Same selected color as Arrow/Box tools (was hardcoded #ffe032).
+      ctx.strokeStyle = a.strokeColor || '#ffe032';
       ctx.lineWidth = a.highlightBrush || 20;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
@@ -2758,7 +4267,8 @@ function wireAnnotateCanvas() {
       ctx.globalAlpha = 1;
       if (hlBox) {
         fillHighlightBox(x, y, w, h);
-        ctx.strokeStyle = 'rgba(240,180,41,0.9)';
+        // Marquee outline follows selected color (preview only; not baked).
+        ctx.strokeStyle = a.strokeColor || 'rgba(240,180,41,0.9)';
       } else {
         ctx.strokeStyle = a.tool === 'crop' ? '#4a7cff' : '#5b8def';
       }
@@ -2883,14 +4393,25 @@ function renderKanbanList() {
   if (state.kanban && state.kanban.id) { list.style.display = 'none'; return; }
   list.style.display = 'flex';
   if (!state.kanbans.length) {
-    list.innerHTML = `<div class="empty"><strong>No kanban boards yet</strong><br/>Columns with WIP counts, grip-handle card drag, colors; improved from the whiteboard reference.</div>`;
+    list.innerHTML = `<div class="empty"><strong>No kanban boards yet</strong><br/>Columns with WIP counts, grip-handle card drag, colors (improved from the whiteboard reference).</div>`;
     return;
   }
-  list.innerHTML = state.kanbans.map(b => `
+  list.innerHTML = state.kanbans.map(b => {
+    let cardCount = '?';
+    try {
+      const st = JSON.parse(b.stateJson || '{}');
+      cardCount = Array.isArray(st.cards) ? st.cards.length : 0;
+    } catch (_) { cardCount = '?'; }
+    const shortId = String(b.id || '').slice(0, 8);
+    return `
     <div class="canvas-row" data-id="${esc(b.id)}">
-      <div class="info"><div class="n">${esc(b.title)}</div><div class="d">Updated ${esc(fmtDate(b.updatedAt))}</div></div>
+      <div class="info">
+        <div class="n">${esc(b.title)}</div>
+        <div class="d">${cardCount} card(s) · Updated ${esc(fmtDate(b.updatedAt))} · id ${esc(shortId)}</div>
+      </div>
       <button type="button" class="danger" data-del="${esc(b.id)}">Delete</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   list.querySelectorAll('.canvas-row').forEach(row => {
     row.onclick = (e) => {
       if (e.target.closest('[data-del]')) return;
@@ -2900,7 +4421,7 @@ function renderKanbanList() {
   list.querySelectorAll('[data-del]').forEach(btn => {
     btn.onclick = async (e) => {
       e.stopPropagation();
-      if (!confirm('Delete this board?')) return;
+      if (!(await confirmDelete('Delete this kanban board and all its cards?'))) return;
       await call('DeleteKanbanBoard', btn.dataset.del);
       await loadKanbans();
     };
@@ -2926,7 +4447,8 @@ async function openKanban(id) {
     const tools = document.getElementById('view-tools');
     tools.innerHTML = `
       <button type="button" class="ghost" id="kb-back">← Boards</button>
-      <input type="text" id="kb-title" value="${esc(b.title)}" style="width:180px;font-weight:600" />
+      <label class="sr-only" for="kb-title">Board title</label>
+      <input type="text" id="kb-title" value="${esc(b.title)}" style="width:180px;font-weight:600" aria-label="Board title" />
       <button type="button" id="kb-add-col">+ Column</button>
       <button type="button" class="primary" id="kb-save">Save</button>`;
     tools.querySelector('#kb-back').onclick = () => closeKanbanBoard(true);
@@ -2953,12 +4475,12 @@ function renderKanbanBoard() {
     const over = col.wipLimit > 0 && cards.length > col.wipLimit;
     colEl.innerHTML = `
       <div class="kanban-col-header">
-        <input class="kanban-col-title" value="${esc(col.title)}" />
+        <input class="kanban-col-title" value="${esc(col.title)}" aria-label="Column title" />
         <span class="kanban-col-count ${over?'over':''}" title="Cards / WIP limit (edit the number; 0 = no limit)">
           <span class="wip-label">WIP</span>
-          <span data-count>${cards.length}</span>/<input type="number" class="wip-input" min="0" max="99" value="${col.wipLimit}" />
+          <span data-count>${cards.length}</span>/<input type="number" class="wip-input" min="0" max="99" value="${col.wipLimit}" aria-label="WIP limit" />
         </span>
-        <button type="button" title="Delete column" data-del-col>✕</button>
+        <button type="button" title="Delete column" aria-label="Delete column" data-del-col>✕</button>
       </div>
       <div class="kanban-cards" data-col="${esc(col.id)}"></div>
       <button type="button" class="kanban-add-card">+ Add card</button>`;
@@ -2967,13 +4489,28 @@ function renderKanbanBoard() {
       const cel = document.createElement('div');
       cel.className = 'kanban-card c-' + (card.color || 'yellow');
       cel.dataset.id = card.id;
+      // Tab order: drag grip → Move → Color → Delete → due date → clear due → card text.
+      // Icons wrapped in aria-hidden so NVDA reads the aria-label only (not emoji glyphs).
       cel.innerHTML = `
         <div class="kc-toolbar">
-          <span class="grip">⋮⋮ drag</span>
-          <button type="button" data-ccolor title="Color">🎨</button>
-          <button type="button" data-cdel title="Delete">✕</button>
+          <button type="button" class="grip" data-cdrag title="Drag to reorder" aria-label="Drag to reorder" tabindex="0">
+            <span aria-hidden="true">⋮⋮</span>
+          </button>
+          <button type="button" data-cmove title="Move to column" aria-label="Move to another column" aria-haspopup="menu" tabindex="0">Move…</button>
+          <button type="button" data-ccolor title="Change card color" aria-label="Change card color" tabindex="0">
+            <span aria-hidden="true">🎨</span>
+          </button>
+          <button type="button" data-cdel title="Delete card" aria-label="Delete card" tabindex="0">
+            <span aria-hidden="true">✕</span>
+          </button>
         </div>
-        <textarea rows="2">${esc(card.text || '')}</textarea>`;
+        <div class="kc-due">
+          <input type="date" title="Due date (optional)" aria-label="Card due date" tabindex="0" value="${esc(dateInputValue(card.dueAt))}" />
+          <button type="button" data-cdue-clear title="Clear due date" aria-label="Clear due date" tabindex="0">
+            <span aria-hidden="true">✕</span>
+          </button>
+        </div>
+        <textarea rows="2" aria-label="Card text" tabindex="0">${esc(card.text || '')}</textarea>`;
       const ta = cel.querySelector('textarea');
       const autosize = () => {
         ta.style.height = 'auto';
@@ -2983,7 +4520,20 @@ function renderKanbanBoard() {
       ta.oninput = () => {
         card.text = ta.value; k.dirty = true; autosize(); scheduleKanbanSave();
       };
-      cel.querySelector('[data-cdel]').onclick = () => {
+      const dueIn = cel.querySelector('.kc-due input[type="date"]');
+      dueIn.onchange = () => {
+        card.dueAt = dueIn.value || '';
+        if (!card.dueAt) delete card.dueAt;
+        k.dirty = true; scheduleKanbanSave();
+      };
+      cel.querySelector('[data-cdue-clear]').onclick = () => {
+        card.dueAt = '';
+        delete card.dueAt;
+        dueIn.value = '';
+        k.dirty = true; scheduleKanbanSave();
+      };
+      cel.querySelector('[data-cdel]').onclick = async () => {
+        if (!(await confirmDelete('Delete this card?'))) return;
         k.cards = k.cards.filter(c => c.id !== card.id);
         k.dirty = true; renderKanbanBoard(); scheduleKanbanSave();
       };
@@ -2992,7 +4542,11 @@ function renderKanbanBoard() {
         card.color = CARD_COLORS[(i + 1) % CARD_COLORS.length];
         k.dirty = true; renderKanbanBoard(); scheduleKanbanSave();
       };
-      const grip = cel.querySelector('.grip');
+      cel.querySelector('[data-cmove]').onclick = (e) => {
+        e.stopPropagation();
+        openKanbanMoveMenu(card, e.currentTarget);
+      };
+      const grip = cel.querySelector('[data-cdrag]');
       grip.addEventListener('pointerdown', (e) => startCardDrag(e, card, cel));
       cardsEl.appendChild(cel);
     });
@@ -3021,6 +4575,94 @@ function renderKanbanBoard() {
     };
     root.appendChild(colEl);
   });
+}
+/** Keyboard/discoverable path: move a card to another column without mouse drag. */
+function openKanbanMoveMenu(card, anchor) {
+  const k = state.kanban;
+  if (!k || !card) return;
+  const others = (k.columns || []).filter(c => c.id !== card.columnId);
+  if (!others.length) { toast('No other columns to move into'); return; }
+  document.querySelectorAll('.kb-move-menu').forEach(el => el.remove());
+  const menu = document.createElement('div');
+  menu.className = 'kb-move-menu popover open';
+  menu.setAttribute('role', 'menu');
+  menu.setAttribute('aria-label', 'Move card to column');
+  menu.innerHTML = `<div style="font-size:0.72rem;color:var(--text-muted);padding:4px 6px 6px">Move to column</div>` +
+    others.map(c => {
+      const count = k.cards.filter(x => x.columnId === c.id).length;
+      const lim = parseInt(c.wipLimit, 10) || 0;
+      const over = lim > 0 && count >= lim;
+      return `<button type="button" role="menuitem" data-col="${esc(c.id)}" ${over ? 'disabled title="WIP limit reached"' : ''}>
+        ${esc(c.title || 'Column')}${lim > 0 ? ` (${count}/${lim})` : ''}
+      </button>`;
+    }).join('');
+  document.body.appendChild(menu);
+  const r = anchor.getBoundingClientRect();
+  menu.style.left = Math.min(window.innerWidth - 220, Math.max(8, r.left)) + 'px';
+  menu.style.top = Math.min(window.innerHeight - 160, r.bottom + 4) + 'px';
+  menu.style.minWidth = '160px';
+  menu.style.padding = '6px';
+  menu.querySelectorAll('button').forEach(btn => {
+    btn.style.display = 'block';
+    btn.style.width = '100%';
+    btn.style.textAlign = 'left';
+    btn.style.marginBottom = '4px';
+    btn.onclick = () => {
+      moveKanbanCardToColumn(card, btn.dataset.col);
+      menu.remove();
+    };
+  });
+  const first = menu.querySelector('button:not([disabled])');
+  if (first) first.focus();
+  const close = (ev) => {
+    if (menu.contains(ev.target) || ev.target === anchor) return;
+    menu.remove();
+    document.removeEventListener('mousedown', close, true);
+    document.removeEventListener('keydown', onKey, true);
+  };
+  const onKey = (ev) => {
+    if (ev.key === 'Escape') {
+      menu.remove();
+      document.removeEventListener('mousedown', close, true);
+      document.removeEventListener('keydown', onKey, true);
+      anchor.focus();
+      return;
+    }
+    // Vertical menu: arrow keys move between enabled menuitems (Tab still works).
+    if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+      const items = Array.from(menu.querySelectorAll('button[role="menuitem"]:not([disabled])'));
+      if (!items.length) return;
+      const i = items.indexOf(document.activeElement);
+      let next;
+      if (ev.key === 'ArrowDown') next = items[(i < 0 ? 0 : i + 1) % items.length];
+      else next = items[(i <= 0 ? items.length : i) - 1];
+      ev.preventDefault();
+      next.focus();
+    }
+  };
+  setTimeout(() => {
+    document.addEventListener('mousedown', close, true);
+    document.addEventListener('keydown', onKey, true);
+  }, 0);
+}
+function moveKanbanCardToColumn(card, colId) {
+  const k = state.kanban;
+  if (!k || !card || !colId || card.columnId === colId) return;
+  const colMeta = k.columns.find(c => c.id === colId);
+  if (!colMeta) return;
+  const destCount = k.cards.filter(c => c.columnId === colId && c.id !== card.id).length;
+  const limit = parseInt(colMeta.wipLimit, 10) || 0;
+  if (limit > 0 && destCount >= limit) {
+    toast('WIP limit reached for that column (' + limit + ')');
+    return;
+  }
+  card.columnId = colId;
+  const dest = k.cards.filter(c => c.columnId === colId && c.id !== card.id);
+  card.order = dest.length;
+  k.dirty = true;
+  renderKanbanBoard();
+  scheduleKanbanSave();
+  toast('Moved to ' + (colMeta.title || 'column'));
 }
 function startCardDrag(e, card, cel) {
   e.preventDefault();
@@ -3089,10 +4731,16 @@ function scheduleKanbanSave() {
 }
 async function saveKanban(toastOk) {
   const k = state.kanban; if (!k) return;
+  // Preserve schedule-link fields on every card so due-date edits still sync to stickies.
   const stateJson = JSON.stringify({ columns: k.columns, cards: k.cards });
   try {
     await call('SaveKanbanBoard', k.id, k.title, stateJson);
     k.dirty = false;
+    // Server syncs card dueAt → sticky dueAt; refresh sticky cache so UI matches DB.
+    try {
+      state.stickies = await call('ListStickies') || [];
+      if (state.view === 'stickies') renderStickies();
+    } catch (_) {}
     if (toastOk) toast('Kanban saved');
   } catch (e) { toast(String(e)); }
 }
@@ -3106,7 +4754,172 @@ async function closeKanbanBoard(save) {
     document.getElementById('view-tools').innerHTML = `<button class="primary" id="btn-new-kb">+ New board</button>`;
     document.getElementById('btn-new-kb').onclick = newKanban;
   }
-  await loadKanbans();
+}
+/* ========== Calendar ========== */
+state.calMonth = state.calMonth || null; // {y,m} 0-based month
+state.calSelDay = state.calSelDay || ''; // YYYY-MM-DD filter or ''
+async function loadCalendar() {
+  try {
+    state.calItems = await call('ListCalendarItems') || [];
+    if (!state.calMonth) {
+      const n = new Date();
+      state.calMonth = { y: n.getFullYear(), m: n.getMonth() };
+    }
+    renderCalendar();
+  } catch (e) {
+    document.getElementById('cal-agenda').innerHTML =
+      `<div class="cal-empty">Could not load agenda: ${esc(e.message || e)}</div>`;
+  }
+}
+function renderCalendar() {
+  renderCalMini();
+  renderCalAgenda();
+}
+function renderCalMini() {
+  const el = document.getElementById('cal-mini');
+  if (!el) return;
+  const { y, m } = state.calMonth;
+  const first = new Date(y, m, 1);
+  const startDow = first.getDay(); // 0 Sun
+  const daysIn = new Date(y, m + 1, 0).getDate();
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const byDay = {};
+  (state.calItems || []).forEach(it => {
+    if (!it.date) return;
+    byDay[it.date] = (byDay[it.date] || 0) + 1;
+  });
+  const today = new Date();
+  const tkey = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  let cells = '';
+  ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d => { cells += `<div class="dow">${d}</div>`; });
+  for (let i = 0; i < startDow; i++) cells += `<div class="day out"></div>`;
+  for (let d = 1; d <= daysIn; d++) {
+    const key = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    const cls = ['day'];
+    if (key === tkey) cls.push('today');
+    if (byDay[key]) cls.push('has-items');
+    if (state.calSelDay === key) cls.push('sel');
+    cells += `<div class="${cls.join(' ')}" data-day="${key}">${d}</div>`;
+  }
+  el.innerHTML = `
+    <div class="cal-nav">
+      <button type="button" id="cal-prev" title="Previous month">‹</button>
+      <strong>${months[m]} ${y}</strong>
+      <button type="button" id="cal-next" title="Next month">›</button>
+    </div>
+    <div class="cal-grid">${cells}</div>
+    <p style="font-size:0.72rem;color:var(--text-muted);margin:12px 0 0;line-height:1.35">
+      Agenda lists sticky due dates, kanban card dues, and decision dates. Empty dates are omitted.
+    </p>`;
+  el.querySelector('#cal-prev').onclick = () => {
+    let { y, m } = state.calMonth;
+    m--; if (m < 0) { m = 11; y--; }
+    state.calMonth = { y, m };
+    // Paging away from the selected day clears the day filter so agenda matches mini-month.
+    state.calSelDay = '';
+    renderCalendar();
+  };
+  el.querySelector('#cal-next').onclick = () => {
+    let { y, m } = state.calMonth;
+    m++; if (m > 11) { m = 0; y++; }
+    state.calMonth = { y, m };
+    state.calSelDay = '';
+    renderCalendar();
+  };
+  el.querySelectorAll('.day[data-day]').forEach(d => {
+    d.onclick = () => {
+      state.calSelDay = (state.calSelDay === d.dataset.day) ? '' : d.dataset.day;
+      renderCalendar();
+    };
+  });
+}
+function todayYMD() {
+  const t = new Date();
+  return t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0');
+}
+function isCalOverdue(ymd, kind) {
+  // Decisions are historical pins, not "due" — only sticky/kanban count as overdue.
+  if (kind === 'decision') return false;
+  if (!ymd) return false;
+  return ymd < todayYMD();
+}
+function renderCalAgenda() {
+  const el = document.getElementById('cal-agenda');
+  if (!el) return;
+  let items = state.calItems || [];
+  if (state.calSelDay) items = items.filter(it => it.date === state.calSelDay);
+  let filterBar = '';
+  if (state.calSelDay) {
+    filterBar = `<div class="cal-filter-bar">
+      <span>Showing <strong>${esc(formatCalDay(state.calSelDay))}</strong> only</span>
+      <button type="button" id="cal-clear-filter" title="Show full agenda">✕ Full agenda</button>
+    </div>`;
+  }
+  if (!items.length) {
+    el.innerHTML = filterBar + `<div class="cal-empty">${state.calSelDay
+      ? 'No items on ' + esc(formatCalDay(state.calSelDay)) + '.'
+      : 'No dated items yet. Set a due date on a sticky or kanban card, or pin a decision.'}</div>`;
+    const clr = el.querySelector('#cal-clear-filter');
+    if (clr) clr.onclick = () => { state.calSelDay = ''; renderCalendar(); };
+    return;
+  }
+  const groups = {};
+  items.forEach(it => {
+    if (!groups[it.date]) groups[it.date] = [];
+    groups[it.date].push(it);
+  });
+  // Past days first (natural ascending still puts overdue before future)
+  const days = Object.keys(groups).sort();
+  el.innerHTML = filterBar + days.map(day => {
+    const label = formatCalDay(day);
+    const dayOver = day < todayYMD();
+    const rows = groups[day].map(it => {
+      const ov = isCalOverdue(it.date, it.kind);
+      return `
+      <div class="cal-item ${ov ? 'overdue' : ''}" data-kind="${esc(it.kind)}" data-id="${esc(it.id)}"
+           data-board="${esc(it.boardId || '')}" data-card="${esc(it.cardId || '')}">
+        <span class="ck">${esc(it.kind)}</span>
+        <span class="ct">${esc(it.title)}</span>
+        ${ov ? '<span class="overdue-tag">Overdue</span>' : ''}
+      </div>`;
+    }).join('');
+    return `<div class="cal-day-group ${dayOver ? 'overdue-group' : ''}"><h3>${esc(label)}${dayOver ? ' · past' : ''}</h3>${rows}</div>`;
+  }).join('');
+  const clr = el.querySelector('#cal-clear-filter');
+  if (clr) clr.onclick = () => { state.calSelDay = ''; renderCalendar(); };
+  el.querySelectorAll('.cal-item').forEach(row => {
+    row.onclick = () => jumpCalendarItem(row.dataset);
+  });
+}
+function formatCalDay(ymd) {
+  try {
+    const [y, m, d] = ymd.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    return dt.toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+  } catch (_) { return ymd; }
+}
+async function jumpCalendarItem(ds) {
+  const kind = ds.kind, id = ds.id;
+  try {
+    if (kind === 'sticky') {
+      setView('stickies');
+      await loadStickies();
+      // Bring sticky into view
+      const safe = String(id).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+      const el = document.querySelector('.sticky[data-id="' + safe + '"]');
+      if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    } else if (kind === 'kanban') {
+      setView('kanban');
+      const boardId = ds.board;
+      if (boardId) await openKanban(boardId);
+      else await loadKanbans();
+    } else if (kind === 'decision') {
+      setView('decisions');
+      state.decisionId = id;
+      await loadDecisions();
+      // loadDecisions renders detail when state.decisionId is set
+    }
+  } catch (e) { toast(String(e.message || e)); }
 }
 
 /* ========== Decisions ========== */
@@ -3169,7 +4982,7 @@ function renderDecisionDetail(d) {
            </div>`
         : `<div id="dec-no-snap" style="color:var(--text-muted);font-size:0.85rem;margin:6px 0">No version snapshot yet. Pick a document below and click <strong>Attach version</strong> to freeze a copy under decision-versions/.</div>`}
       <div class="row">
-        <select id="dec-doc" style="flex:1;color:var(--text);background:var(--bg)"><option value="">(none)</option>${docsOpts}</select>
+        <select id="dec-doc" style="flex:1;color:var(--text);background:var(--bg)"><option value="">(document)</option>${docsOpts}</select>
         <button type="button" class="primary" id="dec-attach">Attach version</button>
       </div>
       <div id="dec-attach-status" style="font-size:0.8rem;color:var(--text-muted);margin-top:8px;min-height:1.2em"></div>

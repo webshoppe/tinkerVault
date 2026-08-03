@@ -16,7 +16,7 @@ import (
 	"github.com/webshoppe/dossier/internal/dossier"
 )
 
-//go:embed ui/index.html ui/flag-data.inc.js
+//go:embed ui/index.html ui/flag-data.inc.js ui/vendor/marked.min.js ui/vendor/highlight.min.js
 var uiFS embed.FS
 
 func main() {
@@ -33,8 +33,9 @@ func main() {
 		DataPath: webviewDataPath(),
 		WindowOptions: webview2.WindowOptions{
 			Title:  "Dossier",
+			// Default open size fits launcher content at standard 1280x720; HintNone keeps the window freely resizable.
 			Width:  1280,
-			Height: 840,
+			Height: 720,
 			Center: true,
 			// RT_GROUP_ICON #1 embedded via go-winres (rsrc_windows_amd64.syso)
 			IconId: 1,
@@ -45,7 +46,8 @@ func main() {
 	}
 	defer w.Destroy()
 
-	w.SetSize(1280, 840, webview2.HintNone)
+	// HintNone: default size only; user can drag edges larger or smaller (not HintFixed).
+	w.SetSize(1280, 720, webview2.HintNone)
 
 	// Bind API methods (appear as global JS functions returning Promises)
 	mustBind(w, "GetStatus", api.GetStatus)
@@ -58,7 +60,19 @@ func main() {
 	mustBind(w, "CloseDossier", api.CloseDossier)
 	mustBind(w, "ListDocuments", api.ListDocuments)
 	mustBind(w, "ImportFiles", api.ImportFiles)
+	mustBind(w, "ImportPaths", api.ImportPaths)
 	mustBind(w, "ImportDropped", api.ImportDropped)
+	mustBind(w, "ListCollections", api.ListCollections)
+	mustBind(w, "CreateCollection", api.CreateCollection)
+	mustBind(w, "DeleteCollection", api.DeleteCollection)
+	mustBind(w, "RenameCollection", api.RenameCollection)
+	mustBind(w, "AddDossierToCollection", api.AddDossierToCollection)
+	mustBind(w, "RemoveDossierFromCollection", api.RemoveDossierFromCollection)
+	mustBind(w, "ListBookmarks", api.ListBookmarks)
+	mustBind(w, "AddBookmarkFolder", api.AddBookmarkFolder)
+	mustBind(w, "RemoveBookmark", api.RemoveBookmark)
+	mustBind(w, "RepickBookmark", api.RepickBookmark)
+	mustBind(w, "ListBookmarkFiles", api.ListBookmarkFiles)
 	mustBind(w, "GetDocument", api.GetDocument)
 	mustBind(w, "DeleteDocument", api.DeleteDocument)
 	mustBind(w, "OpenDocumentExternally", api.OpenDocumentExternally)
@@ -71,11 +85,17 @@ func main() {
 	mustBind(w, "GetNote", api.GetNote)
 	mustBind(w, "SaveNote", api.SaveNote)
 	mustBind(w, "DeleteNote", api.DeleteNote)
+	mustBind(w, "OpenURL", api.OpenURL)
+	mustBind(w, "ResolveNoteAsset", api.ResolveNoteAsset)
+	mustBind(w, "SetWorkspaceDisplayName", api.SetWorkspaceDisplayName)
 	mustBind(w, "ListStickies", api.ListStickies)
 	mustBind(w, "CreateSticky", api.CreateSticky)
 	mustBind(w, "UpdateSticky", api.UpdateSticky)
 	mustBind(w, "DeleteSticky", api.DeleteSticky)
 	mustBind(w, "StickyMeta", api.StickyMeta)
+	mustBind(w, "LinkStickyToKanban", api.LinkStickyToKanban)
+	mustBind(w, "UnlinkSticky", api.UnlinkSticky)
+	mustBind(w, "ListCalendarItems", api.ListCalendarItems)
 	mustBind(w, "ListCanvases", api.ListCanvases)
 	mustBind(w, "CreateCanvas", api.CreateCanvas)
 	mustBind(w, "GetCanvas", api.GetCanvas)
@@ -109,8 +129,8 @@ document.addEventListener('drop', function(e){ e.preventDefault(); e.stopPropaga
 `)
 
 	// Boot auto-open (before UI so GetStatus().open is true when successful):
-	//  1) DOSSIER_AUTO_OPEN=1; force-on for debug/automation (unchanged, separate concept).
-	//  2) Else Settings.autoOpenLast; opt-in user preference (default off).
+	//  1) DOSSIER_AUTO_OPEN=1 — force-on for debug/automation (unchanged, separate concept).
+	//  2) Else Settings.autoOpenLast — opt-in user preference (default off).
 	// Invalid/missing last path never hangs: log and fall through to launcher.
 	if os.Getenv("DOSSIER_AUTO_OPEN") == "1" {
 		if _, err := api.OpenLastDossier(); err != nil {
@@ -146,10 +166,17 @@ func loadUI() (string, error) {
 		return "", err
 	}
 	html := string(b)
-	// Inject offline Twemoji flag SVGs; Windows Segoe UI Emoji cannot glyph regional-indicator flags
+	// Inject offline Twemoji flag SVGs — Windows Segoe UI Emoji cannot glyph regional-indicator flags
 	// (renders as CA/US letter pairs). Visual flag display uses embedded SVG images.
 	if flags, err := fs.ReadFile(uiFS, "ui/flag-data.inc.js"); err == nil {
 		html = strings.Replace(html, "/*__FLAG_DATA__*/", string(flags), 1)
+	}
+	// Offline Markdown renderers (vendored from tinkerVault markdown-viewer)
+	if marked, err := fs.ReadFile(uiFS, "ui/vendor/marked.min.js"); err == nil {
+		html = strings.Replace(html, "/*__MARKED__*/", string(marked), 1)
+	}
+	if hl, err := fs.ReadFile(uiFS, "ui/vendor/highlight.min.js"); err == nil {
+		html = strings.Replace(html, "/*__HIGHLIGHT__*/", string(hl), 1)
 	}
 	return html, nil
 }

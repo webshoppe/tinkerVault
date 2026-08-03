@@ -2,6 +2,7 @@ package dossier
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -443,5 +444,356 @@ INSERT INTO meta(key,value) VALUES('schema_version','2');
 	}
 	if len(list) != 1 || list[0].Text != "keep me" {
 		t.Fatalf("list after migrate: %+v", list)
+	}
+}
+
+func TestWorkspaceDisplayName(t *testing.T) {
+	cfg := &AppConfig{}
+	p := filepath.Clean(`/tmp/my-dossier-folder`)
+	if got := cfg.DisplayNameFor(p); got != "my-dossier-folder" {
+		t.Fatalf("default display=%q", got)
+	}
+	cfg.SetWorkspaceDisplayName(p, "Client Alpha")
+	if got := cfg.DisplayNameFor(p); got != "Client Alpha" {
+		t.Fatalf("named display=%q", got)
+	}
+	cfg.SetWorkspaceDisplayName(p, "")
+	if got := cfg.DisplayNameFor(p); got != "my-dossier-folder" {
+		t.Fatalf("after clear=%q", got)
+	}
+}
+
+func TestNotesEditorModeOrDefault(t *testing.T) {
+	var s AppSettings
+	if s.NotesEditorModeOrDefault() != "split" {
+		t.Fatal("default should be split")
+	}
+	s.NotesEditorMode = "edit"
+	if s.NotesEditorModeOrDefault() != "edit" {
+		t.Fatal("edit")
+	}
+	s.NotesEditorMode = "nope"
+	if s.NotesEditorModeOrDefault() != "split" {
+		t.Fatal("invalid → split")
+	}
+}
+
+func TestStickyDueAtAndKanbanLinkCalendar(t *testing.T) {
+	root := t.TempDir()
+	s, err := OpenOrCreate(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+
+	st, err := s.CreateSticky(&Sticky{Text: "Ship alpha pack", Color: "mint"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// No due → not on calendar
+	items, err := s.ListCalendarItems()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, it := range items {
+		if it.Kind == "sticky" && it.ID == st.ID {
+			t.Fatal("sticky without due should not appear on calendar")
+		}
+	}
+	// Set due via UpdateSticky
+	st.DueAt = "2026-08-15"
+	st2, err := s.UpdateSticky(st.ID, st)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if st2.DueAt != "2026-08-15" {
+		t.Fatalf("dueAt=%q", st2.DueAt)
+	}
+	// Clear due
+	st2.DueAt = ""
+	st3, err := s.UpdateSticky(st2.ID, st2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if st3.DueAt != "" {
+		t.Fatalf("expected clear, got %q", st3.DueAt)
+	}
+	st3.DueAt = "2026-08-20"
+	st3, err = s.UpdateSticky(st3.ID, st3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	board, err := s.CreateKanbanBoard("Sprint")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stt struct {
+		Columns []struct {
+			ID string `json:"id"`
+		} `json:"columns"`
+	}
+	_ = json.Unmarshal([]byte(board.StateJSON), &stt)
+	if len(stt.Columns) < 1 {
+		t.Fatal("no columns")
+	}
+	colID := stt.Columns[0].ID
+	// original text before link
+	origText := st3.Text
+	linked, board2, err := s.LinkStickyToKanban(st3.ID, board.ID, colID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if linked.Text != origText {
+		t.Fatalf("sticky text changed: %q", linked.Text)
+	}
+	if linked.LinkedKanban == nil || linked.LinkedKanban.BoardID != board.ID {
+		t.Fatalf("link missing: %+v", linked.LinkedKanban)
+	}
+	// Sticky still exists
+	list, _ := s.ListStickies()
+	if len(list) != 1 {
+		t.Fatalf("sticky count=%d", len(list))
+	}
+	// Card has text + link + due
+	var stt2 struct {
+		Cards []map[string]interface{} `json:"cards"`
+	}
+	_ = json.Unmarshal([]byte(board2.StateJSON), &stt2)
+	if len(stt2.Cards) != 1 {
+		t.Fatalf("cards=%d", len(stt2.Cards))
+	}
+	card := stt2.Cards[0]
+	if card["text"] != origText {
+		t.Fatalf("card text=%v", card["text"])
+	}
+	if card["linkedStickyId"] != st3.ID {
+		t.Fatalf("linkedStickyId=%v", card["linkedStickyId"])
+	}
+	if card["dueAt"] != "2026-08-20" {
+		t.Fatalf("card dueAt=%v", card["dueAt"])
+	}
+	// Change sticky due → card syncs
+	linked.DueAt = "2026-09-01"
+	linked, err = s.UpdateSticky(linked.ID, linked)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b3, _ := s.GetKanbanBoard(board.ID)
+	_ = json.Unmarshal([]byte(b3.StateJSON), &stt2)
+	if stt2.Cards[0]["dueAt"] != "2026-09-01" {
+		t.Fatalf("card due after sticky update=%v", stt2.Cards[0]["dueAt"])
+	}
+	// Change card due → sticky syncs via SaveKanbanBoard
+	stt2.Cards[0]["dueAt"] = "2026-09-10"
+	raw, _ := json.Marshal(stt2)
+	// need columns in state
+	var full map[string]interface{}
+	_ = json.Unmarshal([]byte(b3.StateJSON), &full)
+	full["cards"] = stt2.Cards
+	raw, _ = json.Marshal(full)
+	_, err = s.SaveKanbanBoard(board.ID, "Sprint", string(raw))
+	if err != nil {
+		t.Fatal(err)
+	}
+	st4, _ := s.GetSticky(linked.ID)
+	if st4.DueAt != "2026-09-10" {
+		t.Fatalf("sticky due after card update=%q", st4.DueAt)
+	}
+	// Unlink
+	st5, err := s.UnlinkSticky(st4.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if st5.LinkedKanban != nil {
+		t.Fatal("expected unlink")
+	}
+	if st5.DueAt != "2026-09-10" {
+		t.Fatalf("due lost on unlink: %q", st5.DueAt)
+	}
+	// Decision on calendar
+	if _, err := s.CreateDecision("Go live", "ship it", "2026-07-01"); err != nil {
+		t.Fatal(err)
+	}
+	items, err = s.ListCalendarItems()
+	if err != nil {
+		t.Fatal(err)
+	}
+	kinds := map[string]int{}
+	for _, it := range items {
+		kinds[it.Kind]++
+		if it.Date == "" {
+			t.Fatalf("empty date on %+v", it)
+		}
+	}
+	if kinds["sticky"] < 1 || kinds["kanban"] < 1 || kinds["decision"] < 1 {
+		t.Fatalf("calendar kinds=%v items=%+v", kinds, items)
+	}
+}
+
+// Card→sticky must work when state is re-saved like the WebView UI (columns+cards only).
+func TestCardDueSyncUIPayload(t *testing.T) {
+	root := t.TempDir()
+	s, err := OpenOrCreate(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	st, _ := s.CreateSticky(&Sticky{Text: "ui-sync", Color: "pink"})
+	st.DueAt = "2026-08-01"
+	st, _ = s.UpdateSticky(st.ID, st)
+	b, _ := s.CreateKanbanBoard("UI")
+	var stt struct {
+		Columns []struct {
+			ID string `json:"id"`
+		} `json:"columns"`
+	}
+	_ = json.Unmarshal([]byte(b.StateJSON), &stt)
+	_, b2, err := s.LinkStickyToKanban(st.ID, b.ID, stt.Columns[0].ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ui map[string]interface{}
+	_ = json.Unmarshal([]byte(b2.StateJSON), &ui)
+	cards, _ := ui["cards"].([]interface{})
+	cm := cards[0].(map[string]interface{})
+	if cm["linkedStickyId"] != st.ID {
+		t.Fatalf("missing linkedStickyId: %v", cm)
+	}
+	cm["dueAt"] = "2026-08-22"
+	payload, _ := json.Marshal(map[string]interface{}{"columns": ui["columns"], "cards": ui["cards"]})
+	if _, err := s.SaveKanbanBoard(b.ID, "UI", string(payload)); err != nil {
+		t.Fatal(err)
+	}
+	st2, err := s.GetSticky(st.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if st2.DueAt != "2026-08-22" {
+		t.Fatalf("card→sticky failed: dueAt=%q", st2.DueAt)
+	}
+	// reverse still works
+	st2.DueAt = "2026-09-09"
+	st2, err = s.UpdateSticky(st2.ID, st2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b3, _ := s.GetKanbanBoard(b.ID)
+	_ = json.Unmarshal([]byte(b3.StateJSON), &ui)
+	cards, _ = ui["cards"].([]interface{})
+	cm = cards[0].(map[string]interface{})
+	if cm["dueAt"] != "2026-09-09" {
+		t.Fatalf("sticky→card regressed: %v", cm["dueAt"])
+	}
+}
+
+func TestCollectionsAndBookmarks(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("APPDATA", tmp)
+
+	// two dossiers
+	d1 := filepath.Join(tmp, "ws1")
+	d2 := filepath.Join(tmp, "ws2")
+	s1, err := OpenOrCreate(d1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s1.Close()
+	s2, err := OpenOrCreate(d2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s2.Close()
+
+	col, err := CreateCollection("Smoke set")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := AddPathToCollection(col.ID, d1); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := AddPathToCollection(col.ID, d2); err != nil {
+		t.Fatal(err)
+	}
+	cols := ListCollections()
+	if len(cols) != 1 || len(cols[0].Paths) != 2 {
+		t.Fatalf("cols=%+v", cols)
+	}
+	if CollectionContaining(d1) == nil {
+		t.Fatal("expected collection containing d1")
+	}
+	members := CollectionMemberViews(cols[0])
+	if len(members) != 2 {
+		t.Fatalf("members=%d", len(members))
+	}
+
+	// bookmarks portable file
+	s, err := OpenOrCreate(d1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	ext := filepath.Join(tmp, "import-src")
+	if err := os.MkdirAll(ext, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	f1 := filepath.Join(ext, "a.txt")
+	f2 := filepath.Join(ext, "b.md")
+	_ = os.WriteFile(f1, []byte("alpha content"), 0o644)
+	_ = os.WriteFile(f2, []byte("# beta"), 0o644)
+	bm, err := s.AddBookmarkFolder(ext, "Import src")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(d1, BookmarksFileName)); err != nil {
+		t.Fatal("bookmarks.json missing", err)
+	}
+	list, err := s.ListBookmarks()
+	if err != nil || len(list) != 1 {
+		t.Fatalf("list=%v err=%v", list, err)
+	}
+	if list[0]["broken"] == true {
+		t.Fatal("should not be broken")
+	}
+	files, err := s.ListBookmarkFiles(bm.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(files) < 2 {
+		t.Fatalf("files=%d", len(files))
+	}
+	imported, err := s.ImportAbsolutePaths([]string{f1, f2})
+	if err != nil || len(imported) != 2 {
+		t.Fatalf("imported=%d err=%v", len(imported), err)
+	}
+	// broken path via rename (Explorer-style), not only delete
+	moved := ext + "-moved"
+	_ = os.RemoveAll(moved)
+	if err := os.Rename(ext, moved); err != nil {
+		t.Fatal(err)
+	}
+	list2, _ := s.ListBookmarks()
+	if list2[0]["broken"] != true {
+		t.Fatal("expected broken badge after rename")
+	}
+	if _, err := s.ListBookmarkFiles(bm.ID); err == nil {
+		t.Fatal("expected ListBookmarkFiles error on stale path")
+	}
+	if _, err := s.UpdateBookmarkPath(bm.ID, moved); err != nil {
+		t.Fatal("repick:", err)
+	}
+	listOK, _ := s.ListBookmarks()
+	if listOK[0]["broken"] == true {
+		t.Fatal("should not be broken after repick")
+	}
+	if files, err := s.ListBookmarkFiles(bm.ID); err != nil || len(files) < 2 {
+		t.Fatalf("browse after repick files=%d err=%v", len(files), err)
+	}
+	if err := s.RemoveBookmark(bm.ID); err != nil {
+		t.Fatal(err)
+	}
+	list3, _ := s.ListBookmarks()
+	if len(list3) != 0 {
+		t.Fatal("expected empty after remove")
 	}
 }

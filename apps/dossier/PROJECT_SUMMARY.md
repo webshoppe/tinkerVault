@@ -1,62 +1,62 @@
-# Dossier; Project Summary
+# Dossier — Project Summary
 
-**Current version:** 1.0.3 (packaging + 3 gap-fix passes)  
-**Binary:** single Windows GUI `.exe` (Go + WebView2), cross-built from WSL2  
+**Current version:** 2.0.0 (v2 packaging ship; last v1 ship was 1.0.3)
+**Binary:** single Windows GUI `.exe` + console twin (Go + WebView2), cross-built from WSL2
 **Repo path:** `dossier-app/`
 
-This document consolidates the tier-by-tier history that previously lived across an internal `STATUS.md` and several `STATUS-GAPFIX-*.md` working files (dev-only, not included in this public copy); this is the narrative map.
+This document consolidates tier-by-tier history that previously lived across an internal `STATUS.md` and several `STATUS-GAPFIX-*.md` working files (dev-only, not included in this public copy); this is the narrative map. Root `STATUS.md` is overwritten each ship pass; `releases/<ver>/STATUS.md` preserves a snapshot.
 
 ---
 
 ## Product intent
 
-A **portable dossier workspace**: one folder per project, real files on disk, local full-text search, sticky/paint/kanban/annotate boards, decision spine, optional “ask your local agent” client; as a **native window**, not a browser tab.
+A **portable dossier workspace**: one folder per project, real files on disk, local full-text search, sticky/paint/kanban/annotate boards, decision spine, Agenda of due dates, multi-folder Collections, optional "ask your local agent" client — as a **native window**, not a browser tab.
 
 ---
 
 ## Tier history
 
-### Tier 1; Foundation
+### Tier 1 — Foundation
 
-- Native Win32 window via **go-webview2** (no CGO)  
-- Dossier folder marker + **SQLite FTS5**  
-- Import markdown/text/PDF (best-effort) + attachments  
-- Notes (`notes/*.md`), sticky notes, search  
+- Native Win32 window via **go-webview2** (no CGO)
+- Dossier folder marker + **SQLite FTS5**
+- Import markdown/text/PDF (best-effort) + attachments
+- Notes (`notes/*.md`), sticky notes, search
 
-### Tier 2; Boards & multi-workspace
+### Tier 2 — Boards & multi-workspace
 
-- Drag-and-drop import  
-- Paint, Kanban, Annotate  
-- Multi-dossier: create/open/switch/recents  
-- Decisions + document version snapshots  
-- Richer document list (date + preview)  
+- Drag-and-drop import
+- Paint, Kanban, Annotate
+- Multi-dossier: create/open/switch/recents
+- Decisions + document version snapshots
+- Richer document list (date + preview)
 
-### Tier 3 / gap-fix 3.1; Polish
+### Tier 3 / gap-fix 3.1 — Polish
 
-- Twemoji offline flag images (Windows cannot glyph RI pairs)  
-- Sticky ink contrast, mini delete, blur/highlight fixes  
-- First-open intros, Settings shell, sample-files, generated icon **asset** (not yet PE-embedded)  
-- Root cause of the Tier 3 blank-window regression: a bulk Python find-replace mid-pass truncated `ui/index.html` (lost the annotate/kanban sections); restored from the Tier-3-fixed backup and gap-fix edits re-applied surgically (see `STATUS-GAPFIX.md`, "Process note"). Surfaced independently during the v2 self-directed reflection pass, 2026-07-26.  
+- Twemoji offline flag images (Windows cannot glyph RI pairs)
+- Sticky ink contrast, mini delete, blur/highlight fixes
+- First-open intros, Settings shell, sample-files, generated icon **asset** (not yet PE-embedded)
+- Root cause of the Tier 3 blank-window regression: a bulk Python find-replace mid-pass truncated `ui/index.html` (lost the annotate/kanban sections); restored from the Tier-3-fixed backup and gap-fix edits re-applied surgically (see `STATUS-GAPFIX.md`, "Process note"). Surfaced independently during the v2 self-directed reflection pass, 2026-07-26.
 
-### Tier 4 / 4.1 / 4.2; Agent & Office
+### Tier 4 / 4.1 / 4.2 — Agent & Office
 
-- Optional **Ask dossier** (host/port/token; hidden when unconfigured)  
-- FTS context: stopword OR → **bm25** rank → **top 4**  
-- Host first-save UX refinements; `~$` lock skip; toast glyph fix  
-- **.docx / .xlsx** extract for search + open externally  
+- Optional **Ask dossier** (host/port/token; hidden when unconfigured)
+- FTS context: stopword OR → **bm25** rank → **top 4**
+- Host first-save UX refinements; `~$` lock skip; toast glyph fix
+- **.docx / .xlsx** extract for search + open externally
 
-### Tier 5; Small UX
+### Tier 5 — Small UX
 
-- Ask **Clear conversation**  
-- Documents **sort** (name / date; session `state.docSort`)  
+- Ask **Clear conversation**
+- Documents **sort** (name / date; session `state.docSort`)
 
 ### Packaging → 1.0.0
 
-- Settings **host** as true hide/enable gate (help + toast + behavior aligned)  
-- **Context menus** on without enabling DevTools (local go-webview2 patch)  
-- **PE icon + FileVersion** via go-winres  
-- Notes **Copy** button  
-- Docs suite + `build-process/` + `releases/1.0.0/`  
+- Settings **host** as true hide/enable gate (help + toast + behavior aligned)
+- **Context menus** on without enabling DevTools (local go-webview2 patch)
+- **PE icon + FileVersion** via go-winres
+- Notes **Copy** button
+- Docs suite + `build-process/` + `releases/1.0.0/`
 
 ### Packaging gap-fix 1.1 → 1.0.1
 
@@ -73,6 +73,56 @@ A **portable dossier workspace**: one folder per project, real files on disk, lo
 
 - Icon's paper/sticky-note art direction reworked: rounded corners on both pieces, jagged/torn sticky edge removed, diagonal/angled placement instead of a square stack, softer tuck into the folder; folder body itself unchanged from 1.2; ~57% opaque fill (down from 1.2's 67% due to the diagonal recompose, not a regression)
 
+### v2 Tier 1 → 2.0.0-t1
+
+- Opt-in **Open last workspace on launch**; `DOSSIER_AUTO_OPEN` remains separate
+- Best-effort **.odt / .ods** extract + import + rescan
+- Schema **v3**: `stickies.due_at` (later UI)
+
+### v2 Tier 2 → 2.0.0-t2
+
+- Workspace display names; color picker presets; Notes **Edit/Split/Preview** + vendored marked/hljs
+- Annotate handle polish; launcher arrow tagline
+
+### v2 Tier 3 → due dates & sticky↔kanban
+
+- Sticky and kanban card due dates
+- Non-destructive sticky-to-kanban link (sync text/due; unlink keeps both)
+- Agenda surface prep / list aggregation
+
+### v2 Tier 4 → Collections & bookmarks
+
+- **Collections** of dossier folders (launcher portfolio)
+- Import **bookmarks** (`bookmarks.json` per dossier)
+- Switcher/collection UX refinements (t4.1–t4.2)
+
+### v2 Tier 5 → Accessibility baseline & keyboard
+
+- Landmarks, names, focus-visible, labels, contrast
+- Keyboard widgets; accordion Space fix; launcher scroll containment
+- Dark scrollbars; toast live region; Kanban tab order; picker focus
+
+### v2 Accessibility Escape (3.1–3.6) → sticky picker
+
+Three failed attempts, then a real root cause:
+
+1. **ABI layout:** `COREWEBVIEW2_PHYSICAL_KEY_STATUS` used Go `bool` for Windows `BOOL` (4-byte), so `WasKeyDown` mis-read and the host accelerator callback body often never ran.
+2. **Event kind:** ordinary keys arrive as **KEY_DOWN (0)**; Escape arrives as **KEY_UP (1)** on this host. A KEY_DOWN-only gate silently dropped Escape.
+
+**Fix (kept in 2.0.0):** correct BOOL to `int32`; invoke `AcceleratorKeyCallback` for Escape on KEY_UP/SYSTEM_KEY_UP as well as the normal KEY_DOWN path; page handlers + host Eval close open sticky popovers. Hand-verified with NVDA after the KEY_UP fix, confirmed four separate times across the session including once on the Color picker in addition to Emoji. One honest gap: no screenshot of the literal Escape keypress closing a picker; this rests on a checked hand-verification checklist item plus the NVDA log evidence, not a smoking-gun screenshot.
+
+### Polish wishlist / Tier 6 close-out (t6–t7)
+
+- Em dash cleanup; copyright **webShoppe**; user-facing Calendar → **Agenda**
+- Strip Escape diag logging; version in launcher/sidebar; route-change focus to view title
+- Kanban Move… arrow keys; console **OriginalFilename** fix; icon history in DEV_GUIDE
+
+### Packaging → **2.0.0**
+
+- All living docs refreshed to match full v2 feature set
+- `releases/2.0.0/` ship folder (both exes + docs)
+- `verify-build.sh` asserts version from `VERSION` file, not a hardcoded literal
+
 ---
 
 ## Architecture (one-liner)
@@ -83,11 +133,11 @@ A **portable dossier workspace**: one folder per project, real files on disk, lo
 
 ## Verification ethos
 
-Each tier was **hand-verified on a real Windows `.exe`**, not only unit tests. Packaging re-checks icon (Explorer/taskbar), version Properties, context menu, Notes Copy, host-gate toast/nav.
+Each tier was **hand-verified on a real Windows `.exe`**, not only unit tests. Agent UI automation (PrintWindow/SendKeys) is often flaky; STATUS files record what was automated vs. hand-checked. Packaging re-checks icon (Explorer/taskbar/Task Manager), version Properties, context menu, Notes Copy, host-gate toast/nav.
 
 ---
 
-## Cold read from the agent that built this
+## Cold read from the agent that built this — v1.0.3 (2026-07-26)
 
 _Written 2026-07-26, from a genuinely fresh Grok Build session (real terminal restart, no memory of any prior session) reading only README.md, DEV_GUIDE.md, USER_GUIDE.md, this file, and every STATUS.md across releases/1.0.0/ through releases/1.0.3/. Reproduced verbatim below; this is the actual output, not a paraphrase._
 
@@ -105,24 +155,31 @@ _Follow-up, same day: the doc drift and verify-build.sh findings above were conf
 
 ---
 
-## Monorepo-upload incident: root source briefly drifted ahead of docs (found + fixed 2026-08-02)
+## Cold read from the agent that built this — v2.0.0
 
-While staging Dossier's first upload into `tinkerVault`, the packaged doc set (`README.md`, `CHANGELOG.md`, `docs/`) always described 1.0.3 correctly. But somewhere during the manual, 100+-file GitHub upload, the source batch (`main.go`, `internal/app/`, `internal/dossier/`, `internal/dialog/`) got pulled from the live WSL2 working copy after v2 Tier 1 work had already started there, instead of from the pre-v2-tagged staging copy. Confirmed directly: `VERSION` read `2.0.0-t1`, `internal/app/version.go` matched, `winres/winres.json` said `2.0.0`, `internal/dossier/store.go`'s `SchemaVersion` was `"3"` (v1.0.3 shipped schema `"2"`), and `main.go` already had the v2 `AutoOpenLastFromSettings` logic, while every doc at the same root still described 1.0.3-only features. `releases/1.0.3/Dossier.exe` itself was unaffected throughout, verified by checksum against the original 1.0.3 build; this was a checked-in-source/docs mismatch, not a broken release.
-
-A true byte-exact 1.0.3-only source snapshot turned out not to be recoverable (no git history at any point in this project, and the local staging copy used to prep the GitHub upload had itself been re-synced from the same already-drifted live repo during a later cleanup pass). Given the v2 additions are additive and confirmed non-breaking, this side quest of finding a "better" fix landed on: restore `VERSION`/`version.go`/`winres.json` to `1.0.3` so nothing actively lies, leave the (harmless, opt-in, migration-safe) v2 code in place rather than trying to hand-strip it back out, and document the real state here plus in DEV_GUIDE.md's Known Limitations rather than pretend it didn't happen.
-
-One likely side effect, not yet independently confirmed on a real Windows box: `build-process/verify-windows.ps1` reads `$ExpectVer` from the `VERSION` file and throws if it doesn't match the compiled `.exe`'s PE version info. A `2.0.0-t1` `VERSION` file next to whatever locally-built `.exe` was being tested at the time would produce exactly the "script is broken" symptom reported, unrelated to a separate em-dash cleanup pass done the same week (that pass touched only prose spacing, and this file had zero em dashes in it to begin with, checked directly). Worth a real re-run once this fix is live, rather than assumed fixed.
-
-**Follow-up, confirmed on a real Windows box, 2026-08-03:** the version-mismatch theory was right, but the first fix (restoring `VERSION`/`version.go`/`winres.json`'s top-level `identity.version`) was incomplete. `winres.json` carries version data in two separate places: the `RT_MANIFEST` block's `identity.version` (cosmetic, what the earlier fix actually touched) and the `RT_VERSION` block's `fixed.file_version`/`fixed.product_version`/`info.0409.FileVersion`/`info.0409.ProductVersion` (the data that actually gets compiled into the .exe's real PE version resource). The `RT_VERSION` block had been left at `2.0.0.1`/`2.0.0-t1` the whole time. Fixed directly (both fields, both the dotted-quad `fixed` values and the display-string `info` values, set to `1.0.3.0`/`1.0.3`). A second gotcha compounded this during testing: `build-process/verify-build.sh` only regenerates the compiled `rsrc_windows_amd64.syso` resource file if one doesn't already exist, so a stale `.syso` from an earlier (pre-fix) run silently kept getting reused across multiple retries even after `winres.json` was corrected; deleting it forced a clean rebuild. With both fixed, a fresh clone of the live repo, built and run for real: `VERIFY_BUILD_OK version=1.0.3`, then `VERIFY_WINDOWS_OK version=1.0.3` (real GUI launch, real smoke test, real PE `FileVersion=1.0.3 ProductVersion=1.0.3`). The corrected `winres.json` still needs to be re-uploaded to the live repo, this fix so far only exists in the local staging copy and a local test clone.
+_Reserved for a separate fresh session. Do not fill in this packaging pass._
 
 ---
 
-## Related status files
+## Monorepo-upload incident: root source briefly drifted ahead of docs (found + fixed 2026-08-02/03, v1.0.3 era)
+
+While staging Dossier's first upload into `tinkerVault`, the packaged doc set (`README.md`, `CHANGELOG.md`, `docs/`) always described 1.0.3 correctly. But somewhere during the manual, 100+-file GitHub upload, the source batch (`main.go`, `internal/app/`, `internal/dossier/`, `internal/dialog/`) got pulled from the live WSL2 working copy after v2 Tier 1 work had already started there, instead of from the pre-v2-tagged staging copy. Confirmed directly: `VERSION` read `2.0.0-t1`, `internal/app/version.go` matched, `winres/winres.json` said `2.0.0`, `internal/dossier/store.go`'s `SchemaVersion` was `"3"` (v1.0.3 shipped schema `"2"`), and `main.go` already had the v2 `AutoOpenLastFromSettings` logic, while every doc at the same root still described 1.0.3-only features. `releases/1.0.3/Dossier.exe` itself was unaffected throughout, verified by checksum against the original 1.0.3 build; this was a checked-in-source/docs mismatch, not a broken release.
+
+A true byte-exact 1.0.3-only source snapshot turned out not to be recoverable (no git history at any point in this project, and the local staging copy used to prep the GitHub upload had itself been re-synced from the same already-drifted live repo during a later cleanup pass). Given the v2 additions were additive and confirmed non-breaking, this side quest of finding a "better" fix landed on: restore `VERSION`/`version.go`/`winres.json` to `1.0.3` so nothing actively lied, leave the (harmless, opt-in, migration-safe) v2 code in place rather than trying to hand-strip it back out, and document the real state here plus in DEV_GUIDE.md's Known Limitations rather than pretend it didn't happen.
+
+`winres.json` carries version data in two separate places: the `RT_MANIFEST` block's `identity.version` (cosmetic) and the `RT_VERSION` block's `fixed.file_version`/`fixed.product_version`/`info.0409.FileVersion`/`info.0409.ProductVersion` (the data that actually gets compiled into the .exe's real PE version resource). The first fix only touched the cosmetic field; the `RT_VERSION` block was left at `2.0.0.1`/`2.0.0-t1` until a follow-up. **Confirmed fixed on a real Windows box, 2026-08-03:** both fields corrected to `1.0.3.0`/`1.0.3`, a stale `rsrc_windows_amd64.syso` (verify-build.sh only regenerates it if one doesn't already exist) deleted to force a clean rebuild, then a fresh clone built and run for real: `VERIFY_BUILD_OK version=1.0.3` and `VERIFY_WINDOWS_OK version=1.0.3` (real GUI launch, real PE `FileVersion=1.0.3 ProductVersion=1.0.3`). Both incidents are closed; this history is kept here as the lesson for future version bumps (both `winres.json` blocks, every time), which is why this v2.0.0 pass double-checked both blocks up front rather than assuming the cosmetic fix was sufficient.
+
+---
+
+## Related status files (historical)
 
 | File | Scope |
 |------|--------|
-| [`releases/1.0.3/STATUS.md`](./releases/1.0.3/STATUS.md) | Verification notes for the current shipped version |
+| `STATUS.md` (repo root) | Latest verification (overwritten each ship pass); internal working file, not part of this public copy |
+| [`releases/1.0.3/STATUS.md`](./releases/1.0.3/STATUS.md) | Last v1 packaging snapshot |
+| [`releases/2.0.0/STATUS.md`](./releases/2.0.0/STATUS.md) | This 2.0.0 packaging snapshot |
+| `STATUS-GAPFIX*.md` | Historical gap-fix notes; internal working files, not part of this public copy |
 
-The tier-by-tier development history (Tiers 1-5, Packaging, and gap-fix passes 1.1-1.3) that would otherwise live across a root `STATUS.md` and several `STATUS-GAPFIX-*.md` files, plus three superseded `1.0.0`-`1.0.2` release snapshots, is consolidated into the Tier history above instead; those are internal working files and aren't part of this public copy.
+The tier-by-tier development history (all tiers, packaging passes, and gap-fixes across v1 and v2) that would otherwise live across a root `STATUS.md` and several `STATUS-GAPFIX-*.md` files, plus three superseded `1.0.0`-`1.0.2` release snapshots, is consolidated into the Tier history above instead.
 
 For day-to-day development, prefer **DEV_GUIDE.md** + this summary over re-reading every gap-fix log.
