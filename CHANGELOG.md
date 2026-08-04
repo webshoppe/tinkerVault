@@ -2,6 +2,16 @@
 
 The build-out history of the **repo itself**, day by day: structure, conventions, the landing page, licensing, and cross-app housekeeping. Each app also keeps its own feature-level changelog for just that app's version history: [`apps/hermes-console/CHANGELOG.md`](apps/hermes-console/CHANGELOG.md), [`apps/markdown-viewer/CHANGELOG.md`](apps/markdown-viewer/CHANGELOG.md), [`apps/whiteboard/CHANGELOG.md`](apps/whiteboard/CHANGELOG.md), [`apps/dossier/CHANGELOG.md`](apps/dossier/CHANGELOG.md).
 
+## 2026-08-03, Dossier updated to 2.0.0
+
+- Updated the Dossier app (`apps/dossier/`) from 1.0.3 to 2.0.0, tag `dossier-v2.0.0`: adds .odt/.ods import with an import-bookmarks Sources panel, a Notes Edit/Split/Preview Markdown workbench, due dates on Sticky Notes and Kanban cards with a non-destructive sticky-to-Kanban link, a new Agenda view (mini-month navigator plus a due-date list), Collections and workspace display names on the launcher, and an accessibility pass. Also fixes a three-layer Sticky Notes Escape-key bug (a struct-layout ABI mismatch plus a KEY_UP/KEY_DOWN event-kind gap).
+- Archived the outgoing 1.0.3 build as `apps/dossier/releases/1.0.3/` and added `apps/dossier/releases/2.0.0/` as the new current snapshot, matching the archived + current pattern already used by Whiteboard and Markdown Viewer.
+- Preserved 12 undocumented dev/QA test fixtures turned up by the sanitization sweep as an organized `apps/dossier/build-process/test-fixtures/` folder (Tier 1 and Tier 4 manual regression packs) instead of dropping them as sweep noise, at JP's request, for possible future regression-testing value.
+- Published `dossier-v2.0.0` as a GitHub Release with a lean end-user `.zip` asset (`Dossier.exe`, icon, sample files incl. two new odt/ods examples, a standalone README), reusing the existing release-scoped badge (`filter=dossier*`).
+- Caught and fixed two live em dashes that had slipped into `apps/dossier/README.md`'s "How to run" section despite an earlier sweep that had reported it clean (the sweep's `grep -P` escaped-byte pattern gave false negatives; switched to a reliable bash/Python method for all sweeps going forward), plus a wrong icon path (`assets/dossier-icon.png` referenced from inside a `releases/` snapshot folder, which has no `assets/` subfolder of its own) in both `releases/2.0.0/README.md` and `releases/1.0.3/README.md`.
+- Added Dossier's version history to the landing page (`index.html`) and root `README.md` for the first time: it had only ever appeared as a single unpaired "Latest" card/row for 1.0.3, with no archived-version counterpart; now follows the same two-card, archived-plus-current pattern as the other three apps.
+- Verified the 2.0.0 build on real hardware before closing out: a fresh `git clone`, `verify-build.sh` in WSL2, and `verify-windows.ps1` in Windows PowerShell all passed clean.
+
 ## 2026-08-02, Dossier 1.0.3 added
 
 - Added a new app, Dossier (`apps/dossier/`), tag `dossier-v1.0.3`, a portable offline dossier workspace for Windows: documents, notes, sticky notes, paint, kanban, annotate, and a decision timeline, plus full-text search and an optional local agent panel.
