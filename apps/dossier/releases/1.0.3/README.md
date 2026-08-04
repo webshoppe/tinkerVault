@@ -1,6 +1,6 @@
 # Dossier
 
-<img src="assets/dossier-icon.png" width="48" height="48" alt="Dossier icon" />
+<img src="dossier-icon.png" width="48" height="48" alt="Dossier icon" />
 
 **Version 1.0.3**; a portable, offline **dossier workspace** for Windows.
 
@@ -38,7 +38,7 @@ Requires the **Microsoft Edge WebView2 Runtime** (preinstalled on modern Windows
 
 ```powershell
 # Example
-R:\path\to\releases\1.0.3\Dossier.exe
+C:\path\to\releases\1.0.3\Dossier.exe
 ```
 
 Optional automation (debug / verify only): set `DOSSIER_AUTO_OPEN=1` to open the last dossier on launch.
