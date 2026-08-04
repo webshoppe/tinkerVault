@@ -159,6 +159,26 @@ _Follow-up, same day: the doc drift and verify-build.sh findings above were conf
 
 _Reserved for a separate fresh session. Do not fill in this packaging pass._
 
+**Run before opening the next Dossier tier**, not partway into it, so any doc/reality drift from the 2.0.0 packaging pass (and the landing-page/root-docs pass below) gets caught while it's still isolated and easy to fix, the same value the 1.0.3 cold read delivered above (it caught stale version strings across three docs plus a verify-build.sh hardcode that would have silently failed on rerun).
+
+**How to run it:** a genuinely fresh Grok Build session (real terminal restart, no memory of this or any prior session) reading only `README.md`, `docs/DEV_GUIDE.md`, `docs/USER_GUIDE.md`, this file, and every `STATUS.md` across `releases/1.0.3/` and `releases/2.0.0/`, same method as the v1.0.3 pass above. Reproduce the output verbatim in this section when it's run, not a paraphrase.
+
+**Cost note:** draws from the shared weekly SuperGrok/xAI pool (a real session reading a fair amount of doc surface); run it once rather than re-running speculatively.
+
+---
+
+## Warm read from the agent that built this — v2.0.0
+
+_Reserved for a separate fresh session. Do not fill in this packaging pass._
+
+A warm read is a companion check to the cold read above, same wiped-memory discipline (no memory of building this, evidence kept separate from inference, no unsupervised edits, text output only, no file writes), but pointed forward instead of backward. Where the cold read asks "does this hold together as shipped," the warm read asks "what's the next best version of this," and is explicitly allowed to propose additive changes, including ones that would touch core architecture, in service of a wishlist rather than bug-catching. It does not authorize building anything; JP decides what, if anything, becomes a real tier from the wishlist.
+
+**Run order:** cold read first (does this hold together), then warm read (what's next), same session or a separate one. Same "before opening the next tier" timing as the cold read above, this is also worth scheduling ahead of the Grok 4.5 free-access window narrowing or closing, since that's exactly the kind of promo-window pressure that's skipped this step on prior apps built under this project.
+
+**How to run it:** same fresh-session, no-memory setup as the cold read, reading the same file set, but with this additional prompt: state plainly the model has no memory of building this and should not guess at what "probably happened"; ask, separately from any bug-catching, what it would add or change if building the next version with no constraints; for each idea, ask for a one-sentence description, whether it fits the current shape as-is or requires a structural change (new dependency, native wrapper, build-pipeline change, anything breaking the single-file/portable-build model), and a rough effort estimate (small / medium / real new tier). Output as a table: Item | Fits current shape? | Effort | Notes.
+
+**Cost note:** like the cold read, this is a read-only reflection task with no file writes, consistently near-free per prior cost-table entries for this kind of task; the real cost has been promo-window pressure to ship the next tier instead, not the price of the read itself.
+
 ---
 
 ## Landing page & root docs: Dossier added to the archived+current history pattern for the first time (2026-08-03, v2.0.0 era)
