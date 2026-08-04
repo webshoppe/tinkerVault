@@ -161,6 +161,14 @@ _Reserved for a separate fresh session. Do not fill in this packaging pass._
 
 ---
 
+## Landing page & root docs: Dossier added to the archived+current history pattern for the first time (2026-08-03, v2.0.0 era)
+
+Through 1.0.3, `index.html` and the root `README.md` listed Dossier as a single unpaired "Latest" card/row, no archived-version counterpart, since 1.0.3 was Dossier's first public release with nothing earlier to pair it with. This pass (staged alongside the 2.0.0 upload) extends Dossier to the same two-card, archived+current pattern the other three apps already use: the existing 1.0.3 card lost its "Latest" badge and picked up a "preserved as a self-contained snapshot" line (Source link repointed at `releases/1.0.3/`), and a new 2.0.0 card was added with the "Latest" badge and a Download link to the `dossier-v2.0.0` tag. Root README.md's Apps table row, its archived-versions bullet list, and its Structure tree all got the matching update in the same pass; root CHANGELOG.md picked up a new 2026-08-03 entry. `apps/README.md` was left untouched by design, JP's call: it's a short one-liner-per-app overview and doesn't need per-version detail.
+
+One false alarm along the way, worth recording so it isn't relitigated: a first pass at reading the live `index.html`/`README.md` via `raw.githubusercontent.com` (no cache-bust query param) showed no Dossier entry at all, which looked like it had never been added to either file, not even for 1.0.3. Re-fetching with a `?v=` cache-busting param showed the real, already-correct 1.0.3 state; this was the project's known CDN staleness gotcha, not an actual gap.
+
+---
+
 ## Monorepo-upload incident: root source briefly drifted ahead of docs (found + fixed 2026-08-02/03, v1.0.3 era)
 
 While staging Dossier's first upload into `tinkerVault`, the packaged doc set (`README.md`, `CHANGELOG.md`, `docs/`) always described 1.0.3 correctly. But somewhere during the manual, 100+-file GitHub upload, the source batch (`main.go`, `internal/app/`, `internal/dossier/`, `internal/dialog/`) got pulled from the live WSL2 working copy after v2 Tier 1 work had already started there, instead of from the pre-v2-tagged staging copy. Confirmed directly: `VERSION` read `2.0.0-t1`, `internal/app/version.go` matched, `winres/winres.json` said `2.0.0`, `internal/dossier/store.go`'s `SchemaVersion` was `"3"` (v1.0.3 shipped schema `"2"`), and `main.go` already had the v2 `AutoOpenLastFromSettings` logic, while every doc at the same root still described 1.0.3-only features. `releases/1.0.3/Dossier.exe` itself was unaffected throughout, verified by checksum against the original 1.0.3 build; this was a checked-in-source/docs mismatch, not a broken release.
