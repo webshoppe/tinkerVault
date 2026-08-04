@@ -177,15 +177,64 @@ _Usage note: weekly SuperGrok pool measured 0% before this run and 0% after, no 
 
 ## Warm read from the agent that built this — v2.0.0
 
-_Reserved for a separate fresh session. Do not fill in this packaging pass._
+_Written 2026-08-04, from a genuinely fresh Grok Build session (headless `grok -p`, real `git clone` of the published repo into an empty scratch directory, no memory of any prior session) reading only apps/dossier/README.md, docs/DEV_GUIDE.md, docs/USER_GUIDE.md, PROJECT_SUMMARY.md, and every STATUS.md across releases/1.0.3/ and releases/2.0.0/. Same wiped-memory discipline as the cold read above, but forward-looking: proposes a wishlist rather than catching bugs. Reproduced verbatim below; this is a proposal only, not authorization to build anything._
 
-A warm read is a companion check to the cold read above, same wiped-memory discipline (no memory of building this, evidence kept separate from inference, no unsupervised edits, text output only, no file writes), but pointed forward instead of backward. Where the cold read asks "does this hold together as shipped," the warm read asks "what's the next best version of this," and is explicitly allowed to propose additive changes, including ones that would touch core architecture, in service of a wishlist rather than bug-catching. It does not authorize building anything; JP decides what, if anything, becomes a real tier from the wishlist.
+**Method:** Fresh `git clone` of `https://github.com/webshoppe/tinkerVault.git` into `/home/jp/warm-read-scratch/tinkerVault-fresh`. Worked only under `apps/dossier/`. Read: `README.md`, `docs/DEV_GUIDE.md`, `docs/USER_GUIDE.md`, `PROJECT_SUMMARY.md`, `releases/1.0.3/STATUS.md`, `releases/2.0.0/STATUS.md`. Did not run binaries, tests, or verify scripts. Did not open source outside those docs. Proposal only; no builds or edits.
 
-**Run order:** cold read first (does this hold together), then warm read (what's next), same session or a separate one. Same "before opening the next tier" timing as the cold read above, this is also worth scheduling ahead of the Grok 4.5 free-access window narrowing or closing, since that's exactly the kind of promo-window pressure that's skipped this step on prior apps built under this project.
+### Verified (from the files above)
 
-**How to run it:** same fresh-session, no-memory setup as the cold read, reading the same file set, but with this additional prompt: state plainly the model has no memory of building this and should not guess at what "probably happened"; ask, separately from any bug-catching, what it would add or change if building the next version with no constraints; for each idea, ask for a one-sentence description, whether it fits the current shape as-is or requires a structural change (new dependency, native wrapper, build-pipeline change, anything breaking the single-file/portable-build model), and a rough effort estimate (small / medium / real new tier). Output as a table: Item | Fits current shape? | Effort | Notes.
+| Topic | What the docs state |
+|--------|---------------------|
+| Ship truth | **2.0.0** product string; PE fixed **2.0.0.23**; dual exes (`Dossier.exe`, `Dossier-console.exe`); last v1 **1.0.3** |
+| Shape | Single Windows GUI `.exe` + console twin; Go + WebView2; `CGO_ENABLED=0` cross-build from WSL; folder = workspace (real files + SQLite); app prefs in `%APPDATA%\Dossier` |
+| Surfaces | Documents, Notes (Edit/Split/Preview), Stickies, Paint, Annotate, Kanban, Decisions, Agenda (list + mini-month, not a full grid), Search, optional Ask (HTTP client only), Settings, Collections, bookmarks |
+| Explicit limits | Best-effort PDF/Office/ODF extract; Notes Revert = one open-session snapshot; Collections live in app config (do not travel with a copied folder); `ui/index.html` is one large file (bulk replace once truncated UI); WebView2 automation flaky; no embedded model; one process / one window (no per-dossier taskbar badge) |
+| Packaging ethos | Ship = portable folder; verify + hand-check on real Windows; local go-webview2 patches (menus vs DevTools, Escape KEY_UP + BOOL ABI) |
 
-**Cost note:** like the cold read, this is a read-only reflection task with no file writes, consistently near-free per prior cost-table entries for this kind of task; the real cost has been promo-window pressure to ship the next tier instead, not the price of the read itself.
+**Not verified here:** PE fields, binary sizes, `VERIFY_BUILD_OK`, unit tests, runtime behavior, or any claim that requires opening Go/HTML outside these docs. Architecture details (module roles, schema v3, agent top-4 bm25, etc.) are taken as the guides state them, not re-proved from source.
+
+### Inferred (wishlist only)
+
+The table below is **proposal**, not a bug list and not a commitment that these gaps are defects. "Fits current shape" means:
+
+- **As-is**: small prefs/UX/API work that matches existing surfaces and portable-folder model
+- **Contained**: real work, still one exe + portable folder, no new runtime model
+- **Structural**: new dependency class, different UI stack, build-pipeline redesign, multi-process/sync service, or anything that breaks the portable-folder / single-exe story
+
+Effort: **small** / **medium** / **real new tier**.
+
+| Item | Fits current shape | Effort | Notes |
+|------|--------------------|--------|-------|
+| Persist document sort and other session-only prefs across launches | As-is | Small | USER_GUIDE says sort is remembered for the session only; Settings/`config.json` already hold app prefs. |
+| Task-list checkboxes in Notes preview rewrite the markdown source | Contained | Small | Docs say checkboxes are visual only; fits Notes files + auto-save pattern. |
+| Notes version history (multiple named snapshots, not one open-session Revert) | Contained | Medium | Explicit current limit is one-level Revert; store + UI, still real files under `notes/`. |
+| Portable Collections (membership travels with a folder or export/import pack) | Contained | Medium | Collections are app-config only today; portable model is the product idea, so this closes a coherence gap without leaving the folder story. |
+| Cross-dossier search within a Collection (or open recents) | Contained | Medium | FTS is per open store today; multi-folder query stays offline and local if carefully scoped. |
+| Agenda as optional full month grid + list (recurring due dates optional follow-on) | Contained | Medium | Agenda is deliberately a list of dated items; grid/recurrence are product depth on existing due fields. |
+| Search filters (surface type, date range, overdue-only) and saved queries | Contained | Small to medium | Builds on FTS surfaces already indexed; UI + query params. |
+| Decision links to stickies/kanban (not only frozen document versions) | Contained | Medium | Decisions already pin chronology; linking work items would stitch spine to boards without a new product genre. |
+| Split `ui/index.html` into modules with a ship-time concat/embed (surgical-edit safety) | Structural (build pipeline) | Medium to real new tier | Docs warn bulk replace once blanked the UI; keeps single-exe embed if the build still produces one HTML blob. |
+| Stable automated smoke beyond flaky SendKeys (e.g. host-scripted JS API + checklist, not pixel coordinates) | Contained | Medium | Verification ethos already prefers unit tests + hand-check; better gates without changing the product binary model. |
+| Optional "portable mode": config beside the exe or inside a chosen root so Settings can travel on a USB stick | Contained | Medium | Today app-wide vs dossier split is fixed; portable-mode would extend the same "folder is backup" idea without cloud. |
+| Prefer Open-with remembered as friendly app names / AppX aliases where possible | Contained | Medium | Preferred apps are a path map; richer OS association is Windows-dialog work, still local. |
+| Better extract honesty UX (per-file "no text / image-only / encrypted" badges + one-click open externally) | As-is | Small | Extract limits are already documented; surfacing them more consistently is UX polish. |
+| OCR path for scanned PDFs (optional external tool or bundled engine) | Structural | Real new tier | New heavy dependency or shell-out; may break "small portable zip" unless strictly optional and external. |
+| Rich Office/ODF in-app preview (layout fidelity) | Structural | Real new tier | Far beyond best-effort text extract; new engines, size, and license surface. |
+| Ship or bundle a local agent (or one-click install of a known local runtime) | Structural | Real new tier | Ask is intentionally HTTP-only with no embedded model; bundling a model changes size, support, and trust model. |
+| Multi-window or multi-process open dossiers (and/or per-dossier taskbar identity) | Structural | Real new tier | Explicitly rejected for v1/v2 (one process, one window, icon set once); would reverse a core host constraint. |
+| Non-Windows ports (Linux/mac) | Structural | Real new tier | WebView2 + Win32 dialogs are the documented host; other OS needs a different webview/dialog stack. |
+| Cloud sync / multi-device merge for a dossier | Structural | Real new tier | Conflicts with "backup = copy the folder" unless sync is a pure external layer; CRDT/merge is a new product tier. |
+| Plugin or extension API for custom surfaces | Structural | Real new tier | New security boundary and packaging story beyond the fixed surface set. |
+| Dark/light (or high-contrast) theme fully controllable in Settings | Contained | Small to medium | A11y baseline and dark scrollbars are documented; a full theme toggle is contained UI + prefs if contrast is kept honest. |
+| Attachments on stickies, cards, or decisions (files living under the dossier folder) | Contained | Medium | Matches "real files on disk"; needs store + open-externally path, not a new architecture. |
+| Workspace export/import as a single zip (dossier folder pack/unpack) | Contained | Small to medium | Pure convenience over "copy the folder"; still portable-folder native. |
+| Soft multi-user / network-share caution (read-only open, lock file, or "DB busy" recovery) | Contained | Medium | Portable SQLite folders get copied and shared; no claim in docs that concurrent multi-user is supported today. |
+
+### Rough priority sense (opinion, not verified)
+
+If ownership continued with **no constraints**, the highest leverage near the current design would be: (1) Notes history + portable Collections (finish the "folder is the backup" story), (2) safer UI modularization without abandoning the single-exe embed, (3) Agenda/search depth that uses dates and FTS already present. The largest "new product" bets (OCR, rich Office preview, embedded agent, multi-window, cross-OS, cloud sync) are real new tiers and would change what "portable Dossier" means.
+
+_Usage note: weekly SuperGrok pool measured 0% before this run and 0% after, no measurable cost, same as the cold read above._
 
 ---
 
