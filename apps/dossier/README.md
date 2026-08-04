@@ -60,8 +60,8 @@ Double-click `Dossier.exe`. **Create / open folder…** to start a workspace; ev
 C:\path\to\releases\2.0.0\Dossier.exe
 ```
 
-- **Dossier.exe** — GUI (no console window).
-- **Dossier-console.exe** — same app with a console for logs (dev/debug).
+- **Dossier.exe** → GUI (no console window).
+- **Dossier-console.exe** → same app with a console for logs (dev/debug).
 - Optional automation (debug / verify only): set `DOSSIER_AUTO_OPEN=1` to force-open the last dossier on launch, independent of the Settings toggle.
 
 Version appears in the launcher and sidebar (muted next to the wordmark), the sidebar footer, and Explorer **Properties → Details**.
