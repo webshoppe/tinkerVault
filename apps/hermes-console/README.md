@@ -2,6 +2,8 @@
 
 [![Release](https://img.shields.io/github/v/release/webshoppe/tinkerVault?filter=hermes-console*&label=release&sort=semver)](https://github.com/webshoppe/tinkerVault/releases?q=hermes-console)
 
+<img src="icon-512.png" width="80" alt="Hermes Console logo icon">
+
 **Current version: 1.2.0**
 
 A single-file Progressive Web App for resolving **Hermes approval-gated tool calls**
