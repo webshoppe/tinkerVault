@@ -6,6 +6,48 @@ All notable changes to this app are documented here. Format follows
 (`hermes-console-v1.0.0`) because tags are repo-wide across the tinkerVault
 monorepo.
 
+## [1.2.0] - 2026-08-07
+
+Three scoped changes: a footer link row, session auto-naming, and a completed
+investigation into distinguishing refusals from completed actions in the UI.
+
+### Added
+- **Footer Source / Docs links.** A new `.footer-links` row under the
+  `powered-by` line links to the app's GitHub source tree and user guide.
+  Both links are `target="_blank" rel="noopener"`, separated by a middot, and
+  use the existing muted/accent palette. They are **always visible**, not
+  gated on connection state — the footer renders regardless of whether the
+  console is connected.
+
+- **Session auto-naming (client-side, display-only).** When a session has no
+  server-provided title, the console now derives a display title from the
+  session's first user message. The server already exposes that text via the
+  `preview` field on each session object, so `sessionDisplayTitle()` takes its
+  first line and uses it as the display name in both the session list and the
+  active-session header; otherwise it falls back to the raw session id. This
+  is purely a render-time derivation — there is **no server write** (no PATCH),
+  so it cannot clobber an existing manual/server title and needs no extra
+  round-trip.
+
+### Investigated
+- **Refusal-vs-completed-action UI distinction.** Probed the live API
+  (`GET /api/sessions/{id}/messages` across 40 sessions / 299 assistant
+  messages, plus the `GET /v1/runs/{id}` poll object) for any field separating
+  a refusal from a normal completed answer. Confirmed the server exposes **no**
+  such field: a refusal is structurally identical to an ordinary answer
+  (`role:"assistant"`, `finish_reason:"stop"`, `tool_calls:null`, with the
+  only difference living in the free-text content). There is no refusal
+  boolean / `finish_reason`, no `tool_name` signal, and the run object carries
+  none of `output`/`content`/`tool_calls`/`finish_reason` either. A faithful UI
+  distinction is therefore impossible from API fields alone, and per the brief
+  it must not be faked with text-pattern matching. No UI change shipped for
+  this; instead a **one-time `console.warn("[gap] ...")`** in `renderHistory()`
+  documents the gap for anyone debugging later, and flags it as a real upstream
+  ask: add a `refused:true` or `finish_reason:"refusal"` field to the message
+  object so the client can render it cleanly.
+
+[1.2.0]: https://github.com/webshoppe/tinkerVault/releases/tag/hermes-console-v1.2.0
+
 ## [1.1.0] - 2026-07-18
 
 Two scoped fast-follows on top of the shipped v1.0.0 app:

@@ -255,6 +255,16 @@
     font-size: 10.5px; color: var(--muted); font-family: var(--mono);
     letter-spacing: 0.2px; opacity: 0.75; min-height: 13px;
   }
+  .footer-links {
+    max-width: 760px; margin: 4px auto 0; text-align: center;
+    font-size: 10.5px; font-family: var(--mono); letter-spacing: 0.2px;
+  }
+  .footer-links a {
+    color: var(--muted); text-decoration: none; opacity: 0.75;
+    transition: color var(--ease), opacity var(--ease);
+  }
+  .footer-links a:hover { color: var(--accent); opacity: 1; }
+  .footer-links .sep { color: var(--muted); opacity: 0.4; margin: 0 6px; }
   .hidden { display: none !important; }
 </style>
 </head>
@@ -319,6 +329,11 @@
     </div>
   </div>
   <div class="powered-by" id="poweredBy"></div>
+  <div class="footer-links">
+    <a href="https://github.com/webshoppe/tinkerVault/tree/main/apps/hermes-console" target="_blank" rel="noopener">Source</a>
+    <span class="sep">&middot;</span>
+    <a href="https://github.com/webshoppe/tinkerVault/blob/main/apps/hermes-console/docs/USER_GUIDE.md" target="_blank" rel="noopener">Docs</a>
+  </div>
 </footer>
 
 <script>
@@ -348,6 +363,7 @@ const state = {
   approvalHandledFor: null, // run_id we've already shown an approval card for (avoid dupes while polling)
   activeSessionId: null,    // selected/created session; sent as session_id on POST /v1/runs
   firstSessionsLogged: false, // log raw shape of first GET /api/sessions response
+  refusalGapLogged: false,     // log the missing-refusal-signal gap once
 };
 
 // ---- Monitoring mode ----
@@ -1256,6 +1272,33 @@ function finishRun() {
 function sessionTitle(s) {
   return s.title || s.name || s.summary || s.label || null;
 }
+// Derive a DISPLAY-ONLY title when the server sends no title (Fix #2, design (a)).
+// Never writes back to the server. Prefers an explicit title, then the first
+// user message — the API already exposes it as the `preview` field — else null
+// so the caller can fall back to the raw id. No PATCH, no extra round-trip.
+function firstLineOf(text, max) {
+  // Take the first line without any newline/CR literal in the source: scan for
+  // the first newline/CR via char codes and cut there. Sidesteps newline-escaping
+  // quirks in the edit pipeline.
+  const raw = String(text == null ? "" : text);
+  const NL = 10, CR = 13;
+  let end = raw.length;
+  for (let i = 0; i < raw.length; i++) {
+    const code = raw.charCodeAt(i);
+    if (code === NL || code === CR) { end = i; break; }
+  }
+  const line = raw.slice(0, end).trim();
+  if (!line) return "";
+  const limit = max || 60;
+  return line.length > limit ? line.slice(0, limit).trimEnd() + "…" : line;
+}
+function sessionDisplayTitle(s) {
+  const t = sessionTitle(s);
+  if (t) return t;
+  const preview = s && typeof s === "object" ? s.preview : null;
+  if (typeof preview === "string" && preview.trim()) return firstLineOf(preview, 60);
+  return null;
+}
 function sessionId(s) {
   return s.id || s.session_id || s.uuid || s._id || null;
 }
@@ -1279,7 +1322,7 @@ function renderActiveSessionInfo(meta) {
     dom.connInfo.dataset.session = "";
     return;
   }
-  const title = meta ? (sessionTitle(meta) || state.activeSessionId) : state.activeSessionId;
+  const title = (meta && sessionDisplayTitle(meta)) || state.activeSessionId;
   dom.activeSessionInfo.innerHTML = "Active session: <b>" + escapeHtml(title) + "</b>";
 }
 
@@ -1340,7 +1383,7 @@ async function loadSessions() {
 
 function renderSessionItem(s) {
   const id = sessionId(s);
-  const title = sessionTitle(s) || id || "(untitled)";
+  const title = sessionDisplayTitle(s) || id || "(untitled)";
   const updated = sessionUpdatedAt(s);
 
   const item = document.createElement("div");
@@ -1393,6 +1436,24 @@ function renderHistory(history) {
   dom.chatArea.innerHTML = "";
   state.assistantEl = null;
   state.assistantText = "";
+
+  // Fix #1(i): log the upstream gap ONCE. Live API investigation (40 sessions,
+  // 299 assistant messages) confirmed the server exposes NO field that
+  // distinguishes a refusal from an ordinary answer — both are role:"assistant",
+  // finish_reason:"stop", tool_calls:null, with the distinction living only in
+  // the free-text content. There is no refusal boolean / finish_reason, no
+  // tool_name signal, and the run object carries none of output/content/
+  // tool_calls/finish_reason either. A faithful UI distinction is impossible
+  // until the API server emits an explicit refusal signal; do NOT paper over
+  // it with text-pattern matching per the task brief.
+  if (!state.refusalGapLogged) {
+    state.refusalGapLogged = true;
+    console.warn("[gap] Refusal-vs-completed action: the API does not expose any "
+      + "field distinguishing a refusal from a completed plain-text answer "
+      + "(both are finish_reason=\"stop\", tool_calls:null). No UI distinction is "
+      + "rendered by design. Track upstream: add a refusal signal to the message object "
+      + "(e.g. refused:true / finish_reason:\"refusal\").");
+  }
 
   const msgs = Array.isArray(history) ? history
     : (history.messages || history.items || history.results || history.data || []);
