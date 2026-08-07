@@ -32,7 +32,8 @@ apps/hermes-console/
 │   └── preview.png         # icon contact sheet (dev only)
 └── releases/
     ├── v1.0.0/             # self-contained snapshot, archived
-    └── v1.1.0/             # self-contained snapshot of this release
+    ├── v1.1.0/             # self-contained snapshot, archived
+    └── v1.2.0/             # self-contained snapshot of this release
 ```
 
 `build-process/` and the `releases/` snapshots are developer artifacts; the
@@ -104,6 +105,16 @@ keys, because the exact response shape isn't contractually fixed. The first raw
 response from list/poll is logged **and** dropped into an on-screen debug panel
 so real field names are easy to confirm.
 
+`sessionDisplayTitle(s)` wraps `sessionTitle()`: if the server sent no title,
+it falls back to the first line of the session's `preview` field (the server's
+own copy of the first user message), via `firstLineOf()`. This is display-only,
+it never writes back to the server (no PATCH), so it can't clobber a title set
+some other way. `firstLineOf()` deliberately avoids any `\n`/`\r` literal in
+its own source, scanning char codes instead and cutting there, a patch/edit
+step converting those escapes into real newlines mid-build once broke a
+regex literal and cost real debugging time; safest to just never write the
+literal at all.
+
 ### PWA
 `sw.js` precaches the shell on `install`, purges old caches on `activate`, and
 routes fetches: same-origin GET → cache-first; cross-origin → not intercepted
@@ -134,7 +145,33 @@ favor of plain GET/POST/PATCH.
 
 ---
 
-## 5. Field-name assumptions to verify against a live server
+## 5. Why there's no refusal-vs-completed-action UI distinction (investigated, not a gap left open by accident)
+
+A v1.2.0 task asked for the UI to visually distinguish a refusal from a
+completed action. Investigated live against a running server (40 sessions,
+299 assistant messages) before writing any code, per the project's standing
+rule to probe rather than assume:
+
+- Message schema (`GET /api/sessions/{id}/messages`) has exactly 12 keys:
+  `id, session_id, role, content, tool_call_id, tool_calls, tool_name,
+  timestamp, token_count, finish_reason, reasoning, reasoning_content`.
+- A refusal and a completed plain-text answer are **structurally identical**:
+  both are `role:"assistant"`, `finish_reason:"stop"`, `tool_calls:null`. The
+  only difference is the meaning of the free text in `content`.
+- The run poll object (`GET /v1/runs/{id}`) is even less useful here, it
+  carries only `status`/ids/timestamps, none of `output`/`content`/
+  `tool_calls`/`finish_reason`.
+
+**Conclusion: don't fake this with text-pattern matching.** A refusal can be
+phrased with zero refusal-sounding keywords ("I'll need to use existing
+tools..."), so keyword matching would be wrong often enough to be worse than
+no distinction at all. `renderHistory()` logs a one-time `console.warn`
+documenting the gap instead, and the real fix is upstream: the API server
+would need to add an explicit signal (`refused:true` or
+`finish_reason:"refusal"`) to the message object. If that ever ships, this is
+the place to wire a real UI treatment in.
+
+## 6. Field-name assumptions to verify against a live server
 
 These are read defensively but were not fully pinned by documentation. Confirm
 against the logged raw responses if behavior looks off:
@@ -154,7 +191,7 @@ against the logged raw responses if behavior looks off:
 
 ---
 
-## 6. Icons
+## 7. Icons
 
 Generated programmatically for reproducibility:
 
@@ -168,7 +205,7 @@ re-run, and (if you change the shell asset list) bump `SHELL_VERSION` in `sw.js`
 
 ---
 
-## 7. Deploy & release process
+## 8. Deploy & release process
 
 Hosting and release notes are in `README.md`. Repo-wide conventions for the
 tinkerVault monorepo:

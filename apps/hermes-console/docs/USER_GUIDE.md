@@ -86,6 +86,11 @@ Tap **☰ Sessions** to open the sessions panel:
   conversation into a new one so you can explore an alternate path without
   disturbing the original.
 
+Sessions with no title set on the server show a short name derived from their
+first message instead of a raw session ID, this is purely a display choice
+made locally in your browser and doesn't change anything on the server; a
+session you've manually renamed elsewhere keeps that name.
+
 Without a selected session, your first message quietly starts a new one.
 
 ---
