@@ -8,7 +8,7 @@ A small collection of offline-first, single-file web apps. No install, no accoun
 |---|---|---|---|
 | **Markdown Viewer** (v1.1.0) | Drag-and-drop `.md` viewer with tabs, syntax highlighting, TOC, search, dark/light theme, edit mode, and standalone export | [Open](https://webshoppe.github.io/tinkerVault/apps/markdown-viewer/) | [`apps/markdown-viewer/`](apps/markdown-viewer/) |
 | **Whiteboard** (v2.4.0) | Five boards: Paint, Sticky Notes, Annotate, Wordpad, Kanban, with smart paste routing, quota tracking, full board history/trash, and command-palette search, all in one portable file | [Open](https://webshoppe.github.io/tinkerVault/apps/whiteboard/whiteboard.html) | [`apps/whiteboard/`](apps/whiteboard/) |
-| **Hermes Console** (v1.1.0) | Resolve Hermes approval-gated tool calls and browse sessions from any device, a phone-friendly PWA that talks straight to a running Hermes API server (approve/deny tool calls, chat, session browse + fork, per-message copy/rerun) | [Open](https://webshoppe.github.io/tinkerVault/apps/hermes-console/) | [`apps/hermes-console/`](apps/hermes-console/) |
+| **Hermes Console** (v1.2.0) | Resolve Hermes approval-gated tool calls and browse sessions from any device, a phone-friendly PWA that talks straight to a running Hermes API server (approve/deny tool calls, chat, session browse + fork, per-message copy/rerun, auto-named sessions, footer links back to source/docs) | [Open](https://webshoppe.github.io/tinkerVault/apps/hermes-console/) | [`apps/hermes-console/`](apps/hermes-console/) |
 | **Dossier** (v2.0.0) | Portable, offline dossier workspace for Windows: documents (now with .odt/.ods import), notes, sticky notes linked to Kanban cards, paint, kanban, annotate, a decision timeline, and a new Agenda view, plus full-text search, collections, and an optional local agent panel. Native compiled `.exe`, not a browser app | [Download](https://github.com/webshoppe/tinkerVault/releases/tag/dossier-v2.0.0) | [`apps/dossier/`](apps/dossier/) |
 
 Each **Try it** link above always points to that app's current version, hosted live via GitHub Pages. GitHub Pages only ever serves the current version, it doesn't host old releases live, so looking at an older version means downloading its `releases/vX.X.X/` folder below and opening its HTML file directly; it runs exactly the same way, just without the hosted link. Dossier is the one exception: it's a compiled Windows `.exe`, not a browser app, so its "Try it" column links to its GitHub Release download instead of a hosted page. The landing page itself lives at [webshoppe.github.io/tinkerVault](https://webshoppe.github.io/tinkerVault/).
@@ -17,7 +17,7 @@ Each app also runs completely offline, just download its folder and double-click
 
 - Markdown Viewer: [v1.1.0](apps/markdown-viewer/) current, [v1.0.0](apps/markdown-viewer/releases/v1.0.0/index.html) archived
 - Whiteboard: [v2.4.0](apps/whiteboard/whiteboard.html) current, [v1.0.0](apps/whiteboard/releases/v1.0.0/whiteboard.html) archived
-- Hermes Console: [v1.1.0](apps/hermes-console/) current, [v1.0.0](apps/hermes-console/releases/v1.0.0/index.html) archived
+- Hermes Console: [v1.2.0](apps/hermes-console/) current, [v1.1.0](apps/hermes-console/releases/v1.1.0/index.html) and [v1.0.0](apps/hermes-console/releases/v1.0.0/index.html) archived
 - Dossier: [v2.0.0](apps/dossier/) current, [v1.0.3](apps/dossier/releases/1.0.3/) archived
 
 ## Why single-file apps
@@ -33,10 +33,11 @@ Curious about the hardware and process behind this, and what "verified" actually
 ```
 tinkerVault/
 ├── apps/
-│   ├── hermes-console/  (currently v1.1.0)
+│   ├── hermes-console/  (currently v1.2.0)
 │   │   └── releases/
 │   │       ├── v1.0.0/  (archived)
-│   │       └── v1.1.0/  (duplicate of current, kept as a snapshot)
+│   │       ├── v1.1.0/  (archived)
+│   │       └── v1.2.0/  (duplicate of current, kept as a snapshot)
 │   ├── markdown-viewer/  (currently v1.1.0)
 │   │   └── releases/
 │   │       ├── v1.0.0/  (archived)

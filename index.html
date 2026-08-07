@@ -49,6 +49,13 @@
     gap: 1rem;
     flex-wrap: wrap;
   }
+  .app-icon {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    object-fit: contain;
+  }
   .app-info h2 {
     margin: 0 0 0.35rem;
     font-size: 1.15rem;
@@ -111,6 +118,7 @@
     </p>
 
     <div class="app-card">
+      <img class="app-icon" src="apps/markdown-viewer/icon.svg" alt="Markdown Viewer icon">
       <div class="app-info">
         <h2>Markdown Viewer <span style="color:var(--muted); font-weight:400; font-size:0.85em;">v1.0.0</span></h2>
         <p>Single-file-at-a-time Markdown viewer: GFM rendering, syntax highlighting, dark/light theme, TOC, search, export. The original release, preserved as a self-contained snapshot.</p>
@@ -122,6 +130,7 @@
     </div>
 
     <div class="app-card">
+      <img class="app-icon" src="apps/markdown-viewer/icon.svg" alt="Markdown Viewer icon">
       <div class="app-info">
         <h2>Markdown Viewer <span style="color:var(--muted); font-weight:400; font-size:0.85em;">v1.1.0</span><span class="latest-badge">Latest</span></h2>
         <p>Drag-and-drop .md viewer with tabs (same-name files no longer collide), syntax highlighting, TOC, search, dark/light theme, edit mode, Save, Copy MD, and standalone export.</p>
@@ -133,6 +142,7 @@
     </div>
 
     <div class="app-card">
+      <img class="app-icon" src="apps/whiteboard/icon.svg" alt="Whiteboard icon">
       <div class="app-info">
         <h2>Whiteboard <span style="color:var(--muted); font-weight:400; font-size:0.85em;">v1.0.0</span></h2>
         <p>Four boards: Paint, Sticky Notes, Annotate, Wordpad. The original release, preserved as a self-contained snapshot.</p>
@@ -144,6 +154,7 @@
     </div>
 
     <div class="app-card">
+      <img class="app-icon" src="apps/whiteboard/icon.svg" alt="Whiteboard icon">
       <div class="app-info">
         <h2>Whiteboard <span style="color:var(--muted); font-weight:400; font-size:0.85em;">v2.4.0</span><span class="latest-badge">Latest</span></h2>
         <p>Five boards: Paint, Sticky Notes, Annotate, Wordpad, Kanban, with smart paste routing, quota tracking, board history, and command-palette search.</p>
@@ -155,6 +166,7 @@
     </div>
 
     <div class="app-card">
+      <img class="app-icon" src="apps/hermes-console/icon-512.png" alt="Hermes Console icon">
       <div class="app-info">
         <h2>Hermes Console <span style="color:var(--muted); font-weight:400; font-size:0.85em;">v1.0.0</span></h2>
         <p>Resolve Hermes approval-gated tool calls and browse sessions from any device. The original release, preserved as a self-contained snapshot.</p>
@@ -166,9 +178,22 @@
     </div>
 
     <div class="app-card">
+      <img class="app-icon" src="apps/hermes-console/icon-512.png" alt="Hermes Console icon">
       <div class="app-info">
-        <h2>Hermes Console <span style="color:var(--muted); font-weight:400; font-size:0.85em;">v1.1.0</span><span class="latest-badge">Latest</span></h2>
-        <p>Resolve Hermes approval-gated tool calls and browse sessions from any device, a phone-friendly PWA that talks straight to a running Hermes API server. Adds a per-message toolbar (copy, rerun) and an in-app version label.</p>
+        <h2>Hermes Console <span style="color:var(--muted); font-weight:400; font-size:0.85em;">v1.1.0</span></h2>
+        <p>Resolve Hermes approval-gated tool calls and browse sessions from any device, a phone-friendly PWA that talks straight to a running Hermes API server. Adds a per-message toolbar (copy, rerun) and an in-app version label. The prior release, preserved as a self-contained snapshot.</p>
+      </div>
+      <div class="app-links">
+        <a class="btn btn-primary" href="apps/hermes-console/releases/v1.1.0/index.html">Open</a>
+        <a class="btn btn-secondary" href="https://github.com/webshoppe/tinkerVault/tree/main/apps/hermes-console/releases/v1.1.0" target="_blank" rel="noopener">Source</a>
+      </div>
+    </div>
+
+    <div class="app-card">
+      <img class="app-icon" src="apps/hermes-console/icon-512.png" alt="Hermes Console icon">
+      <div class="app-info">
+        <h2>Hermes Console <span style="color:var(--muted); font-weight:400; font-size:0.85em;">v1.2.0</span><span class="latest-badge">Latest</span></h2>
+        <p>Resolve Hermes approval-gated tool calls and browse sessions from any device, a phone-friendly PWA that talks straight to a running Hermes API server. Adds footer links back to the source/docs and automatic session naming.</p>
       </div>
       <div class="app-links">
         <a class="btn btn-primary" href="apps/hermes-console/">Open</a>
@@ -177,6 +202,7 @@
     </div>
 
     <div class="app-card">
+      <img class="app-icon" src="apps/dossier/assets/dossier-icon.png" alt="Dossier icon">
       <div class="app-info">
         <h2>Dossier <span style="color:var(--muted); font-weight:400; font-size:0.85em;">v1.0.3</span></h2>
         <p>Portable, offline dossier workspace for Windows: one folder holds real documents, notes, sticky notes, paint, kanban, annotate, and a decision timeline, with full-text search and an optional local agent panel. Native desktop app (compiled .exe), not a browser app. The original release, preserved as a self-contained snapshot.</p>
@@ -188,6 +214,7 @@
     </div>
 
     <div class="app-card">
+      <img class="app-icon" src="apps/dossier/assets/dossier-icon.png" alt="Dossier icon">
       <div class="app-info">
         <h2>Dossier <span style="color:var(--muted); font-weight:400; font-size:0.85em;">v2.0.0</span><span class="latest-badge">Latest</span></h2>
         <p>Portable, offline dossier workspace for Windows: documents (now with .odt/.ods import), notes, sticky notes linked to Kanban cards with due dates, paint, kanban, annotate, a decision timeline, and a new Agenda view, plus full-text search, collections, and an optional local agent panel. Native desktop app (compiled .exe), not a browser app.</p>

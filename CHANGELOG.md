@@ -2,6 +2,16 @@
 
 The build-out history of the **repo itself**, day by day: structure, conventions, the landing page, licensing, and cross-app housekeeping. Each app also keeps its own feature-level changelog for just that app's version history: [`apps/hermes-console/CHANGELOG.md`](apps/hermes-console/CHANGELOG.md), [`apps/markdown-viewer/CHANGELOG.md`](apps/markdown-viewer/CHANGELOG.md), [`apps/whiteboard/CHANGELOG.md`](apps/whiteboard/CHANGELOG.md), [`apps/dossier/CHANGELOG.md`](apps/dossier/CHANGELOG.md).
 
+## 2026-08-07, Hermes Console 1.2.0
+
+- Added a footer link row to Hermes Console (Source, Docs), always visible regardless of connection state, since the installed PWA has no browser chrome and no other way to find its own source.
+- Added client-side session auto-naming: sessions with no server-provided title now derive a display name from the first user message via the server's `preview` field. Display-only, no server write, so it can't clobber an existing title.
+- Investigated distinguishing a refusal from a completed action in the UI. Live probing of 40 sessions / 299 assistant messages confirmed the API exposes no field to tell the two apart, both are `finish_reason:"stop"` with `tool_calls:null`. Shipped a one-time console warning documenting the gap instead of faking a distinction with text matching.
+- A patch step converting `\n` escapes into literal newlines broke JS parsing mid-build; briefly misdiagnosed as a wholesale corrupted working file before being correctly traced to the escape conversion itself, fixed by avoiding `\n`/`\r` literals entirely, restored via `git checkout`, and re-applied clean.
+- Archived v1.1.0 as `apps/hermes-console/releases/v1.1.0/`, added `apps/hermes-console/releases/v1.2.0/` as the new current snapshot, the first app in this repo to reach a third release. `SHELL_VERSION` in `sw.js` bumped so installed clients pick up the change.
+- Landing page (`index.html`) and root `README.md` updated to the archived+current pattern now covering three versions for the first time, not just two.
+- Landing page cards for all four apps now show each app's actual icon (previously text-only across the board), using the icon file each app already had on disk (`icon.svg` for Markdown Viewer and Whiteboard, `icon-512.png` for Hermes Console, `dossier-icon.png` for Dossier). Also added Hermes Console's own missing logo to its app README header, matching the pattern Markdown Viewer and Whiteboard already used, it had real generated icon assets from day one but was never actually wired into its own README.
+
 ## 2026-08-03, Dossier updated to 2.0.0
 
 - Updated the Dossier app (`apps/dossier/`) from 1.0.3 to 2.0.0, tag `dossier-v2.0.0`: adds .odt/.ods import with an import-bookmarks Sources panel, a Notes Edit/Split/Preview Markdown workbench, due dates on Sticky Notes and Kanban cards with a non-destructive sticky-to-Kanban link, a new Agenda view (mini-month navigator plus a due-date list), Collections and workspace display names on the launcher, and an accessibility pass. Also fixes a three-layer Sticky Notes Escape-key bug (a struct-layout ABI mismatch plus a KEY_UP/KEY_DOWN event-kind gap).
