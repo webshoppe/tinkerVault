@@ -1,4 +1,4 @@
-# Developer guide — Dossier 2.0.0
+# Developer guide — Dossier 2.0.1
 
 For people who want to **read or change** the codebase.  
 End-user instructions: [USER_GUIDE.md](./USER_GUIDE.md). Overview: [README.md](../README.md).
@@ -88,13 +88,13 @@ Prefer `make build` so both binaries and PE **OriginalFilename** stay correct (w
 
 ### Version fields (must stay in agreement)
 
-| Location | 2.0.0 ship |
+| Location | 2.0.1 ship |
 |----------|------------|
-| `VERSION` | `2.0.0` |
-| `internal/app/version.go` `Version` | `2.0.0` |
-| `winres/winres.json` FileVersion / ProductVersion strings | `2.0.0` |
-| PE fixed quad | `2.0.0.23` |
-| UI footer / brand / launcher defaults | `2.0.0` |
+| `VERSION` | `2.0.1` |
+| `internal/app/version.go` `Version` | `2.0.1` |
+| `winres/winres.json` FileVersion / ProductVersion strings | `2.0.1` |
+| PE fixed quad | `2.0.1.24` |
+| UI footer / brand / launcher defaults | `2.0.1` |
 
 ### go-webview2 local patches (`replace` in go.mod)
 
@@ -165,7 +165,23 @@ See [PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md) for the full narrative. High leve
 | v2 T3–T4 | Due dates, sticky↔kanban link, Agenda, Collections, bookmarks |
 | v2 T5+ | Sort, a11y landmarks/keyboard/scroll/toasts, Escape KEY_UP fix |
 | v2 T6/T7 | Polish, version in UI, route focus, kanban arrows, OriginalFilename |
-| **Packaging 2.0.0** | Docs + release folder + verify script |
+| Packaging 2.0.0 | Docs + release folder + verify script |
+| **Gap-fix 2.0.1** | Notes/Decisions two-pane width fix (hard-pinned flex basis, see Layout patterns below) |
+
+---
+
+## Layout patterns: list+detail panes (added 2.0.1)
+
+`ui/index.html` has two views (`#notes-view`, `#decisions-view`) that put a list/spine pane and a detail pane as **direct flex children of the view root** with `flex-direction: row !important`. Documents avoids this by nesting its row (`.docs-layout`) under a column view; that structural difference is why only Notes/Decisions were affected by the 2.0.1 bug.
+
+**The lesson:** a soft flex basis (`flex: 0 1 <n>px` plus a `width: min(..., vw)` cap) is not equivalent to a hard pin (`flex: 0 0 <n>px`). Under min-content pressure (long unbroken titles, no wrap points), the soft-basis pane can balloon past its intended width and starve the sibling `flex: 1` pane, even with a `max-width` set. This is exactly what happened here: the v1-era containment fix used soft flex to solve horizontal-scroll/no-stacking, which fixed that problem but never locked the actual width ratio, and the squish symptom resurfaced at wide viewports.
+
+**Going forward, any new list+detail split should use:**
+- List/rail pane: `width: <n>px; flex: 0 0 <n>px; min-width: 0`
+- Detail/editor pane: `flex: 1 1 0%; min-width: 0`
+- Any banner/intro that could become a stray flex sibling: `flex: 0 0 100%` (forces its own row)
+
+See `releases/2.0.1/STATUS.md` for the full diagnosis (headless Chrome measurements at 1920/1600/1280/1100) and fix.
 
 ---
 

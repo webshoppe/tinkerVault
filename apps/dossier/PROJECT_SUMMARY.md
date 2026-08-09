@@ -1,6 +1,6 @@
 # Dossier — Project Summary
 
-**Current version:** 2.0.0 (v2 packaging ship; last v1 ship was 1.0.3)
+**Current version:** 2.0.1 (v2 gap-fix ship; prior v2 ship was 2.0.0; last v1 ship was 1.0.3)
 **Binary:** single Windows GUI `.exe` + console twin (Go + WebView2), cross-built from WSL2
 **Repo path:** `dossier-app/`
 
@@ -122,6 +122,16 @@ Three failed attempts, then a real root cause:
 - All living docs refreshed to match full v2 feature set
 - `releases/2.0.0/` ship folder (both exes + docs)
 - `verify-build.sh` asserts version from `VERSION` file, not a hardcoded literal
+
+### Gap-fix → **2.0.1** (2026-08-07)
+
+Notes and Decisions two-pane layout squished to the right side at a maximized window (~1920px): list/spine column ballooning toward ~94% of the main area, detail pane squeezed into a narrow strip, a dead elevated-background gap in between. No horizontal scroll, so it read as a width-ratio bug rather than an overflow bug.
+
+Root cause: the v1-era containment fix (raised the stack breakpoint to kill a default-width horizontal scrollbar and get Notes/Decisions to stack instead of overflow) used a **soft flex basis** for the list/spine pane (`flex: 0 1 <n>px` plus a `width: min(<n>px, <n>vw)` cap), not a hard pin. That solved the original overflow/no-stacking problem but never locked the actual side-by-side width ratio. Under min-content pressure (long unbroken list titles, no wrap points) the soft-basis column can balloon past its intended width even with `max-width` set, starving the sibling `flex: 1` detail pane. Documents' sources rail was never affected because it uses a hard-pinned `flex: 0 0 220px` and nests its list+detail row under a column view instead of putting them as direct flex children of the view root. Confirmed via headless Chrome measurement at 1920px: list ~93.7% / editor ~6.3%, plus a secondary issue where the first-open intro banner became a third flex column (intro ~54% / list ~16% / editor ~28%).
+
+Fix (surgical CSS only, no JS changes, no bulk edit of `ui/index.html`): Notes' list → `width: 260px; flex: 0 0 260px; min-width: 0`; Decisions' spine → `width: 280px; flex: 0 0 280px; min-width: 0`; both editor/detail panes → `flex: 1 1 0%; min-width: 0`; intro banners → `flex: 0 0 100%` (own row). The existing stack breakpoint at `@media (max-width: 1320px)` is unchanged. See `docs/DEV_GUIDE.md`'s new "Layout patterns: list+detail panes" section for the general lesson (soft flex basis ≠ hard pin), and `releases/2.0.1/STATUS.md` for the full diagnosis, layout-harness results (1920/1600/1280/1100 viewports), and version-agreement table.
+
+Verified: unit tests pass, dual rebuild (both exes 12,342,784 bytes), PE versions confirmed via PowerShell `FileVersionInfo` (2.0.1 / 2.0.1.24), automated layout harness across four viewports, and JP's own hand-check on real Windows at default/maximized/narrow window sizes for both Notes and Decisions (Explorer Properties version correct, in-app layout correct, no squish, stack behavior at narrow widths unchanged).
 
 ---
 
@@ -262,7 +272,8 @@ A true byte-exact 1.0.3-only source snapshot turned out not to be recoverable (n
 |------|--------|
 | `STATUS.md` (repo root) | Latest verification (overwritten each ship pass); internal working file, not part of this public copy |
 | [`releases/1.0.3/STATUS.md`](./releases/1.0.3/STATUS.md) | Last v1 packaging snapshot |
-| [`releases/2.0.0/STATUS.md`](./releases/2.0.0/STATUS.md) | This 2.0.0 packaging snapshot |
+| [`releases/2.0.0/STATUS.md`](./releases/2.0.0/STATUS.md) | Prior v2 packaging snapshot |
+| [`releases/2.0.1/STATUS.md`](./releases/2.0.1/STATUS.md) | This 2.0.1 gap-fix snapshot |
 | `STATUS-GAPFIX*.md` | Historical gap-fix notes; internal working files, not part of this public copy |
 
 The tier-by-tier development history (all tiers, packaging passes, and gap-fixes across v1 and v2) that would otherwise live across a root `STATUS.md` and several `STATUS-GAPFIX-*.md` files, plus three superseded `1.0.0`-`1.0.2` release snapshots, is consolidated into the Tier history above instead.

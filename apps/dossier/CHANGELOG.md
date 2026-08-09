@@ -2,6 +2,13 @@
 
 All notable changes to this app are listed here. See [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) for the full tier-by-tier build story behind each entry.
 
+## v2.0.1, 2026-08-07
+
+Gap-fix; surgical CSS only, no feature work.
+
+### Fixed
+- **Notes and Decisions: two-pane layout no longer breaks at a maximized window.** At wide widths (~1920px), the list/spine column ballooned to consume nearly the full width, squeezing the note editor / decision detail pane into a narrow strip on the right with a dead gap in between. Root cause: the list/spine pane used a soft, shrinkable flex basis (`flex: 0 1 <n>px` plus a `min()`-based viewport width) left over from the earlier v1 containment fix that only addressed horizontal scroll and column stacking, not the side-by-side width ratio. Documents' sources rail never had this problem because it uses a hard-pinned `flex: 0 0 220px`. Fixed by hard-pinning Notes' list to `width: 260px; flex: 0 0 260px` and Decisions' spine to `width: 280px; flex: 0 0 280px` (both with `min-width: 0`), and giving the editor/detail panes `flex: 1 1 0%; min-width: 0` so they always claim the remaining width. First-open intro banners also now force their own full-width row instead of becoming a third flex column. The existing stack breakpoint at 1320px and narrower is unchanged.
+
 ## v2.0.0, 2026-08-01
 
 Current shipped version. Built up over five v2 feature tiers plus an accessibility pass and a Tier 6 close-out/packaging pass (internal versions 2.0.0-t1 through 2.0.0-t7, not published as their own release folders; see PROJECT_SUMMARY.md for the full tier history).

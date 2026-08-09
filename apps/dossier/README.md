@@ -4,7 +4,7 @@
 
 <img src="assets/dossier-icon.png" width="48" height="48" alt="Dossier icon" />
 
-**Version 2.0.0**; a portable, offline **dossier workspace** for Windows.
+**Version 2.0.1**; a portable, offline **dossier workspace** for Windows.
 
 One native `.exe` (not a browser tab). Pick a folder; that folder becomes a self-contained workspace with real documents, notes, stickies, boards, search, collections, and an optional local agent panel. Backup = copy the folder.
 
@@ -36,7 +36,7 @@ Requires the **Microsoft Edge WebView2 Runtime** (preinstalled on modern Windows
 
 **1. Download it**
 
-Go to the [Dossier release page](https://github.com/webshoppe/tinkerVault/releases/tag/dossier-v2.0.0) and click `dossier-v2.0.0.zip` under Assets. It downloads like any other file.
+Go to the [Dossier release page](https://github.com/webshoppe/tinkerVault/releases/tag/dossier-v2.0.1) and click `dossier-v2.0.1.zip` under Assets. It downloads like any other file.
 
 **2. Unzip it**
 
@@ -50,14 +50,14 @@ Double-click `Dossier.exe`. **Create / open folder…** to start a workspace; ev
 
 ## How to run
 
-1. Get `Dossier.exe` from `releases/2.0.0/` (or build it; see below).
+1. Get `Dossier.exe` from `releases/2.0.1/` (or build it; see below).
 2. Double-click it on Windows.
 3. **Create / open folder…**, open a recent workspace, open a **collection**, or enable **Open last workspace on launch** in Settings.
 4. Work. Everything for that workspace lives inside the folder you chose.
 
 ```powershell
 # Example
-C:\path\to\releases\2.0.0\Dossier.exe
+C:\path\to\releases\2.0.1\Dossier.exe
 ```
 
 - **Dossier.exe** → GUI (no console window).
@@ -102,7 +102,7 @@ export PATH="$HOME/.local/go/bin:$HOME/go/bin:$PATH"
 cd /path/to/dossier-app
 go test ./internal/... -count=1
 make build          # → build/Dossier.exe + build/Dossier-console.exe (icon + version embedded)
-make release        # → releases/2.0.0/
+make release        # → releases/2.0.1/
 ```
 
 Or without Make:
@@ -120,8 +120,8 @@ Console binary (logs to console): `make build-console`.
 
 ## Version
 
-In-app footer and Windows **File → Properties → Details** both report **2.0.0** (PE fixed file/product version **2.0.0.23**).
-See [releases/2.0.0/STATUS.md](./releases/2.0.0/STATUS.md) for the current version's verification. Last v1 ship: [releases/1.0.3/](./releases/1.0.3/).
+In-app footer and Windows **File → Properties → Details** both report **2.0.1** (PE fixed file/product version **2.0.1.24**).
+See [releases/2.0.1/STATUS.md](./releases/2.0.1/STATUS.md) for the current version's verification. Prior v2 ship: [releases/2.0.0/](./releases/2.0.0/). Last v1 ship: [releases/1.0.3/](./releases/1.0.3/).
 
 ---
 
@@ -134,7 +134,7 @@ See [releases/2.0.0/STATUS.md](./releases/2.0.0/STATUS.md) for the current versi
 | [PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md) | Tier history (v1 + full v2) + room for a cold-read note |
 | [CHANGELOG.md](./CHANGELOG.md) | What changed, in brief |
 | [build-process/](./build-process/) | Re-runnable verify scripts |
-| [releases/2.0.0/STATUS.md](./releases/2.0.0/STATUS.md) | Latest packaging verification |
+| [releases/2.0.1/STATUS.md](./releases/2.0.1/STATUS.md) | Latest packaging verification |
 
 ---
 
