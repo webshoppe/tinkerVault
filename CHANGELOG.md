@@ -2,15 +2,13 @@
 
 The build-out history of the **repo itself**, day by day: structure, conventions, the landing page, licensing, and cross-app housekeeping. Each app also keeps its own feature-level changelog for just that app's version history: [`apps/hermes-console/CHANGELOG.md`](apps/hermes-console/CHANGELOG.md), [`apps/markdown-viewer/CHANGELOG.md`](apps/markdown-viewer/CHANGELOG.md), [`apps/whiteboard/CHANGELOG.md`](apps/whiteboard/CHANGELOG.md), [`apps/dossier/CHANGELOG.md`](apps/dossier/CHANGELOG.md).
 
-## 2026-08-07, Hermes Console 1.2.0
+## 2026-08-07, Dossier updated to 2.0.1
 
-- Added a footer link row to Hermes Console (Source, Docs), always visible regardless of connection state, since the installed PWA has no browser chrome and no other way to find its own source.
-- Added client-side session auto-naming: sessions with no server-provided title now derive a display name from the first user message via the server's `preview` field. Display-only, no server write, so it can't clobber an existing title.
-- Investigated distinguishing a refusal from a completed action in the UI. Live probing of 40 sessions / 299 assistant messages confirmed the API exposes no field to tell the two apart, both are `finish_reason:"stop"` with `tool_calls:null`. Shipped a one-time console warning documenting the gap instead of faking a distinction with text matching.
-- A patch step converting `\n` escapes into literal newlines broke JS parsing mid-build; briefly misdiagnosed as a wholesale corrupted working file before being correctly traced to the escape conversion itself, fixed by avoiding `\n`/`\r` literals entirely, restored via `git checkout`, and re-applied clean.
-- Archived v1.1.0 as `apps/hermes-console/releases/v1.1.0/`, added `apps/hermes-console/releases/v1.2.0/` as the new current snapshot, the first app in this repo to reach a third release. `SHELL_VERSION` in `sw.js` bumped so installed clients pick up the change.
-- Landing page (`index.html`) and root `README.md` updated to the archived+current pattern now covering three versions for the first time, not just two.
-- Landing page cards for all four apps now show each app's actual icon (previously text-only across the board), using the icon file each app already had on disk (`icon.svg` for Markdown Viewer and Whiteboard, `icon-512.png` for Hermes Console, `dossier-icon.png` for Dossier). Also added Hermes Console's own missing logo to its app README header, matching the pattern Markdown Viewer and Whiteboard already used, it had real generated icon assets from day one but was never actually wired into its own README.
+- Updated the Dossier app (`apps/dossier/`) from 2.0.0 to 2.0.1, tag `dossier-v2.0.1`: gap-fix release, surgical CSS only, no new features. Fixes the Notes and Decisions two-pane layout squishing to the right side at a maximized window: the list/spine pane used a soft, shrinkable flex basis left over from an earlier v1 containment fix that only addressed horizontal scroll and stacking, not the actual width ratio; replaced with a hard-pinned width (matching the pattern Documents' sources rail already used) on both panes.
+- Archived the outgoing 2.0.0 build as `apps/dossier/releases/2.0.0/` and added `apps/dossier/releases/2.0.1/` as the new current snapshot, extending the same archived + current pattern used for the 1.0.3 → 2.0.0 transition.
+- Published `dossier-v2.0.1` as a GitHub Release with a lean end-user `.zip` asset (`Dossier.exe`, icon, sample files, standalone README), reusing the existing release-scoped badge (`filter=dossier*`).
+- Updated the landing page (`index.html`) and root `README.md` to move the "Latest" badge from the 2.0.0 card/row to the new 2.0.1 card/row, with 2.0.0 picking up a "preserved as a self-contained snapshot" line the same way 1.0.3 did when 2.0.0 shipped.
+- Verified the 2.0.1 build before closing out: dual rebuild (both exes byte-matched at 12,342,784 bytes), PE version fields confirmed via PowerShell `FileVersionInfo`, an automated headless-Chrome layout harness across four viewports, and a real-hardware hand-check on Windows (Explorer Properties, in-app layout at default/maximized/narrow window sizes for both Notes and Decisions).
 
 ## 2026-08-03, Dossier updated to 2.0.0
 
