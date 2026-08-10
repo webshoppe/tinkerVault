@@ -396,18 +396,28 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
   text-align: left; justify-content: flex-start;
 }
 
-/* Notes — responsive side list (collapses / stacks so it isn't clipped) */
-#notes-view { flex-direction: row !important; min-width: 0; }
+/* Notes: fixed-width list + flex-grow editor (Documents-style split).
+   Soft min()/flex:0 1 basis let list min-content blow out at wide widths;
+   pin list with flex:0 0 260px so detail always takes remaining space. */
+#notes-view {
+  flex-direction: row !important; flex-wrap: wrap; min-width: 0;
+  overflow: hidden; /* children scroll; avoid flex min-content horizontal blowout */
+}
+/* Own row in side-by-side (wrap); do not grow — stacked mode resets basis below */
+#notes-view > .intro-banner {
+  flex: 0 0 100%; width: 100%; max-width: 100%;
+}
 #notes-list {
-  width: min(260px, 34vw); min-width: 140px; max-width: 320px;
-  flex: 0 1 260px; border-right: 1px solid var(--border);
-  overflow: auto; background: var(--bg-elevated);
+  width: 260px; flex: 0 0 260px; min-width: 0;
+  border-right: 1px solid var(--border);
+  overflow-x: hidden; overflow-y: auto; background: var(--bg-elevated);
 }
 #notes-view.list-collapsed #notes-list { display: none; }
 .panel-collapse-btn { flex-shrink: 0; font-size: 0.72rem; padding: 4px 8px; white-space: nowrap; }
 /* Default window is 1280px — stack at/above that so panels aren't clipped out of the box */
 @media (max-width: 1320px) {
-  #notes-view { flex-direction: column !important; }
+  #notes-view { flex-direction: column !important; flex-wrap: nowrap; overflow: auto; }
+  #notes-view > .intro-banner { flex: 0 0 auto; width: auto; max-width: none; }
   #notes-list {
     width: 100% !important; max-width: none; min-width: 0; flex: 0 0 auto;
     max-height: 34%; border-right: none; border-bottom: 1px solid var(--border);
@@ -419,7 +429,7 @@ input[type="number"].compact, .wip-input { width: 48px; padding: 2px 4px; text-a
 .note-item.active { background: var(--accent-soft); border-left: 3px solid var(--accent); }
 .note-item .t { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .note-item .d { font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; }
-#note-editor { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+#note-editor { flex: 1 1 0%; min-width: 0; display: flex; flex-direction: column; }
 #note-editor .bar {
   display: flex; gap: 8px; align-items: center;
   padding: 10px 14px; border-bottom: 1px solid var(--border);
@@ -953,16 +963,23 @@ button.color-swatch:hover { filter: none; background: inherit; }
 .cal-filter-bar button { font-size: 0.78rem; padding: 4px 10px; }
 .cal-empty { color: var(--text-muted); padding: 32px 12px; text-align: center; line-height: 1.5; }
 
-/* Decisions timeline — responsive spine so it isn't clipped at default width */
-#decisions-view { flex-direction: row !important; min-width: 0; }
+/* Decisions: fixed-width spine + flex-grow detail (same split pattern as Notes). */
+#decisions-view {
+  flex-direction: row !important; flex-wrap: wrap; min-width: 0;
+  overflow: hidden;
+}
+#decisions-view > .intro-banner {
+  flex: 0 0 100%; width: 100%; max-width: 100%;
+}
 #decision-spine {
-  width: min(300px, 36vw); min-width: 160px; max-width: 360px;
-  flex: 0 1 300px; border-right: 1px solid var(--border);
-  overflow: auto; background: var(--bg-elevated); padding: 16px 12px;
+  width: 280px; flex: 0 0 280px; min-width: 0;
+  border-right: 1px solid var(--border);
+  overflow-x: hidden; overflow-y: auto; background: var(--bg-elevated); padding: 16px 12px;
 }
 #decisions-view.spine-collapsed #decision-spine { display: none; }
 @media (max-width: 1320px) {
-  #decisions-view { flex-direction: column !important; }
+  #decisions-view { flex-direction: column !important; flex-wrap: nowrap; overflow: auto; }
+  #decisions-view > .intro-banner { flex: 0 0 auto; width: auto; max-width: none; }
   #decision-spine {
     width: 100% !important; max-width: none; min-width: 0; flex: 0 0 auto;
     max-height: 36%; border-right: none; border-bottom: 1px solid var(--border);
@@ -982,7 +999,7 @@ button.color-swatch:hover { filter: none; background: inherit; }
 .spine-item .when { font-size: 0.72rem; color: var(--text-muted); }
 .spine-item .ttl { font-weight: 600; margin-top: 2px; font-size: 0.92rem; }
 .spine-item .snip { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
-#decision-detail { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 16px 20px; overflow: auto; }
+#decision-detail { flex: 1 1 0%; min-width: 0; display: flex; flex-direction: column; padding: 16px 20px; overflow: auto; }
 #decision-detail .row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
 #decision-detail label { font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px; }
 #decision-detail .field { margin-bottom: 14px; }
@@ -1054,7 +1071,7 @@ button.color-swatch:hover { filter: none; background: inherit; }
 <div id="app">
   <div id="setup" role="main" aria-label="Workspace launcher">
     <h1>📁 Dossier</h1>
-    <p class="app-ver" id="setup-ver">v2.0.0</p>
+    <p class="app-ver" id="setup-ver">v2.0.1</p>
     <p class="tagline">One folder per workspace. Real documents. Local search.<br/>Stickies, paint, kanban, decisions → all portable.</p>
     <div class="card">
       <p>Choose a folder to hold this dossier’s documents, notes, boards, and database. Everything lives there.</p>
@@ -1072,7 +1089,7 @@ button.color-swatch:hover { filter: none; background: inherit; }
   <div id="shell">
     <aside id="sidebar" aria-label="Workspace">
       <header class="brand">
-        <h1>📁 Dossier <span class="app-ver" id="brand-ver">v2.0.0</span></h1>
+        <h1>📁 Dossier <span class="app-ver" id="brand-ver">v2.0.1</span></h1>
         <div class="ws-display" id="dossier-display" style="display:none" title="Workspace display name"></div>
         <div class="path" id="dossier-path" role="button" tabindex="0" title="Open folder in Explorer" aria-label="Open workspace folder in Explorer"></div>
         <div class="ws-switch">
@@ -1096,7 +1113,7 @@ button.color-swatch:hover { filter: none; background: inherit; }
         <button type="button" data-view="settings"><span class="icon" aria-hidden="true">⚙️</span> Settings</button>
       </nav>
       <footer class="foot">
-        <div>v<span id="ver">2.0.0</span></div>
+        <div>v<span id="ver">2.0.1</span></div>
         <div style="margin-top:4px">All data in the folder above</div>
       </footer>
     </aside>
@@ -1584,7 +1601,7 @@ async function importFileList(fileList) {
 async function boot() {
   try {
     const st = await call('GetStatus');
-    const verStr = String(st.version || '2.0.0').replace(/^v/i, '');
+    const verStr = String(st.version || '2.0.1').replace(/^v/i, '');
     document.getElementById('ver').textContent = verStr;
     const brandVer = document.getElementById('brand-ver');
     if (brandVer) brandVer.textContent = 'v' + verStr;
