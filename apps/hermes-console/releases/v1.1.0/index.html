@@ -1092,7 +1092,12 @@ function handleApprovalPending(event, runId) {
 
   const meta = document.createElement("div");
   meta.style.fontSize = "13px";
-  meta.innerHTML = "Tool: <b>" + escapeHtml(info.name || "(unknown)") + "</b>";
+  const fallbackToolMsg = "details aren't available over this polling transport (SSE is disabled server-side)";
+
+  const hasToolDetails = info.name || info.arguments !== null;
+  meta.innerHTML = hasToolDetails
+    ? "Tool: <b>" + escapeHtml(info.name || "(unknown)") + "</b>"
+    : "Tool: <b>" + fallbackToolMsg + "</b>";
   card.appendChild(meta);
 
   const argLabel = document.createElement("div");
@@ -1101,8 +1106,12 @@ function handleApprovalPending(event, runId) {
   card.appendChild(argLabel);
 
   const pre = document.createElement("pre");
-  try { pre.textContent = JSON.stringify(info.arguments, null, 2); }
-  catch (e) { pre.textContent = String(info.arguments); }
+  if (info.arguments !== null) {
+    try { pre.textContent = JSON.stringify(info.arguments, null, 2); }
+    catch (e) { pre.textContent = String(info.arguments); }
+  } else {
+    pre.textContent = "Tool " + fallbackToolMsg + ".";
+  }
   card.appendChild(pre);
 
   // Full raw event too, for correcting the contract later.
@@ -1176,15 +1185,13 @@ function extractApprovalInfo(event) {
 
 async function submitApproval(runId, decision, info, rawEvent) {
   // Body format is a best guess; log request + response so it's easy to correct.
+  // Server contract (gateway/platforms/api_server.py _handle_run_approval):
+  // expects {"choice": "once"|"session"|"always"|"deny"}, keyed on run_id server-side
+  // (no approval_id needed). "approve"/"approved"/"allow" are aliased to "once" server-side,
+  // so sending the raw decision string under the "choice" key works directly.
   const body = {
-    decision: decision,                 // "approve" | "deny"
-    approved: decision === "approve",   // include boolean form too, defensively
+    choice: decision,   // "approve" -> aliased to "once" server-side; "deny" -> "deny"
   };
-  // If the event carried an approval/tool call id, echo it back.
-  const callId = rawEvent.id || rawEvent.approval_id || rawEvent.tool_call_id ||
-                 (info.source && (info.source.id || info.source.tool_call_id)) ||
-                 (rawEvent.data && (rawEvent.data.id || rawEvent.data.approval_id));
-  if (callId) body.approval_id = callId;
 
   const url = baseUrl() + "/v1/runs/" + encodeURIComponent(runId) + "/approval";
   console.log("[POST approval] request", { url, body });
