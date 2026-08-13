@@ -17,7 +17,7 @@
  * the tailnet-only constraint).
  */
 
-const SHELL_VERSION = "hermes-console-shell-v4";
+const SHELL_VERSION = "hermes-console-shell-v5";
 
 // Same-origin shell assets to precache. Paths are relative to the SW scope
 // (/apps/hermes-console/), so they resolve correctly under a subpath deploy.

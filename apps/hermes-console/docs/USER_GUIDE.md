@@ -67,6 +67,12 @@ and a highlighted **Approval required** card appears showing:
 - the **tool name**, and
 - the **arguments** it wants to run with.
 
+For some approvals (mainly shell/terminal commands), the server doesn't send
+Console a separate tool name or argument list, only a plain description of
+the command. In that case the card will say tool details aren't available
+instead of showing a name and arguments, that's expected, not an error, and
+you can still approve or deny normally.
+
 Review it, then tap **Approve** or **Deny**. The decision is sent to the server
 and the run continues (or stops, if denied). This works from any device the
 console is open on; that's the whole point: you can be away from the machine

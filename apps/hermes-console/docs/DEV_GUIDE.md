@@ -33,7 +33,8 @@ apps/hermes-console/
 └── releases/
     ├── v1.0.0/             # self-contained snapshot, archived
     ├── v1.1.0/             # self-contained snapshot, archived
-    └── v1.2.0/             # self-contained snapshot of this release
+    ├── v1.2.0/             # self-contained snapshot, archived
+    └── v1.2.1/             # self-contained snapshot of this release
 ```
 
 `build-process/` and the `releases/` snapshots are developer artifacts; the
@@ -143,6 +144,16 @@ to `true` to prefer real-time streaming. Same caution applies to
 `POST /api/sessions/{id}/chat/stream`, a streaming endpoint, so it's avoided in
 favor of plain GET/POST/PATCH.
 
+**This is why the approval card can't show real tool details (as of v1.2.1).**
+`_set_run_status()` server-side deliberately excludes tool-call details from
+the polled run object ("without exposing private agent objects"), those only
+ever traveled over the SSE event stream this app can't use. `command`/
+`description` are the only fields ever visible here for dangerous-command
+approvals, never `name`/`arguments`. If SSE gets fixed and `USE_SSE` flips to
+`true`, `extractApprovalInfo()`/`handleApprovalPending()` would need revisiting
+to actually surface the richer event data instead of the current honest
+fallback message.
+
 ---
 
 ## 5. Why there's no refusal-vs-completed-action UI distinction (investigated, not a gap left open by accident)
@@ -181,8 +192,12 @@ against the logged raw responses if behavior looks off:
 - **Approval shape**: `isApprovalPending()` looks for `status`
   `requires_approval`/`pending_approval` or a type/status containing
   `"approval"`, including nested `data`.
-- **Approval body**: sent as `{decision, approved, approval_id?}`, a defensive
-  superset; trim once the server's expected shape is confirmed.
+- **Approval body**: confirmed as of v1.2.1 against `gateway/platforms/api_server.py
+  _handle_run_approval` — sent as `{choice: "once"|"session"|"always"|"deny"}`,
+  keyed on `run_id` server-side (no `approval_id` needed). `"approve"` is
+  aliased to `"once"` server-side. The earlier `{decision, approved,
+  approval_id?}` shape documented here previously was never actually read by
+  the server and caused every approval to fail with HTTP 400.
 - **Capabilities identity** (`renderPoweredBy()`): probes
   `agent`/`name`/`model` and `version`/`build` at top level and under
   `agent`/`model`/`server`/`info`.

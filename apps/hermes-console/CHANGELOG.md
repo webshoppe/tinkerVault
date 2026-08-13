@@ -6,6 +6,23 @@ All notable changes to this app are documented here. Format follows
 (`hermes-console-v1.0.0`) because tags are repo-wide across the tinkerVault
 monorepo.
 
+## [1.2.1] - 2026-08-12
+
+### Fixed
+- **Approval POST always failed with HTTP 400, approvals never actually
+  resolved.** `submitApproval()` sent `{decision, approved, approval_id?}`.
+  The server's approval endpoint only ever reads a `choice` field
+  (`"once"|"session"|"always"|"deny"`, with `"approve"`/`"approved"`/`"allow"`
+  aliased to `"once"`), keyed on `run_id` alone, no `approval_id` needed. Since
+  `choice` was never sent, every approval decision was rejected, so the run
+  never actually resumed, it just re-polled back into the same pending card,
+  looking like a UI loop. Now sends `{choice: decision}` directly.
+- **Approval card showed misleading "(unknown)" / "null".** Dangerous-command
+  approvals only ever carry `command`/`description`, never a `name` or
+  `arguments` pair, so `handleApprovalPending()` now shows an honest message
+  explaining tool details aren't available over this polling transport
+  (SSE is disabled server-side), instead of implying missing data.
+
 ## [1.2.0] - 2026-08-07
 
 Three scoped changes: a footer link row, session auto-naming, and a completed
