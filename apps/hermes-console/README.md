@@ -4,12 +4,9 @@
 
 <img src="icon-512.png" width="80" alt="Hermes Console logo icon">
 
-**Current version: 1.2.0**
+**Current version: 1.2.1**
 
-A single-file Progressive Web App for resolving **Hermes approval-gated tool calls**
-and browsing sessions from your phone or any other device, something no existing
-Hermes frontend (Open WebUI included) can do. It talks directly to an
-already-running Hermes API server over plain HTTP using the Runs and Sessions APIs.
+A single-file Progressive Web App for resolving **Hermes approval-gated tool calls** and browsing sessions from your phone or any other device, something no existing Hermes frontend (Open WebUI included) can do. It talks directly to an already-running Hermes API server over plain HTTP using the Runs and Sessions APIs.
 
 Built as part of the `tinkerVault` monorepo (`apps/hermes-console/`).
 
@@ -17,17 +14,12 @@ Built as part of the `tinkerVault` monorepo (`apps/hermes-console/`).
 
 ## What it does
 
-- **Connect** to any Hermes server by host / port / bearer key (stored per-device
-  in `localStorage`; nothing is hard-coded).
+- **Connect** to any Hermes server by host / port / bearer key (stored per-device in `localStorage`; nothing is hard-coded).
 - **Chat**: send input, watch the assistant response stream in (via polling).
-- **Approvals**: when a run pauses on an approval-gated tool call, an Approve /
-  Deny card appears with the tool name and arguments. Tap a decision from
-  anywhere; the run continues.
+- **Approvals**: when a run pauses on an approval-gated tool call, an Approve / Deny card appears with the tool name and arguments when available, or an honest message when they aren't (mainly shell/terminal commands, the server doesn't expose those details over this polling transport). Tap a decision from anywhere; the run continues.
 - **Stop** an in-flight run.
-- **Sessions**: browse, open (with full history), create, and fork sessions.
-  Messages thread into one real conversation instead of scattering.
-- **Installable**: add to home screen on Android / install on desktop; loads
-  offline (the app shell is cached; live API data never is).
+- **Sessions**: browse, open (with full history), create, and fork sessions. Messages thread into one real conversation instead of scattering.
+- **Installable**: add to home screen on Android / install on desktop; loads offline (the app shell is cached; live API data never is).
 
 ---
 
@@ -42,7 +34,7 @@ Built as part of the `tinkerVault` monorepo (`apps/hermes-console/`).
 | `icon-maskable-512.png` | Maskable icon for Android adaptive launchers. |
 | `apple-touch-icon.png` | 180×180 iOS home-screen icon. |
 | `favicon.ico`, `favicon-16.png`, `favicon-32.png` | Browser-tab favicons. |
-| `VERSION` | Semver version string (`1.2.0`). |
+| `VERSION` | Semver version string (`1.2.1`). |
 | `CHANGELOG.md` | App-level changelog. |
 | `PROJECT_SUMMARY.md` | The build story: why this app exists, the phased build, what got verified. |
 | `docs/USER_GUIDE.md` | End-user documentation. |
@@ -52,9 +44,9 @@ Built as part of the `tinkerVault` monorepo (`apps/hermes-console/`).
 | `releases/v1.0.0/` | Self-contained snapshot of the 1.0.0 release. |
 | `releases/v1.1.0/` | Self-contained snapshot of the 1.1.0 release (slimmed: shell + `docs/USER_GUIDE.md`). |
 | `releases/v1.2.0/` | Self-contained snapshot of the 1.2.0 release (slimmed: shell + `docs/USER_GUIDE.md`). |
+| `releases/v1.2.1/` | Self-contained snapshot of the 1.2.1 release (slimmed: shell + `docs/USER_GUIDE.md`). |
 
-Everything except `build-process/`, `docs/`, `PROJECT_SUMMARY.md`, and
-`releases/` is part of the deployed shell.
+Everything except `build-process/`, `docs/`, `PROJECT_SUMMARY.md`, and `releases/` is part of the deployed shell.
 
 ## Documentation
 
@@ -68,37 +60,23 @@ Everything except `build-process/`, `docs/`, `PROJECT_SUMMARY.md`, and
 ## Architecture notes (important)
 
 ### Polling, not SSE
-The Runs API has an events stream (`GET /v1/runs/{run_id}/events`), but on the
-target server **that one endpoint is missing its `Access-Control-Allow-Origin`
-header**, so a browser blocks the cross-origin read. Every other endpoint sends
-CORS correctly. The app therefore **polls** `GET /v1/runs/{run_id}` every ~1.5 s
-instead of opening an event stream.
+The Runs API has an events stream (`GET /v1/runs/{run_id}/events`), but on the target server **that one endpoint is missing its `Access-Control-Allow-Origin` header**, so a browser blocks the cross-origin read. Every other endpoint sends CORS correctly. The app therefore **polls** `GET /v1/runs/{run_id}` every ~1.5 s instead of opening an event stream.
 
-The fetch-based SSE reader is still in `index.html`, gated behind
-`const USE_SSE = false;`. If the server ever starts sending the CORS header on
-the events endpoint, flip that to `true` to prefer real-time streaming.
+The fetch-based SSE reader is still in `index.html`, gated behind `const USE_SSE = false;`. If the server ever starts sending the CORS header on the events endpoint, flip that to `true` to prefer real-time streaming.
 
-The same assumption applies to `POST /api/sessions/{id}/chat/stream`: it's a
-streaming endpoint, so the app avoids it and uses plain GET/POST/PATCH for
-sessions.
+The same assumption applies to `POST /api/sessions/{id}/chat/stream`: it's a streaming endpoint, so the app avoids it and uses plain GET/POST/PATCH for sessions.
 
 ### Shell vs. API caching
 The service worker splits traffic by origin:
 
-- **Same-origin GET** (the static HTML/CSS/JS/icons, the "app shell") →
-  **cache-first**, so the console opens instantly and works offline.
-- **Cross-origin** (the Hermes server, on a different host:port) →
-  **never intercepted**, always live network. Runs and sessions must never be
-  served stale.
+- **Same-origin GET** (the static HTML/CSS/JS/icons, the "app shell") → **cache-first**, so the console opens instantly and works offline.
+- **Cross-origin** (the Hermes server, on a different host:port) → **never intercepted**, always live network. Runs and sessions must never be   served stale.
 - **Non-GET** (all API writes) → passed straight through.
 
-The cache is versioned (`SHELL_VERSION` in `sw.js`). **Bump it on every deploy**
-so clients drop the old shell instead of getting stuck on it. Old caches are
-purged automatically on the service worker's `activate` event.
+The cache is versioned (`SHELL_VERSION` in `sw.js`). **Bump it on every deploy** so clients drop the old shell instead of getting stuck on it. Old caches are purged automatically on the service worker's `activate` event.
 
-### No push notifications
-Deliberate non-goal: public push infrastructure conflicts with the tailnet-only
-constraint.
+### No push notifications 
+Deliberate non-goal: public push infrastructure conflicts with the tailnet-only constraint.
 
 ---
 
@@ -111,9 +89,7 @@ constraint.
 "scope": "/apps/hermes-console/"
 ```
 
-These two fields are the **only** path-sensitive parts (all other references in
-the HTML, manifest, and SW are relative). Set them to match where the app is
-actually served:
+These two fields are the **only** path-sensitive parts (all other references in the HTML, manifest, and SW are relative). Set them to match where the app is actually served:
 
 | Deploy location | `start_url` / `scope` |
 |-----------------|-----------------------|
@@ -121,39 +97,28 @@ actually served:
 | `https://<user>.github.io/hermes-console/` (repo named `hermes-console`) | `/hermes-console/` |
 | Custom domain root (`https://console.example/`) | `/` |
 
-If the paths don't match, the installed app may launch to a 404 or the service
-worker scope won't cover the page.
+If the paths don't match, the installed app may launch to a 404 or the service worker scope won't cover the page.
 
 ---
 
 ## Deploying to GitHub Pages
 
-Service workers require **HTTPS or localhost**. GitHub Pages is HTTPS, so it works
-out of the box.
+Service workers require **HTTPS or localhost**. GitHub Pages is HTTPS, so it works out of the box.
 
 1. Put these files where Pages will serve them at the path in `start_url`.
-   For the default `/apps/hermes-console/`, that means the repo serving Pages has
-   the files under `apps/hermes-console/`.
+   For the default `/apps/hermes-console/`, that means the repo serving Pages has the files under `apps/hermes-console/`.
 2. Enable Pages (Settings → Pages → deploy from branch, usually `main` / root).
 3. Visit `https://<user>.github.io/apps/hermes-console/`.
-4. First load registers the service worker; check **DevTools → Application →
-   Service Workers** to confirm it's activated, and **Application → Manifest** to
-   confirm the icons and colors load.
-5. On Android Chrome you'll get an **Install** button in the header (Add to Home
-   Screen); on desktop Chrome/Edge, the same button plus the address-bar install
-   icon. iOS Safari installs manually via **Share → Add to Home Screen** (no
-   `beforeinstallprompt` event exists there; the button just stays hidden).
+4. First load registers the service worker; check **DevTools → Application → Service Workers** to confirm it's activated, and **Application → Manifest** to confirm the icons and colors load.
+5. On Android Chrome you'll get an **Install** button in the header (Add to Home Screen); on desktop Chrome/Edge, the same button plus the address-bar install icon. iOS Safari installs manually via **Share → Add to Home Screen** (no `beforeinstallprompt` event exists there; the button just stays hidden).
 
-> **Redeploying:** bump `SHELL_VERSION` in `sw.js` whenever you change any shell
-> file, or returning visitors may keep the cached old version until the SW
-> updates on its own.
+> **Redeploying:** bump `SHELL_VERSION` in `sw.js` whenever you change any shell file, or returning visitors may keep the cached old version until the SW updates on its own.
 
 ---
 
 ## Local testing
 
-Serve over `localhost` (service workers are allowed there) from the **directory
-that reproduces your deploy path**:
+Serve over `localhost` (service workers are allowed there) from the **directory that reproduces your deploy path**:
 
 ```bash
 # reproduce the /apps/hermes-console/ path
@@ -164,11 +129,9 @@ python -m http.server 8777
 # open http://localhost:8777/apps/hermes-console/
 ```
 
-Then point the connection screen at your Hermes server's host, port (default
-`8642`), and bearer key.
+Then point the connection screen at your Hermes server's host, port (default `8642`), and bearer key.
 
-> Opening `index.html` via `file://` will load the UI but the service worker
-> won't register (needs http/https). Use a local server for full PWA testing.
+> Opening `index.html` via `file://` will load the UI but the service worker won't register (needs http/https). Use a local server for full PWA testing.
 
 ---
 
@@ -181,10 +144,7 @@ pip install Pillow
 python build-process/make_icons.py
 ```
 
-Edit the palette constants or the `draw_h_with_wings()` routine at the top of
-`build-process/make_icons.py` to change the mark, then re-run. To also refresh the favicons,
-regenerate them from `icon-192.png` (see the project history) or add them to the
-script.
+Edit the palette constants or the `draw_h_with_wings()` routine at the top of `build-process/make_icons.py` to change the mark, then re-run. To also refresh the favicons, regenerate them from `icon-192.png` (see the project history) or add them to the script.
 
 ---
 
